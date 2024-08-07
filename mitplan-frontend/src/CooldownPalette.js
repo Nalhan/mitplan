@@ -29,12 +29,19 @@ const CooldownItem = ({ cooldown }) => {
 };
 
 const CooldownPalette = ({ cooldowns }) => {
+  // Check if cooldowns is an array and not empty
+  const hasCooldowns = Array.isArray(cooldowns) && cooldowns.length > 0;
+
   return (
     <div className="cooldown-palette">
       <h3>Cooldown Palette</h3>
-      {cooldowns.map((cooldown) => (
-        <CooldownItem key={cooldown.id} cooldown={cooldown} />
-      ))}
+      {hasCooldowns ? (
+        cooldowns.map((cooldown) => (
+          <CooldownItem key={cooldown.id} cooldown={cooldown} />
+        ))
+      ) : (
+        <p>No cooldowns available</p>
+      )}
     </div>
   );
 };

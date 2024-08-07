@@ -50,7 +50,7 @@ app.post('/api/events', async (req, res) => {
     for (const event of events) {
       await MitplanEvent.findOneAndUpdate(
         { key: event.key },
-        event,
+        { ...event, columnId: parseInt(event.columnId) || 1 },
         { upsert: true, new: true }
       );
     }

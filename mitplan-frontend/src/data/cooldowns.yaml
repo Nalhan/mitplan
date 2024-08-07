@@ -7,7 +7,7 @@
   name: Medium Cooldown
   duration: 60
   color: '#e67e22'
-
+  
 - id: 3
   name: Long Cooldown
   duration: 120

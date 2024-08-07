@@ -11,6 +11,8 @@ function App() {
   const [eventName, setEventName] = useState('');
   const [eventTimestamp, setEventTimestamp] = useState(1);
   const [timelineLength, setTimelineLength] = useState(121);
+  const [columnCount, setColumnCount] = useState(2);
+  const [eventColumn, setEventColumn] = useState(1);
 
   const fetchEventsFromBackend = async () => {
     try {
@@ -27,21 +29,27 @@ function App() {
 
   const createEvent = async (e) => {
     e.preventDefault();
-    const newEvent = { key: events.length, name: eventName, timestamp: eventTimestamp }; // Assign unique key
+    const newEvent = { 
+      key: events.length, 
+      name: eventName, 
+      timestamp: parseFloat(eventTimestamp),
+      columnId: parseInt(eventColumn) || 1
+    };
     try {
       const response = await fetch('http://localhost:5000/api/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify([newEvent]), // Send as an array
+        body: JSON.stringify([newEvent]),
       });
       if (!response.ok) {
         throw new Error('Failed to create event');
       }
-      setEvents((prevEvents) => [...prevEvents, newEvent]); // Update state
-      setEventName(''); // Clear input
-      setEventTimestamp(5); // Reset timestamp
+      setEvents((prevEvents) => [...prevEvents, newEvent]);
+      setEventName('');
+      setEventTimestamp(5);
+      setEventColumn(1);
     } catch (error) {
       console.error('Error creating event:', error);
     }
@@ -62,18 +70,17 @@ function App() {
     }
   };
 
-  const moveEvent = (fromIndex, toIndex, newTimestamp) => {
-    const updatedEvents = [...events];
-    const [movedEvent] = updatedEvents.splice(fromIndex, 1);
-    movedEvent.timestamp = newTimestamp;
-
-    // Find the correct position to insert the event based on its new timestamp
-    const insertIndex = updatedEvents.findIndex(event => event.timestamp > newTimestamp);
-    if (insertIndex === -1) {
-      updatedEvents.push(movedEvent);
-    } else {
-      updatedEvents.splice(insertIndex, 0, movedEvent);
+  const moveEvent = (id, newTimestamp, columnId) => {
+    if (!Array.isArray(events)) {
+      console.error('Events is not an array:', events);
+      return;
     }
+    const updatedEvents = events.map(event => {
+      if (event.key === id) {
+        return { ...event, timestamp: parseFloat(newTimestamp.toFixed(2)), columnId };
+      }
+      return event;
+    });
 
     setEvents(updatedEvents);
     saveEventsToBackend(updatedEvents);
@@ -120,6 +127,13 @@ function App() {
             placeholder="Timeline Length"
             min="1"
           />
+          <input
+            type="number"
+            value={columnCount}
+            onChange={(e) => setColumnCount(Math.max(1, parseInt(e.target.value) || 1))}
+            placeholder="Number of Columns"
+            min="1"
+          />
         </div>
         <form onSubmit={createEvent}>
           <input
@@ -136,12 +150,26 @@ function App() {
             placeholder="5"
             required
           />
+          <input
+            type="number"
+            value={eventColumn}
+            onChange={(e) => setEventColumn(Math.max(1, parseInt(e.target.value) || 1))}
+            placeholder="Column"
+            min="1"
+            max={columnCount}
+            required
+          />
           <button type="submit">Create Event</button>
         </form>
         <button onClick={clearEvents}>Clear Events</button>
         <div className="content">
           <CooldownPalette cooldowns={cooldowns} />
-          <VerticalTimeline events={events} moveEvent={moveEvent} timelineLength={timelineLength} />
+          <VerticalTimeline 
+            events={events} 
+            moveEvent={moveEvent} 
+            timelineLength={timelineLength}
+            columnCount={columnCount}
+          />
         </div>
       </div>
     </DndProvider>
