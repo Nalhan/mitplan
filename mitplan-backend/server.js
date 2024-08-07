@@ -83,6 +83,41 @@ app.delete('/api/events', async (req, res) => {
   }
 });
 
+// Import the Settings model
+const Settings = require('./models/Settings');
+
+app.get('/api/settings', async (req, res) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings({ timelineLength: 121, columnCount: 2 });
+      await settings.save();
+    }
+    res.status(200).json(settings);
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ message: 'Error fetching settings' });
+  }
+});
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const { timelineLength, columnCount } = req.body;
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings({ timelineLength, columnCount });
+    } else {
+      settings.timelineLength = timelineLength;
+      settings.columnCount = columnCount;
+    }
+    await settings.save();
+    res.status(200).json({ message: 'Settings updated successfully', settings });
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ message: 'Error updating settings' });
+  }
+});
+
 // Log incoming requests
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);

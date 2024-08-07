@@ -27,6 +27,38 @@ function App() {
     }
   };
 
+  const fetchSettingsFromBackend = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/settings');
+      if (!response.ok) {
+        throw new Error('Failed to fetch settings');
+      }
+      const data = await response.json();
+      setTimelineLength(data.timelineLength || 121);
+      setColumnCount(data.columnCount || 2);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
+  const updateSettings = async (newTimelineLength, newColumnCount) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ timelineLength: newTimelineLength, columnCount: newColumnCount }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update settings');
+      }
+      console.log('Settings updated successfully');
+    } catch (error) {
+      console.error('Error updating settings:', error);
+    }
+  };
+
   const createEvent = async (e) => {
     e.preventDefault();
     const newEvent = { 
@@ -106,6 +138,7 @@ function App() {
 
   useEffect(() => {
     fetchEventsFromBackend();
+    fetchSettingsFromBackend();
     const socket = io('http://localhost:5000');
     socket.on('connect', () => {
       console.log('Connected to backend');
@@ -115,6 +148,18 @@ function App() {
     };
   }, []);
 
+  const handleTimelineLengthChange = (e) => {
+    const newLength = Math.max(1, parseInt(e.target.value) || 1);
+    setTimelineLength(newLength);
+    updateSettings(newLength, columnCount);
+  };
+
+  const handleColumnCountChange = (e) => {
+    const newCount = Math.max(1, parseInt(e.target.value) || 1);
+    setColumnCount(newCount);
+    updateSettings(timelineLength, newCount);
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="App">
@@ -123,14 +168,14 @@ function App() {
           <input
             type="number"
             value={timelineLength}
-            onChange={(e) => setTimelineLength(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={handleTimelineLengthChange}
             placeholder="Timeline Length"
             min="1"
           />
           <input
             type="number"
             value={columnCount}
-            onChange={(e) => setColumnCount(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={handleColumnCountChange}
             placeholder="Number of Columns"
             min="1"
           />
