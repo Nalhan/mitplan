@@ -159,16 +159,20 @@ function Room() {
             </div>
             <EventForm onSubmit={createEvent} columnCount={columnCount} />
             <button onClick={clearEvents}>Clear Events</button>
-            <div className="content" style={{ display: 'flex' }}>
-              <VerticalTimeline 
-                events={events} 
-                moveEvent={moveEvent} 
-                timelineLength={timelineLength}
-                columnCount={columnCount}
-                onDragEnd={handleDragEnd}
-                onDrop={handleDrop}
-              />
-              <CooldownPalette />
+            <div className="content-wrapper" style={{ display: 'flex', position: 'relative' }}>
+              <div className="timeline-container" style={{ flex: 1 }}>
+                <VerticalTimeline 
+                  events={events} 
+                  moveEvent={moveEvent} 
+                  timelineLength={timelineLength}
+                  columnCount={columnCount}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop}
+                />
+              </div>
+              <div className="cooldown-palette-container" style={{ position: 'absolute', right: 0, top: 0, bottom: 0 }}>
+                <CooldownPalette />
+              </div>
             </div>
           </>
         ) : (
