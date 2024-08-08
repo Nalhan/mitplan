@@ -2,50 +2,90 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const mongoose = require('mongoose');
-const cors = require('cors'); // Import cors
-const bodyParser = require('body-parser'); // Import bodyParser
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: 'http://localhost:3000', // Replace with your frontend URL
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
-    credentials: true, // Allow credentials if needed
+    credentials: true,
   },
 });
 
-// Use CORS middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow requests from this origin
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'DELETE'],
-  credentials: true, // Allow credentials if needed
+  credentials: true,
 }));
 
-app.use(bodyParser.json()); // Middleware to parse JSON bodies
+app.use(bodyParser.json());
 
-// Connect to MongoDB
 mongoose.connect('mongodb://localhost/mitplan', { useNewUrlParser: true, useUnifiedTopology: true });
+
+const MitplanEvent = require('./models/MitplanEvent');
+const Settings = require('./models/Settings');
 
 // Basic route
 app.get('/', (req, res) => {
   res.send('Mitplan Backend is running!');
 });
 
-// Handle socket connections
 io.on('connection', (socket) => {
   console.log('A user connected');
+
+  // Send initial state to the connected client
+  sendInitialState(socket);
+
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
+
+  socket.on('clearEvents', handleClearEvents);
+  socket.on('createEvent', handleCreateEvent);
+  socket.on('updateEvents', handleUpdateEvents);
+  socket.on('getEvents', handleGetEvents);
+  socket.on('getSettings', handleGetSettings);
+  socket.on('updateSettings', handleUpdateSettings);
 });
 
-// Import the MitplanEvent model
-const MitplanEvent = require('./models/MitplanEvent'); // Adjust the path as necessary
+async function sendInitialState(socket) {
+  try {
+    const events = await MitplanEvent.find();
+    const settings = await Settings.findOne() || new Settings({ timelineLength: 121, columnCount: 2 });
+    socket.emit('initialState', { events, settings });
+  } catch (error) {
+    console.error('Error sending initial state:', error);
+  }
+}
 
-// Add this code after your existing routes
-app.post('/api/events', async (req, res) => {
-  const events = req.body;
+async function handleClearEvents() {
+  try {
+    await MitplanEvent.deleteMany({});
+    console.log('All events cleared');
+    io.emit('stateUpdate', { events: [] });
+  } catch (error) {
+    console.error('Error clearing events:', error);
+    io.emit('error', { message: 'Error clearing events' });
+  }
+}
+
+async function handleCreateEvent(newEvent) {
+  try {
+    const event = new MitplanEvent(newEvent);
+    await event.save();
+    console.log('Event created:', event);
+    const updatedEvents = await MitplanEvent.find();
+    io.emit('stateUpdate', { events: updatedEvents });
+  } catch (error) {
+    console.error('Error creating event:', error);
+    io.emit('error', { message: 'Error creating event' });
+  }
+}
+
+async function handleUpdateEvents(events) {
   try {
     for (const event of events) {
       await MitplanEvent.findOneAndUpdate(
@@ -54,82 +94,55 @@ app.post('/api/events', async (req, res) => {
         { upsert: true, new: true }
       );
     }
-    console.log('Received events:', events);
-    
-    // Fetch updated events and emit stateUpdate
+    console.log('Events updated:', events);
     const updatedEvents = await MitplanEvent.find();
     io.emit('stateUpdate', { events: updatedEvents });
-    
-    res.status(200).send({ message: 'Events saved/updated successfully' });
   } catch (error) {
-    console.error('Error saving/updating events:', error);
-    res.status(500).send({ message: 'Error saving/updating events' });
+    console.error('Error updating events:', error);
+    io.emit('error', { message: 'Error updating events' });
   }
-});
+}
 
-app.get('/api/events', async (req, res) => {
+async function handleGetEvents(callback) {
   try {
-    const events = await MitplanEvent.find(); // Fetch all events
-    res.status(200).send(events);
+    const events = await MitplanEvent.find();
+    callback(events);
   } catch (error) {
     console.error('Error fetching events:', error);
-    res.status(500).send({ message: 'Error fetching events' });
+    callback({ error: 'Error fetching events' });
   }
-});
+}
 
-app.delete('/api/events', async (req, res) => {
-  try {
-    await MitplanEvent.deleteMany({}); // Clear all events
-    console.log('All events cleared');
-    
-    // Emit stateUpdate with empty events array
-    io.emit('stateUpdate', { events: [] });
-    
-    res.status(200).send({ message: 'All events cleared successfully' });
-  } catch (error) {
-    console.error('Error clearing events:', error);
-    res.status(500).send({ message: 'Error clearing events' });
-  }
-});
-
-// Import the Settings model
-const Settings = require('./models/Settings');
-
-app.get('/api/settings', async (req, res) => {
+async function handleGetSettings(callback) {
   try {
     let settings = await Settings.findOne();
     if (!settings) {
       settings = new Settings({ timelineLength: 121, columnCount: 2 });
       await settings.save();
     }
-    res.status(200).json(settings);
+    callback(settings);
   } catch (error) {
     console.error('Error fetching settings:', error);
-    res.status(500).json({ message: 'Error fetching settings' });
+    callback({ error: 'Error fetching settings' });
   }
-});
+}
 
-app.post('/api/settings', async (req, res) => {
+async function handleUpdateSettings(newSettings) {
   try {
-    const { timelineLength, columnCount } = req.body;
     let settings = await Settings.findOne();
     if (!settings) {
-      settings = new Settings({ timelineLength, columnCount });
+      settings = new Settings(newSettings);
     } else {
-      settings.timelineLength = timelineLength;
-      settings.columnCount = columnCount;
+      settings.timelineLength = newSettings.timelineLength;
+      settings.columnCount = newSettings.columnCount;
     }
     await settings.save();
-    
-    // Emit stateUpdate with updated settings
     io.emit('stateUpdate', { settings });
-    
-    res.status(200).json({ message: 'Settings updated successfully', settings });
   } catch (error) {
     console.error('Error updating settings:', error);
-    res.status(500).json({ message: 'Error updating settings' });
+    io.emit('error', { message: 'Error updating settings' });
   }
-});
+}
 
 // Log incoming requests
 app.use((req, res, next) => {
