@@ -1,45 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import io from 'socket.io-client';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import VerticalTimeline from './VerticalTimeline';
-import CooldownPalette from './CooldownPalette';
+import VerticalTimeline from './components/VerticalTimeline';
+import CooldownPalette from './components/CooldownPalette';
+import EventForm from './components/EventForm';
+import useDataFetching from './hooks/useDataFetching';
 import cooldowns from './data/cooldowns.yaml';
 
 function App() {
   const [events, setEvents] = useState([]);
-  const [eventName, setEventName] = useState('');
-  const [eventTimestamp, setEventTimestamp] = useState(1);
   const [timelineLength, setTimelineLength] = useState(121);
   const [columnCount, setColumnCount] = useState(2);
-  const [eventColumn, setEventColumn] = useState(1);
 
-  const fetchEventsFromBackend = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/events');
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
-      const data = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
-  };
+  const fetchedEvents = useDataFetching('http://localhost:5000/api/events', []);
+  const fetchedSettings = useDataFetching('http://localhost:5000/api/settings', {});
 
-  const fetchSettingsFromBackend = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/settings');
-      if (!response.ok) {
-        throw new Error('Failed to fetch settings');
-      }
-      const data = await response.json();
-      setTimelineLength(data.timelineLength || 121);
-      setColumnCount(data.columnCount || 2);
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-    }
-  };
+  useEffect(() => {
+    if (fetchedEvents.length > 0) setEvents(fetchedEvents);
+    if (fetchedSettings.timelineLength) setTimelineLength(fetchedSettings.timelineLength);
+    if (fetchedSettings.columnCount) setColumnCount(fetchedSettings.columnCount);
+  }, [fetchedEvents, fetchedSettings]);
 
   const updateSettings = async (newTimelineLength, newColumnCount) => {
     try {
@@ -63,9 +44,9 @@ function App() {
     e.preventDefault();
     const newEvent = { 
       key: events.length, 
-      name: eventName, 
-      timestamp: parseFloat(eventTimestamp),
-      columnId: parseInt(eventColumn) || 1
+      name: e.eventName, 
+      timestamp: parseFloat(e.eventTimestamp),
+      columnId: parseInt(e.eventColumn) || 1
     };
     try {
       const response = await fetch('http://localhost:5000/api/events', {
@@ -79,9 +60,6 @@ function App() {
         throw new Error('Failed to create event');
       }
       setEvents((prevEvents) => [...prevEvents, newEvent]);
-      setEventName('');
-      setEventTimestamp(5);
-      setEventColumn(1);
     } catch (error) {
       console.error('Error creating event:', error);
     }
@@ -137,28 +115,24 @@ function App() {
   };
 
   useEffect(() => {
-    fetchEventsFromBackend();
-    fetchSettingsFromBackend();
     const socket = io('http://localhost:5000');
+    
     socket.on('connect', () => {
       console.log('Connected to backend');
     });
+
+    socket.on('stateUpdate', (data) => {
+      if (data.events) setEvents(data.events);
+      if (data.settings) {
+        setTimelineLength(data.settings.timelineLength || 121);
+        setColumnCount(data.settings.columnCount || 2);
+      }
+    });
+
     return () => {
       socket.disconnect();
     };
   }, []);
-
-  const handleTimelineLengthChange = (e) => {
-    const newLength = Math.max(1, parseInt(e.target.value) || 1);
-    setTimelineLength(newLength);
-    updateSettings(newLength, columnCount);
-  };
-
-  const handleColumnCountChange = (e) => {
-    const newCount = Math.max(1, parseInt(e.target.value) || 1);
-    setColumnCount(newCount);
-    updateSettings(timelineLength, newCount);
-  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -168,44 +142,19 @@ function App() {
           <input
             type="number"
             value={timelineLength}
-            onChange={handleTimelineLengthChange}
+            onChange={(e) => setTimelineLength(Math.max(1, parseInt(e.target.value) || 1))}
             placeholder="Timeline Length"
             min="1"
           />
           <input
             type="number"
             value={columnCount}
-            onChange={handleColumnCountChange}
+            onChange={(e) => setColumnCount(Math.max(1, parseInt(e.target.value) || 1))}
             placeholder="Number of Columns"
             min="1"
           />
         </div>
-        <form onSubmit={createEvent}>
-          <input
-            type="text"
-            value={eventName}
-            onChange={(e) => setEventName(e.target.value)}
-            placeholder="Event Name"
-            required
-          />
-          <input
-            type="number"
-            value={eventTimestamp}
-            onChange={(e) => setEventTimestamp(Number(e.target.value))}
-            placeholder="5"
-            required
-          />
-          <input
-            type="number"
-            value={eventColumn}
-            onChange={(e) => setEventColumn(Math.max(1, parseInt(e.target.value) || 1))}
-            placeholder="Column"
-            min="1"
-            max={columnCount}
-            required
-          />
-          <button type="submit">Create Event</button>
-        </form>
+        <EventForm onSubmit={createEvent} columnCount={columnCount} />
         <button onClick={clearEvents}>Clear Events</button>
         <div className="content">
           <CooldownPalette cooldowns={cooldowns} />

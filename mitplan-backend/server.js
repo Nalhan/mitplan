@@ -55,6 +55,11 @@ app.post('/api/events', async (req, res) => {
       );
     }
     console.log('Received events:', events);
+    
+    // Fetch updated events and emit stateUpdate
+    const updatedEvents = await MitplanEvent.find();
+    io.emit('stateUpdate', { events: updatedEvents });
+    
     res.status(200).send({ message: 'Events saved/updated successfully' });
   } catch (error) {
     console.error('Error saving/updating events:', error);
@@ -76,6 +81,10 @@ app.delete('/api/events', async (req, res) => {
   try {
     await MitplanEvent.deleteMany({}); // Clear all events
     console.log('All events cleared');
+    
+    // Emit stateUpdate with empty events array
+    io.emit('stateUpdate', { events: [] });
+    
     res.status(200).send({ message: 'All events cleared successfully' });
   } catch (error) {
     console.error('Error clearing events:', error);
@@ -111,6 +120,10 @@ app.post('/api/settings', async (req, res) => {
       settings.columnCount = columnCount;
     }
     await settings.save();
+    
+    // Emit stateUpdate with updated settings
+    io.emit('stateUpdate', { settings });
+    
     res.status(200).json({ message: 'Settings updated successfully', settings });
   } catch (error) {
     console.error('Error updating settings:', error);
