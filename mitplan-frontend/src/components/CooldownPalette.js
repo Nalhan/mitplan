@@ -4,9 +4,15 @@ import cooldowns from '../data/cooldowns.yaml';
 
 const CooldownItem = ({ cooldown }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
-    type: 'EVENT',
-    item: { ...cooldown, isNew: true },
-    collect: (monitor) => ({
+    type: 'TIMELINE_EVENT',
+    item: { 
+      id: `new_${cooldown.id}`,
+      name: cooldown.name,
+      duration: cooldown.duration,
+      color: cooldown.color,
+      isNew: true
+    },
+    collect: (monitor) => ({ 
       isDragging: !!monitor.isDragging(),
     }),
   }));

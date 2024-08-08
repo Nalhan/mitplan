@@ -125,7 +125,7 @@ function Room() {
       socket.emit('createEvent', roomId, newEvent);
     } else {
       const updatedEvents = events.map(event => {
-        if (event.key === item.key) {
+        if (event.key === item.id) {
           return { ...event, timestamp: parseFloat(timestamp.toFixed(2)), columnId };
         }
         return event;

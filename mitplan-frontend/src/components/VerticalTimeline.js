@@ -40,27 +40,42 @@ const TimelineEvent = ({ event, moveEvent, timelineLength }) => {
   );
 };
 
-const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop }) => {
+const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, columnId }) => {
   const ref = useRef(null);
   const [draggedItem, setDraggedItem] = useState(null);
+
+  const calculateTimestamp = useCallback((clientY) => {
+    const columnRect = ref.current.getBoundingClientRect();
+    const relativeY = clientY - columnRect.top;
+    const calculatedTimestamp = (relativeY / columnRect.height) * timelineLength;
+    return Math.max(0, Math.min(calculatedTimestamp, timelineLength));
+  }, [timelineLength]);
 
   const [, drop] = useDrop({
     accept: ItemType,
     hover: (item, monitor) => {
-      const columnRect = ref.current.getBoundingClientRect();
       const clientOffset = monitor.getClientOffset();
-      const hoverClientY = clientOffset.y - columnRect.top;
-      
-      const draggedTimestamp = (hoverClientY / columnRect.height) * timelineLength;
-      
-      if (draggedTimestamp !== item.timestamp) {
-        setDraggedItem({ ...item, timestamp: draggedTimestamp });
-        moveEvent(item.id, draggedTimestamp);
+      if (clientOffset) {
+        const draggedTimestamp = calculateTimestamp(clientOffset.y);
+        
+        if (draggedTimestamp !== item.timestamp) {
+          setDraggedItem({ ...item, timestamp: draggedTimestamp });
+          if (!item.isNew) {
+            moveEvent(item.id, draggedTimestamp, columnId);
+          }
+        }
       }
     },
     drop: (item, monitor) => {
-      if (draggedItem) {
-        onDragEnd(draggedItem.id, draggedItem.timestamp);
+      const clientOffset = monitor.getClientOffset();
+      if (clientOffset) {
+        const draggedTimestamp = calculateTimestamp(clientOffset.y);
+
+        if (item.isNew) {
+          onDrop(item, columnId, draggedTimestamp);
+        } else {
+          onDragEnd(item.id, draggedTimestamp, columnId);
+        }
       }
       setDraggedItem(null);
     },
@@ -137,7 +152,8 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, 
               moveEvent={(id, newTimestamp) => handleMoveEvent(id, newTimestamp, index + 1)} 
               timelineLength={timelineLength} 
               onDragEnd={(id, newTimestamp) => onDragEnd(id, newTimestamp, index + 1)}
-              onDrop={(item, newTimestamp) => onDrop(item, index + 1, newTimestamp)}
+              onDrop={(item, columnId, newTimestamp) => onDrop(item, columnId, newTimestamp)}
+              columnId={index + 1}
             />
           </div>
         ))}
