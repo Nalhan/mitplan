@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const generateRoomName = require('./utils/roomNameGenerator');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,128 +29,67 @@ mongoose.connect('mongodb://localhost/mitplan', { useNewUrlParser: true, useUnif
 const MitplanEvent = require('./models/MitplanEvent');
 const Settings = require('./models/Settings');
 
-// Basic route
-app.get('/', (req, res) => {
-  res.send('Mitplan Backend is running!');
+const rooms = new Map();
+
+app.post('/api/rooms', (req, res) => {
+  let roomId;
+  do {
+    roomId = generateRoomName();
+  } while (rooms.has(roomId));
+  
+  rooms.set(roomId, { events: [], settings: { timelineLength: 121, columnCount: 2 } });
+  res.json({ roomId });
 });
 
 io.on('connection', (socket) => {
   console.log('A user connected');
 
-  // Send initial state to the connected client
-  sendInitialState(socket);
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    const room = rooms.get(roomId);
+    if (room) {
+      socket.emit('initialState', room);
+    } else {
+      socket.emit('error', { message: 'Room not found' });
+    }
+  });
+
+  socket.on('clearEvents', (roomId) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.events = [];
+      io.to(roomId).emit('stateUpdate', { events: room.events });
+    }
+  });
+
+  socket.on('createEvent', (roomId, newEvent) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.events.push(newEvent);
+      io.to(roomId).emit('stateUpdate', { events: room.events });
+    }
+  });
+
+  socket.on('updateEvents', (roomId, updatedEvents) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.events = updatedEvents;
+      io.to(roomId).emit('stateUpdate', { events: room.events });
+    }
+  });
+
+  socket.on('updateSettings', (roomId, newSettings) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.settings = { ...room.settings, ...newSettings };
+      io.to(roomId).emit('stateUpdate', { settings: room.settings });
+    }
+  });
 
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
-
-  socket.on('clearEvents', handleClearEvents);
-  socket.on('createEvent', handleCreateEvent);
-  socket.on('updateEvents', handleUpdateEvents);
-  socket.on('getEvents', handleGetEvents);
-  socket.on('getSettings', handleGetSettings);
-  socket.on('updateSettings', handleUpdateSettings);
 });
 
-async function sendInitialState(socket) {
-  try {
-    const events = await MitplanEvent.find();
-    const settings = await Settings.findOne() || new Settings({ timelineLength: 121, columnCount: 2 });
-    socket.emit('initialState', { events, settings });
-  } catch (error) {
-    console.error('Error sending initial state:', error);
-  }
-}
-
-async function handleClearEvents() {
-  try {
-    await MitplanEvent.deleteMany({});
-    console.log('All events cleared');
-    io.emit('stateUpdate', { events: [] });
-  } catch (error) {
-    console.error('Error clearing events:', error);
-    io.emit('error', { message: 'Error clearing events' });
-  }
-}
-
-async function handleCreateEvent(newEvent) {
-  try {
-    const event = new MitplanEvent(newEvent);
-    await event.save();
-    console.log('Event created:', event);
-    const updatedEvents = await MitplanEvent.find();
-    io.emit('stateUpdate', { events: updatedEvents });
-  } catch (error) {
-    console.error('Error creating event:', error);
-    io.emit('error', { message: 'Error creating event' });
-  }
-}
-
-async function handleUpdateEvents(events) {
-  try {
-    for (const event of events) {
-      await MitplanEvent.findOneAndUpdate(
-        { key: event.key },
-        { ...event, columnId: parseInt(event.columnId) || 1 },
-        { upsert: true, new: true }
-      );
-    }
-    console.log('Events updated:', events);
-    const updatedEvents = await MitplanEvent.find();
-    io.emit('stateUpdate', { events: updatedEvents });
-  } catch (error) {
-    console.error('Error updating events:', error);
-    io.emit('error', { message: 'Error updating events' });
-  }
-}
-
-async function handleGetEvents(callback) {
-  try {
-    const events = await MitplanEvent.find();
-    callback(events);
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    callback({ error: 'Error fetching events' });
-  }
-}
-
-async function handleGetSettings(callback) {
-  try {
-    let settings = await Settings.findOne();
-    if (!settings) {
-      settings = new Settings({ timelineLength: 121, columnCount: 2 });
-      await settings.save();
-    }
-    callback(settings);
-  } catch (error) {
-    console.error('Error fetching settings:', error);
-    callback({ error: 'Error fetching settings' });
-  }
-}
-
-async function handleUpdateSettings(newSettings) {
-  try {
-    let settings = await Settings.findOne();
-    if (!settings) {
-      settings = new Settings(newSettings);
-    } else {
-      settings.timelineLength = newSettings.timelineLength;
-      settings.columnCount = newSettings.columnCount;
-    }
-    await settings.save();
-    io.emit('stateUpdate', { settings });
-  } catch (error) {
-    console.error('Error updating settings:', error);
-    io.emit('error', { message: 'Error updating settings' });
-  }
-}
-
-// Log incoming requests
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-
-// Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
