@@ -1,18 +1,23 @@
-import React, { useRef, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import { getEmptyImage } from 'react-dnd-html5-backend';
 
 const ItemType = 'TIMELINE_EVENT';
 
 const TimelineEvent = ({ event, moveEvent, timelineLength }) => {
   const ref = useRef(null);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, preview] = useDrag({
     type: ItemType,
     item: { id: event.key, timestamp: event.timestamp || 0 },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
+
+  useEffect(() => {
+    preview(getEmptyImage(), { captureDraggingState: true });
+  }, [preview]);
 
   drag(ref);
 
