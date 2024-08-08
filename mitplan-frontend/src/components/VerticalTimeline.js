@@ -1,23 +1,18 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import { getEmptyImage } from 'react-dnd-html5-backend';
 
 const ItemType = 'TIMELINE_EVENT';
 
 const TimelineEvent = ({ event, moveEvent, timelineLength }) => {
   const ref = useRef(null);
 
-  const [{ isDragging }, drag, preview] = useDrag({
+  const [{ isDragging }, drag] = useDrag({
     type: ItemType,
     item: { id: event.key, timestamp: event.timestamp || 0 },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
-
-  useEffect(() => {
-    preview(getEmptyImage(), { captureDraggingState: true });
-  }, [preview]);
 
   drag(ref);
 
@@ -45,7 +40,7 @@ const TimelineEvent = ({ event, moveEvent, timelineLength }) => {
   );
 };
 
-const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd }) => {
+const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop }) => {
   const ref = useRef(null);
   const [draggedItem, setDraggedItem] = useState(null);
 
@@ -94,7 +89,7 @@ const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd }) => {
   );
 };
 
-const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd }) => {
+const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd, onDrop }) => {
   const handleMoveEvent = useCallback((id, newTimestamp, columnId) => {
     moveEvent(id, newTimestamp, columnId);
   }, [moveEvent]);
@@ -142,6 +137,7 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, 
               moveEvent={(id, newTimestamp) => handleMoveEvent(id, newTimestamp, index + 1)} 
               timelineLength={timelineLength} 
               onDragEnd={(id, newTimestamp) => onDragEnd(id, newTimestamp, index + 1)}
+              onDrop={(item, newTimestamp) => onDrop(item, index + 1, newTimestamp)}
             />
           </div>
         ))}

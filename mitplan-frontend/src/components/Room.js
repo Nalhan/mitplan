@@ -6,7 +6,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
 import CooldownPalette from './CooldownPalette';
 import EventForm from './EventForm';
-import cooldowns from '../data/cooldowns.yaml';
 
 function Room() {
   const { roomId } = useParams();
@@ -113,6 +112,29 @@ function Room() {
     socket.emit('updateEvents', roomId, updatedEvents);
   };
 
+  const handleDrop = (item, columnId, timestamp) => {
+    if (item.isNew) {
+      const newEvent = {
+        key: events.length,
+        name: item.name,
+        timestamp: parseFloat(timestamp.toFixed(2)),
+        columnId: columnId,
+        duration: item.duration,
+        color: item.color,
+      };
+      socket.emit('createEvent', roomId, newEvent);
+    } else {
+      const updatedEvents = events.map(event => {
+        if (event.key === item.key) {
+          return { ...event, timestamp: parseFloat(timestamp.toFixed(2)), columnId };
+        }
+        return event;
+      });
+      setEvents(updatedEvents);
+      saveEventsToBackend(updatedEvents);
+    }
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="Room">
@@ -137,15 +159,16 @@ function Room() {
             </div>
             <EventForm onSubmit={createEvent} columnCount={columnCount} />
             <button onClick={clearEvents}>Clear Events</button>
-            <div className="content">
-              <CooldownPalette cooldowns={cooldowns} />
+            <div className="content" style={{ display: 'flex' }}>
               <VerticalTimeline 
                 events={events} 
                 moveEvent={moveEvent} 
                 timelineLength={timelineLength}
                 columnCount={columnCount}
                 onDragEnd={handleDragEnd}
+                onDrop={handleDrop}
               />
+              <CooldownPalette />
             </div>
           </>
         ) : (

@@ -525,6 +525,10 @@ module.exports = function (webpackEnv) {
               // See https://github.com/webpack/webpack/issues/6571
               sideEffects: true,
             },
+            {
+              test: /\.ya?ml$/,
+              use: 'yaml-loader'
+            },
             // Adds support for CSS Modules, but using SASS
             // using the extension .module.scss or .module.sass
             {
@@ -543,6 +547,7 @@ module.exports = function (webpackEnv) {
                 'sass-loader'
               ),
             },
+
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
             // In production, they would get copied to the `build` folder.

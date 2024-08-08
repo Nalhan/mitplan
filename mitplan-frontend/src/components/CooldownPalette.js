@@ -1,10 +1,11 @@
 import React from 'react';
 import { useDrag } from 'react-dnd';
+import cooldowns from '../data/cooldowns.yaml';
 
 const CooldownItem = ({ cooldown }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
-    type: 'COOLDOWN',
-    item: { ...cooldown },
+    type: 'EVENT',
+    item: { ...cooldown, isNew: true },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -16,32 +17,33 @@ const CooldownItem = ({ cooldown }) => {
       style={{
         opacity: isDragging ? 0.5 : 1,
         cursor: 'move',
-        padding: '5px',
+        padding: '10px',
         margin: '5px',
         backgroundColor: cooldown.color,
         color: 'white',
         borderRadius: '5px',
+        textAlign: 'center',
       }}
     >
-      {cooldown.name} ({cooldown.duration}s)
+      {cooldown.name}
+      <br />
+      ({cooldown.duration}s)
     </div>
   );
 };
 
-const CooldownPalette = ({ cooldowns }) => {
-  // Check if cooldowns is an array and not empty
-  const hasCooldowns = Array.isArray(cooldowns) && cooldowns.length > 0;
+const CooldownPalette = () => {
+  if (!cooldowns || !Array.isArray(cooldowns)) {
+    console.error('Invalid cooldowns data:', cooldowns);
+    return <div>Error: Invalid cooldowns data</div>;
+  }
 
   return (
-    <div className="cooldown-palette">
-      <h3>Cooldown Palette</h3>
-      {hasCooldowns ? (
-        cooldowns.map((cooldown) => (
-          <CooldownItem key={cooldown.id} cooldown={cooldown} />
-        ))
-      ) : (
-        <p>No cooldowns available</p>
-      )}
+    <div className="cooldown-palette" style={{ width: '150px', padding: '10px' }}>
+      <h3>Cooldowns</h3>
+      {cooldowns.map((cooldown) => (
+        <CooldownItem key={cooldown.id} cooldown={cooldown} />
+      ))}
     </div>
   );
 };
