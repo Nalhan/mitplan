@@ -1,153 +1,64 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
-import { getEmptyImage } from 'react-dnd-html5-backend';
+import React, { useRef, useCallback } from 'react';
+import { useDrop } from 'react-dnd';
+import TimelineEvent from './TimelineEvent';
 
 const ItemType = 'TIMELINE_EVENT';
 
-const TimelineEvent = ({ event, moveEvent, timelineLength }) => {
+const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, columnId, onDeleteEvent }) => {
   const ref = useRef(null);
-
-  const [{ isDragging }, drag, preview] = useDrag({
-    type: ItemType,
-    item: { id: event.key, timestamp: event.timestamp || 0 },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-
-  useEffect(() => {
-    preview(getEmptyImage(), { captureDraggingState: true });
-  }, [preview]);
-
-  drag(ref);
-
-  const timestamp = event.timestamp || 0;
-
-  return (
-    <div 
-      ref={ref}
-      style={{ 
-        padding: '5px', 
-        border: '1px solid black', 
-        margin: '2px',
-        cursor: 'move',
-        backgroundColor: 'white',
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: `${(timestamp / timelineLength) * 100}%`,
-        transform: 'translateY(-50%)',
-      }}
-    >
-      {event.name} (Timestamp: {timestamp.toFixed(2)})
-    </div>
-  );
-};
-
-const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, columnId }) => {
-  const ref = useRef(null);
-  const [draggedItem, setDraggedItem] = useState(null);
-
-  const calculateTimestamp = useCallback((clientY) => {
-    const columnRect = ref.current.getBoundingClientRect();
-    const relativeY = clientY - columnRect.top;
-    const calculatedTimestamp = (relativeY / columnRect.height) * timelineLength;
-    return Math.max(0, Math.min(calculatedTimestamp, timelineLength));
-  }, [timelineLength]);
-
   const [, drop] = useDrop({
     accept: ItemType,
     hover: (item, monitor) => {
-      const clientOffset = monitor.getClientOffset();
-      if (clientOffset) {
-        const draggedTimestamp = calculateTimestamp(clientOffset.y);
-        
-        if (draggedTimestamp !== item.timestamp) {
-          setDraggedItem({ ...item, timestamp: draggedTimestamp });
-          if (!item.isNew) {
-            moveEvent(item.id, draggedTimestamp, columnId);
-          }
+      const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
+      if (draggedTimestamp !== item.timestamp) {
+        if (!item.isNew) {
+          moveEvent(item.id, draggedTimestamp, columnId);
         }
       }
     },
     drop: (item, monitor) => {
-      const clientOffset = monitor.getClientOffset();
-      if (clientOffset) {
-        const draggedTimestamp = calculateTimestamp(clientOffset.y);
-
-        if (item.isNew) {
-          onDrop(item, columnId, draggedTimestamp);
-        } else {
-          onDragEnd(item.id, draggedTimestamp, columnId);
-        }
-      }
-      setDraggedItem(null);
+      const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
+      item.isNew ? onDrop(item, columnId, draggedTimestamp) : onDragEnd(item.id, draggedTimestamp, columnId);
     },
   });
+
+  const calculateTimestamp = useCallback((clientY) => {
+    if (!clientY || !ref.current) return 0;
+    const columnRect = ref.current.getBoundingClientRect();
+    const relativeY = clientY - columnRect.top;
+    return Math.max(0, Math.min((relativeY / columnRect.height) * timelineLength, timelineLength));
+  }, [timelineLength]);
 
   drop(ref);
 
   return (
-    <div
-      ref={ref}
-      style={{
-        position: 'relative',
-        height: '100%',
-        width: '100%',
-      }}
-    >
+    <div ref={ref} style={{ position: 'relative', height: '100%', width: '100%' }}>
       {events.map((event) => (
         <TimelineEvent 
           key={event.key} 
           event={event} 
-          moveEvent={moveEvent}
           timelineLength={timelineLength}
+          onDelete={() => onDeleteEvent(event.key)}
         />
       ))}
     </div>
   );
 };
 
-const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd, onDrop }) => {
+const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd, onDrop, onDeleteEvent }) => {
   const handleMoveEvent = useCallback((id, newTimestamp, columnId) => {
     moveEvent(id, newTimestamp, columnId);
   }, [moveEvent]);
 
-  // Split events into columns
   const columnEvents = Array.from({ length: columnCount }, (_, index) => 
     events.filter(event => event.columnId === index + 1 || (!event.columnId && index === 0))
   );
 
-  const timestampWidth = 70; // Set a fixed width for the timestamp column
+  const timestampWidth = 70;
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
-      <div style={{ 
-        width: `${timestampWidth}px`, 
-        flexShrink: 0, 
-        borderRight: '1px solid #ccc', 
-        position: 'relative' 
-      }}>
-        {Array.from({ length: Math.floor(timelineLength / 5) + 1 }, (_, i) => (
-          <div 
-            key={i * 5} 
-            style={{ 
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: `${(i * 5 / timelineLength) * 100}%`,
-              transform: 'translateY(-50%)',
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'flex-end', 
-              paddingRight: '5px',
-              height: '20px',
-            }}
-          >
-            {i * 5} sec
-          </div>
-        ))}
-      </div>
+      <TimestampColumn timelineLength={timelineLength} timestampWidth={timestampWidth} />
       <div style={{ display: 'flex', flexGrow: 1 }}>
         {columnEvents.map((events, index) => (
           <div key={index} style={{ flexGrow: 1, flexBasis: 0 }}>
@@ -158,6 +69,7 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, 
               onDragEnd={(id, newTimestamp) => onDragEnd(id, newTimestamp, index + 1)}
               onDrop={(item, columnId, newTimestamp) => onDrop(item, columnId, newTimestamp)}
               columnId={index + 1}
+              onDeleteEvent={onDeleteEvent}
             />
           </div>
         ))}
@@ -165,5 +77,34 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, 
     </div>
   );
 };
+
+const TimestampColumn = ({ timelineLength, timestampWidth }) => (
+  <div style={{ 
+    width: `${timestampWidth}px`, 
+    flexShrink: 0, 
+    borderRight: '1px solid #ccc', 
+    position: 'relative' 
+  }}>
+    {Array.from({ length: Math.floor(timelineLength / 5) + 1 }, (_, i) => (
+      <div 
+        key={i * 5} 
+        style={{ 
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: `${(i * 5 / timelineLength) * 100}%`,
+          transform: 'translateY(-50%)',
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'flex-end', 
+          paddingRight: '5px',
+          height: '20px',
+        }}
+      >
+        {i * 5} sec
+      </div>
+    ))}
+  </div>
+);
 
 export default VerticalTimeline;

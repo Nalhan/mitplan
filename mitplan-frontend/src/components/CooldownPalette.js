@@ -10,6 +10,7 @@ const CooldownItem = ({ cooldown }) => {
       name: cooldown.name,
       duration: cooldown.duration,
       color: cooldown.color,
+      icon: cooldown.icon,
       isNew: true
     },
     collect: (monitor) => ({ 
@@ -17,23 +18,35 @@ const CooldownItem = ({ cooldown }) => {
     }),
   }));
 
+  const [imageError, setImageError] = React.useState(false);
+
   return (
     <div
       ref={drag}
       style={{
         opacity: isDragging ? 0.5 : 1,
         cursor: 'move',
-        padding: '10px',
-        margin: '5px',
+        width: '50px',
+        height: '50px',
+        margin: '4px',
         backgroundColor: cooldown.color,
-        color: 'white',
         borderRadius: '5px',
-        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
       }}
+      title={`${cooldown.name} (${cooldown.duration}s)`}
     >
-      {cooldown.name}
-      <br />
-      ({cooldown.duration}s)
+      {imageError ? (
+        <span>{cooldown.name[0]}</span>
+      ) : (
+        <img 
+          src={cooldown.icon} 
+          alt={cooldown.name} 
+          style={{ width: '44px', height: '44px' }} 
+          onError={() => setImageError(true)}
+        />
+      )}
     </div>
   );
 };
@@ -45,11 +58,13 @@ const CooldownPalette = () => {
   }
 
   return (
-    <div className="cooldown-palette" style={{ width: '150px', padding: '10px' }}>
+    <div className="cooldown-palette" style={{ width: '200px', padding: '10px' }}>
       <h3>Cooldowns</h3>
-      {cooldowns.map((cooldown) => (
-        <CooldownItem key={cooldown.id} cooldown={cooldown} />
-      ))}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0px' }}>
+        {cooldowns.map((cooldown) => (
+          <CooldownItem key={cooldown.id} cooldown={cooldown} />
+        ))}
+      </div>
     </div>
   );
 };

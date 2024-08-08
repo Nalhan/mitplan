@@ -86,6 +86,14 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('deleteEvent', (roomId, eventKey) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.events = room.events.filter(event => event.key !== eventKey);
+      io.to(roomId).emit('stateUpdate', { events: room.events });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });

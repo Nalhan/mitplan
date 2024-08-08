@@ -135,6 +135,14 @@ function Room() {
     }
   };
 
+  const deleteEvent = (eventKey) => {
+    if (!socket) {
+      console.error('Socket connection not established');
+      return;
+    }
+    socket.emit('deleteEvent', roomId, eventKey);
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="Room">
@@ -168,6 +176,7 @@ function Room() {
                   columnCount={columnCount}
                   onDragEnd={handleDragEnd}
                   onDrop={handleDrop}
+                  onDeleteEvent={deleteEvent}
                 />
               </div>
               <div className="cooldown-palette-container" style={{ position: 'absolute', right: 0, top: 0, bottom: 0 }}>
