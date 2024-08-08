@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
+import { getContrastColor } from '../utils/colorUtils';
 
 const ItemType = 'TIMELINE_EVENT';
 
@@ -21,6 +22,9 @@ const TimelineEvent = ({ event, timelineLength, onDelete }) => {
   const timestamp = event.timestamp || 0;
   const topPosition = `${(timestamp / timelineLength) * 100}%`;
 
+  const backgroundColor = event.color || '#f0f0f0';
+  const textColor = event.color ? getContrastColor(event.color) : '#333';
+
   return (
     <div 
       ref={ref}
@@ -30,8 +34,8 @@ const TimelineEvent = ({ event, timelineLength, onDelete }) => {
         borderRadius: '8px',
         margin: '4px',
         cursor: 'move',
-        backgroundColor: event.color || '#f0f0f0',
-        color: event.color ? '#fff' : '#333',
+        backgroundColor: backgroundColor,
+        color: textColor,
         position: 'absolute',
         left: '10px',
         right: '10px',
@@ -56,7 +60,7 @@ const TimelineEvent = ({ event, timelineLength, onDelete }) => {
           border: 'none',
           cursor: 'pointer',
           fontSize: '16px',
-          color: event.color ? '#fff' : '#ff4d4d',
+          color: textColor,
           marginLeft: '10px',
           padding: '2px 6px',
           borderRadius: '50%',

@@ -13,7 +13,7 @@ def process_csv(input_file, output_file):
                 'id': int(row['spellid']),
                 'name': row['ability'],
                 'duration': duration,
-                'color': '#3498db',  # Default color, you may want to randomize or assign based on class
+                'color': f"#{row['color'].lower()}",  # Add # in front of the color code and make lowercase
                 'icon': row['image'],
                 'referenceLink': row['wowhead link'],
                 'className': row['class name'],

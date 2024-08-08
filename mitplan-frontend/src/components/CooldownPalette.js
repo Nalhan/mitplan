@@ -60,7 +60,7 @@ const CooldownPalette = () => {
   return (
     <div className="cooldown-palette" style={{ width: '200px', padding: '10px' }}>
       <h3>Cooldowns</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0px' }}>
         {cooldowns.map((cooldown) => (
           <CooldownItem key={cooldown.id} cooldown={cooldown} />
         ))}
