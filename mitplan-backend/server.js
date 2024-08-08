@@ -65,7 +65,16 @@ io.on('connection', (socket) => {
   socket.on('createEvent', (roomId, newEvent) => {
     const room = rooms.get(roomId);
     if (room) {
-      room.events.push(newEvent);
+      const eventToAdd = {
+        key: newEvent.key,
+        name: newEvent.name,
+        timestamp: newEvent.timestamp,
+        columnId: newEvent.columnId,
+        duration: newEvent.duration,
+        color: newEvent.color,
+        icon: newEvent.icon,
+      };
+      room.events.push(eventToAdd);
       io.to(roomId).emit('stateUpdate', { events: room.events });
     }
   });

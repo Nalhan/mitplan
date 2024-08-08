@@ -121,6 +121,7 @@ function Room() {
         columnId: columnId,
         duration: item.duration,
         color: item.color,
+        icon: item.icon, // Make sure to include the icon
       };
       socket.emit('createEvent', roomId, newEvent);
     } else {
@@ -133,14 +134,6 @@ function Room() {
       setEvents(updatedEvents);
       saveEventsToBackend(updatedEvents);
     }
-  };
-
-  const deleteEvent = (eventKey) => {
-    if (!socket) {
-      console.error('Socket connection not established');
-      return;
-    }
-    socket.emit('deleteEvent', roomId, eventKey);
   };
 
   return (
@@ -176,7 +169,6 @@ function Room() {
                   columnCount={columnCount}
                   onDragEnd={handleDragEnd}
                   onDrop={handleDrop}
-                  onDeleteEvent={deleteEvent}
                 />
               </div>
               <div className="cooldown-palette-container" style={{ position: 'absolute', right: 0, top: 0, bottom: 0 }}>

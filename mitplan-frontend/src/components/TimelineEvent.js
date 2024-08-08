@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 import { getContrastColor } from '../utils/colorUtils';
@@ -25,6 +25,8 @@ const TimelineEvent = ({ event, timelineLength, onDelete }) => {
   const backgroundColor = event.color || '#f0f0f0';
   const textColor = event.color ? getContrastColor(event.color) : '#333';
 
+  const [imageError, setImageError] = useState(false);
+
   return (
     <div 
       ref={ref}
@@ -46,28 +48,54 @@ const TimelineEvent = ({ event, timelineLength, onDelete }) => {
         alignItems: 'center',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         opacity: isDragging ? 0.6 : 1,
+        padding: '5px 10px',
       }}
     >
-      <span style={{ fontWeight: 'bold' }}>{event.name}</span>
-      <span style={{ fontSize: '0.8em' }}>({timestamp.toFixed(2)}s)</span>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(event.key);
-        }}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '16px',
-          color: textColor,
-          marginLeft: '10px',
-          padding: '2px 6px',
-          borderRadius: '50%',
-        }}
-      >
-        ×
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {event.icon && !imageError ? (
+          <img 
+            src={event.icon} 
+            alt={event.name}
+            style={{ width: '24px', height: '24px' }}
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <span style={{ 
+            width: '24px', 
+            height: '24px', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: '4px',
+            fontSize: '12px'
+          }}>
+            {event.name[0]}
+          </span>
+        )}
+        <span style={{ fontWeight: 'bold' }}>{event.name}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '0.8em' }}>({timestamp.toFixed(2)}s)</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(event.key);
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '16px',
+            color: textColor,
+            marginLeft: '10px',
+            padding: '2px 6px',
+            borderRadius: '50%',
+          }}
+        >
+          ×
+        </button>
+      </div>
     </div>
   );
 };
