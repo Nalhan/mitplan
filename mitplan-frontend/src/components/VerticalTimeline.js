@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
 const ItemType = 'TIMELINE_EVENT';
@@ -40,8 +40,9 @@ const TimelineEvent = ({ event, moveEvent, timelineLength }) => {
   );
 };
 
-const EventColumn = ({ events, moveEvent, timelineLength }) => {
+const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd }) => {
   const ref = useRef(null);
+  const [draggedItem, setDraggedItem] = useState(null);
 
   const [, drop] = useDrop({
     accept: ItemType,
@@ -53,8 +54,15 @@ const EventColumn = ({ events, moveEvent, timelineLength }) => {
       const draggedTimestamp = (hoverClientY / columnRect.height) * timelineLength;
       
       if (draggedTimestamp !== item.timestamp) {
+        setDraggedItem({ ...item, timestamp: draggedTimestamp });
         moveEvent(item.id, draggedTimestamp);
       }
+    },
+    drop: (item, monitor) => {
+      if (draggedItem) {
+        onDragEnd(draggedItem.id, draggedItem.timestamp);
+      }
+      setDraggedItem(null);
     },
   });
 
@@ -81,7 +89,7 @@ const EventColumn = ({ events, moveEvent, timelineLength }) => {
   );
 };
 
-const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2 }) => {
+const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd }) => {
   const handleMoveEvent = useCallback((id, newTimestamp, columnId) => {
     moveEvent(id, newTimestamp, columnId);
   }, [moveEvent]);
@@ -128,6 +136,7 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2 }
               events={events} 
               moveEvent={(id, newTimestamp) => handleMoveEvent(id, newTimestamp, index + 1)} 
               timelineLength={timelineLength} 
+              onDragEnd={(id, newTimestamp) => onDragEnd(id, newTimestamp, index + 1)}
             />
           </div>
         ))}

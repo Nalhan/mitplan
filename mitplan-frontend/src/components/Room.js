@@ -91,6 +91,17 @@ function Room() {
     });
 
     setEvents(updatedEvents);
+  };
+
+  const handleDragEnd = (id, newTimestamp, columnId) => {
+    const updatedEvents = events.map(event => {
+      if (event.key === id) {
+        return { ...event, timestamp: parseFloat(newTimestamp.toFixed(2)), columnId };
+      }
+      return event;
+    });
+
+    setEvents(updatedEvents);
     saveEventsToBackend(updatedEvents);
   };
 
@@ -133,6 +144,7 @@ function Room() {
                 moveEvent={moveEvent} 
                 timelineLength={timelineLength}
                 columnCount={columnCount}
+                onDragEnd={handleDragEnd}
               />
             </div>
           </>
