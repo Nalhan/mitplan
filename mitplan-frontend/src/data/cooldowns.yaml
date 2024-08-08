@@ -1,14 +1,312 @@
-- id: 1
-  name: Short Cooldown
-  duration: 30
+- id: 31821
+  name: Aura Mastery
+  duration: 180.0
   color: '#3498db'
-
-- id: 2
-  name: Medium Cooldown
-  duration: 60
-  color: '#e67e22'
-  
-- id: 3
-  name: Long Cooldown
-  duration: 120
-  color: '#e74c3c'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_auramastery.jpg
+  referenceLink: https://www.wowhead.com/spell=31821/aura-mastery
+  className: Paladin Holy
+  category: DR
+- id: 31884
+  name: Avenging Wrath
+  duration: 120.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_avenginewrath.jpg
+  referenceLink: https://www.wowhead.com/spell=31884/avenging-wrath
+  className: Paladin Holy
+  category: Raid CD
+- id: 216331
+  name: Avenging Crusader
+  duration: 60.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_paladin_veneration.jpg
+  referenceLink: https://www.wowhead.com/spell=216331/avenging-crusader
+  className: Paladin Holy
+  category: ''
+- id: 200652
+  name: Tyr's Deliverance
+  duration: 90.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/inv_mace_2h_artifactsilverhand_d_01.jpg
+  referenceLink: https://www.wowhead.com/ptr-2/spell=200652/tyrs-deliverance
+  className: Paladin Holy
+  category: Minor CD
+- id: 304971
+  name: Divine Toll
+  duration: 45.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_bastion_paladin.jpg
+  referenceLink: https://www.wowhead.com/spell=304971/divine-toll
+  className: Paladin Holy
+  category: Minor CD
+- id: 414170
+  name: Daybreak
+  duration: 45.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_aspiration.jpg
+  referenceLink: https://www.wowhead.com/ptr-2/spell=414170/daybreak
+  className: Paladin Holy
+  category: Raid CD
+- id: 62618
+  name: 'Power Word: Barrier'
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_powerwordbarrier.jpg
+  referenceLink: https://www.wowhead.com/spell=62618/power-word-barrier
+  className: Priest Discipline
+  category: DR
+- id: 271466
+  name: Luminous Barrier
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_priest_burningwill.jpg
+  referenceLink: https://www.wowhead.com/spell=271466/luminous-barrier
+  className: Priest Discipline
+  category: DR
+- id: 246287
+  name: Evangelism
+  duration: 90.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_divineillumination.jpg
+  referenceLink: https://www.wowhead.com/spell=246287/evangelism
+  className: Priest Discipline
+  category: Raid CD
+- id: 47536
+  name: Rapture
+  duration: 90.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_rapture.jpg
+  referenceLink: https://www.wowhead.com/spell=47536/rapture
+  className: Priest Discipline
+  category: Minor CD
+- id: 207948
+  name: Lights Wrath
+  duration: 90.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/inv_staff_2h_artifacttome_d_01.jpg
+  referenceLink: https://www.wowhead.com/spell=207948/lights-wrath
+  className: Priest Discipline
+  category: Discipline
+- id: 421453
+  name: Uppies
+  duration: 240.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_priest_ascendance.jpg
+  referenceLink: https://www.wowhead.com/ptr-2/spell=421453/ultimate-penitence
+  className: Priest Discipline
+  category: Minor CD
+- id: 34433
+  name: Shadowfiend
+  duration: 45.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_shadow_shadowfiend.jpg
+  referenceLink: https://www.wowhead.com/spell=34433/shadowfiend
+  className: Priest Discipline
+  category: Discipline
+- id: 200174
+  name: Mindbender
+  duration: 30.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_shadow_soulleech_3.jpg
+  referenceLink: https://www.wowhead.com/spell=200174/mindbender
+  className: Priest Discipline
+  category: Discipline
+- id: 194509
+  name: Radiance 15s
+  duration: 15.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_priest_power-word.jpg
+  referenceLink: https://www.wowhead.com/spell=194509/power-word-radiance
+  className: Priest Discipline
+  category: Discipline
+- id: 194509
+  name: Radiance 20s
+  duration: 20.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_priest_power-word.jpg
+  referenceLink: https://www.wowhead.com/spell=194509/power-word-radiance
+  className: Priest Discipline
+  category: Discipline
+- id: 265202
+  name: 'Holy Word: Salvation'
+  duration: 240.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_priest_archangel.jpg
+  referenceLink: https://www.wowhead.com/spell=265202/holy-word-salvation
+  className: Priest Holy
+  category: Raid CD
+- id: 64843
+  name: Divine Hymn
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_divinehymn.jpg
+  referenceLink: https://www.wowhead.com/spell=64843/divine-hymn
+  className: Priest Holy
+  category: Raid CD
+- id: 200183
+  name: Apotheosis
+  duration: 120.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_priest_ascension.jpg
+  referenceLink: https://www.wowhead.com/spell=200183/apotheosis
+  className: Priest Holy
+  category: ''
+- id: 64901
+  name: Symbol of Hope
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_holy_symbolofhope.jpg
+  referenceLink: https://www.wowhead.com/spell=64901/symbol-of-hope
+  className: Priest Holy
+  category: DR
+- id: 370537
+  name: Stasis
+  duration: 90.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_evoker_stasis.jpg
+  referenceLink: https://www.wowhead.com/beta/spell=370537/stasis
+  className: Evoker Preservation
+  category: Minor CD
+- id: 359816
+  name: Dream Flight
+  duration: 120.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_evoker_dreamflight.jpg
+  referenceLink: https://www.wowhead.com/beta/spell=359816/dream-flight
+  className: Evoker Preservation
+  category: Raid CD
+- id: 363534
+  name: Rewind 3m
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_evoker_rewind.jpg
+  referenceLink: https://www.wowhead.com/beta/spell=363534/rewind
+  className: Evoker Preservation
+  category: Raid CD
+- id: 373270
+  name: Lifebind
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_evoker_hoverred.jpg
+  referenceLink: https://www.wowhead.com/spell=373270/lifebind
+  className: Evoker Preservation
+  category: Minor CD
+- id: 370984
+  name: Emerald Communion
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_evoker_green_01.jpg
+  referenceLink: https://www.wowhead.com/spell=370984/emerald-communion
+  className: Evoker Preservation
+  category: Minor CD
+- id: 108280
+  name: Healing Tide Totem
+  duration: 165.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_shaman_healingtide.jpg
+  referenceLink: https://www.wowhead.com/spell=108280/healing-tide-totem
+  className: Shaman Restoration
+  category: Raid CD
+- id: 98008
+  name: Spirit Link Totem
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_shaman_spiritlink.jpg
+  referenceLink: https://www.wowhead.com/spell=98008/spirit-link-totem
+  className: Shaman Restoration
+  category: DR
+- id: 207399
+  name: Ancestral Protection Totem
+  duration: 300.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_nature_reincarnation.jpg
+  referenceLink: https://www.wowhead.com/spell=207399/ancestral-protection-totem
+  className: Shaman Restoration
+  category: Utility
+- id: 114049
+  name: Ascendance
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_fire_elementaldevastation.jpg
+  referenceLink: https://www.wowhead.com/spell=114049/ascendance
+  className: Shaman Restoration
+  category: Raid CD
+- id: 108281
+  name: Ancestral Guidance
+  duration: 120.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_shaman_ancestralguidance.jpg
+  referenceLink: https://www.wowhead.com/spell=108281/ancestral-guidance
+  className: Shaman Restoration
+  category: Minor CD
+- id: 16191
+  name: Mana Tide Totem
+  duration: 165.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_frost_summonwaterelemental.jpg
+  referenceLink: https://www.wowhead.com/spell=16191/mana-tide-totem
+  className: Shaman Restoration
+  category: Minor CD
+- id: 157153
+  name: Cloudburst Totem
+  duration: 42.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_shaman_condensationtotem.jpg
+  referenceLink: https://www.wowhead.com/spell=157153/cloudburst-totem
+  className: Shaman Restoration
+  category: ''
+- id: 79206
+  name: Spiritwalkers Grace
+  duration: 120.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_shaman_spiritwalkersgrace.jpg
+  referenceLink: https://www.wowhead.com/spell=79206/spiritwalkers-grace
+  className: Shaman Restoration
+  category: Utility
+- id: 740
+  name: Tranquility
+  duration: 180.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_nature_tranquility.jpg
+  referenceLink: https://www.wowhead.com/spell=740/tranquility
+  className: Druid Resto
+  category: Raid CD
+- id: 33891
+  name: 'Incarnation: Tree of Life'
+  duration: 130.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_druid_improvedtreeform.jpg
+  referenceLink: https://www.wowhead.com/spell=33891/incarnation-tree-of-life
+  className: Druid Resto
+  category: Raid CD
+- id: 197721
+  name: Flourish
+  duration: 60.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/spell_druid_wildburst.jpg
+  referenceLink: https://www.wowhead.com/spell=197721/flourish
+  className: Druid Resto
+  category: Raid CD
+- id: 323764
+  name: Convoke the Spirits
+  duration: 60.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_ardenweald_druid.jpg
+  referenceLink: https://www.wowhead.com/spell=323764/convoke-the-spirits#icon:ability_ardenweald_druid
+  className: Druid Resto
+  category: ''
+- id: 102693
+  name: Grove Guardians
+  duration: 60.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/ability_druid_forceofnature.jpg
+  referenceLink: https://www.wowhead.com/spell=102693/grove-guardians
+  className: Druid Resto
+  category: Minor CD
+- id: 124974
+  name: Natures Vigil
+  duration: 90.0
+  color: '#3498db'
+  icon: https://wow.zamimg.com/images/wow/icons/large/achievement_zone_feralas.jpg
+  referenceLink: https://www.wowhead.com/beta/spell=124974/natures-vigil
+  className: Druid Resto
+  category: ''
