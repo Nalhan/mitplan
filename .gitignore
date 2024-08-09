@@ -1,4 +1,4 @@
 utils/scripts/input.csv
-database/*
 mitplan-backend/.env
 mitplan-frontend/.env
+
