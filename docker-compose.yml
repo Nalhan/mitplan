@@ -15,6 +15,8 @@ services:
     secrets:
       - db_password
       - jwt_secret
+    networks:
+      - mitplan-network
 
   mitplan-postgres:
     container_name: mitplan-postgres
@@ -27,13 +29,21 @@ services:
       - db_password
     volumes:
       - ${HOST_POSTGRES_DATA}:/var/lib/postgresql/data
+    networks:
+      - mitplan-network
 
   mitplan-redis:
     container_name: mitplan-redis
     image: redis:6
+    networks:
+      - mitplan-network
 
 secrets:
   db_password:
     file: ./secrets/db_password.txt
   jwt_secret:
     file: ./secrets/jwt_secret.txt
+
+networks:
+  mitplan-network:
+    driver: bridge

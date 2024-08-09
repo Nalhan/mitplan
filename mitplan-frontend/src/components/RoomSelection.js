@@ -6,7 +6,7 @@ function RoomSelection() {
   const navigate = useNavigate();
 
   const createRoom = async () => {
-    const response = await fetch('${process.env.REACT_APP_BACKEND_URL}/api/rooms', { method: 'POST' });
+    const response = await fetch('/api/rooms', { method: 'POST' });
     const data = await response.json();
     navigate(`/room/${data.roomId}`);
   };
