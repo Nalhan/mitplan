@@ -10,11 +10,15 @@ COPY mitplan-frontend/package*.json ./frontend/
 
 # Install dependencies for both frontend and backend
 RUN cd backend && npm install
-RUN cd frontend && npm install
+RUN cd frontend && rm -rf node_modules && npm ci
 
 # Copy the rest of the application code
 COPY mitplan-backend ./backend
 COPY mitplan-frontend ./frontend
+
+# Copy the .env file to both frontend and backend
+COPY .env ./backend/.env
+COPY .env ./frontend/.env
 
 # Build the frontend
 RUN cd frontend && npm run build
