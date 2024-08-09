@@ -1,4 +1,5 @@
 utils/scripts/input.csv
 mitplan-backend/.env
 mitplan-frontend/.env
-
+.env
+secrets/

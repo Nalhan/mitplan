@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  mitplan:
+    container_name: mitplan
+    build: .
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=mitplan
+      - DB_USER=mitplan_user
+      - REDIS_URL=redis://redis:6379
+      - FRONTEND_URL=http://localhost:3000
+    secrets:
+      - db_password
+      - jwt_secret
+
+  mitplan-postgres:
+    container_name: mitplan-postgres
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=mitplan
+      - POSTGRES_USER=mitplan_user
+    secrets:
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mitplan-redis:
+    container_name: mitplan-redis
+    image: redis:6
+
+volumes:
+  postgres_data:
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
