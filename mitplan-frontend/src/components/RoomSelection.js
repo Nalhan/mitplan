@@ -1,3 +1,4 @@
+require('dotenv').config();
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,7 +7,7 @@ function RoomSelection() {
   const navigate = useNavigate();
 
   const createRoom = async () => {
-    const response = await fetch('http://localhost:5000/api/rooms', { method: 'POST' });
+    const response = await fetch('${process.env.REACT_APP_BACKEND_URL}/api/rooms', { method: 'POST' });
     const data = await response.json();
     navigate(`/room/${data.roomId}`);
   };

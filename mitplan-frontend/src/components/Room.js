@@ -1,3 +1,4 @@
+require('dotenv').config();
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import io from 'socket.io-client';
@@ -15,7 +16,7 @@ function Room() {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io(process.env.REACT_APP_BACKEND_URL);
     
     newSocket.on('connect', () => {
       console.log('Connected to backend');

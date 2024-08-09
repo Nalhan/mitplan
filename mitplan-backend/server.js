@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -5,22 +6,41 @@ const Redis = require('ioredis');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const generateRoomName = require('./utils/roomNameGenerator');
+const { Sequelize, DataTypes } = require('sequelize');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL,
     methods: ['GET', 'POST'],
     credentials: true,
   },
 });
 
 // Initialize Redis client
-const redis = new Redis();
+const redis = new Redis(process.env.REDIS_URL);
+
+// Initialize Sequelize
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  dialect: 'postgres'
+});
+
+// Define models
+const Room = sequelize.define('Room', {
+  roomId: {
+    type: DataTypes.STRING,
+    primaryKey: true
+  },
+  state: DataTypes.JSONB
+});
+
+sequelize.sync();
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL,
   methods: ['GET', 'POST', 'DELETE'],
   credentials: true,
 }));
@@ -37,6 +57,7 @@ app.post('/api/rooms', async (req, res) => {
   
   const initialState = { events: [], settings: { timelineLength: 121, columnCount: 2 } };
   await redis.set(`room:${roomId}`, JSON.stringify(initialState));
+  await Room.create({ roomId, state: initialState });
   res.json({ roomId });
 });
 
@@ -45,7 +66,14 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', async (roomId) => {
     socket.join(roomId);
-    const roomData = await redis.get(`room:${roomId}`);
+    let roomData = await redis.get(`room:${roomId}`);
+    if (!roomData) {
+      const dbRoom = await Room.findOne({ where: { roomId } });
+      if (dbRoom) {
+        roomData = JSON.stringify(dbRoom.state);
+        await redis.set(`room:${roomId}`, roomData);
+      }
+    }
     if (roomData) {
       socket.emit('initialState', JSON.parse(roomData));
     } else {
@@ -88,6 +116,7 @@ io.on('connection', (socket) => {
       const room = JSON.parse(roomData);
       room.events = updatedEvents;
       await redis.set(`room:${roomId}`, JSON.stringify(room));
+      await Room.update({ state: room }, { where: { roomId } });
       io.to(roomId).emit('stateUpdate', { events: room.events });
     }
   });
@@ -115,6 +144,17 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
+});
+
+app.post('/api/rooms/:roomId/save', async (req, res) => {
+  const { roomId } = req.params;
+  const roomData = await redis.get(`room:${roomId}`);
+  if (roomData) {
+    await Room.update({ state: JSON.parse(roomData) }, { where: { roomId } });
+    res.json({ message: 'Room state saved successfully' });
+  } else {
+    res.status(404).json({ message: 'Room not found' });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
