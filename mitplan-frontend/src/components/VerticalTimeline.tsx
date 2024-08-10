@@ -34,9 +34,8 @@ const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLe
     hover: (item: any, monitor) => {
       const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
       if (draggedTimestamp !== item.timestamp) {
-        if (!item.isNew) {
-          moveEvent(item.id, draggedTimestamp, columnId);
-        }
+        item.timestamp = draggedTimestamp;
+        item.columnId = columnId;
       }
     },
     drop: (item: any, monitor) => {
@@ -58,7 +57,7 @@ const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLe
     showContextMenu([
       {
         label: 'Add new event',
-        action: () => onDrop({ isNew: true }, columnId, timestamp)
+        action: () => onDrop({ isNew: true, name: 'New Event' }, columnId, timestamp)
       }
     ], e.clientX, e.clientY);
   }, [showContextMenu, calculateTimestamp, onDrop, columnId]);

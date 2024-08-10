@@ -5,7 +5,11 @@ import {
   evokerDevAbilities,
   evokerPresAbilities,
 } from './classAbilities/evoker'
-import { monkMistweaverAbilities, monkWindwalkerAbilities } from './classAbilities/monk'
+import { 
+  monkMistweaverAbilities,
+  monkWindwalkerAbilities,
+  monkBrewmasterAbilities,
+} from './classAbilities/monk'
 import {
   mageArcaneAbilities,
   mageFireAbilities,
@@ -58,6 +62,7 @@ import {
   rogueSubAbilities,
 } from './classAbilities/rogue'
 
+
 export type WowClass =
   | 'Death Knight'
   | 'Demon Hunter'
@@ -80,11 +85,14 @@ export const equalSpecs = (a: ClassSpec, b: ClassSpec) =>
 
 export type WowSpec = string
 
+
+
 type SpecDetails = {
   abilities: Ability[]
   icon: string
   mainStat: 'intellect' | 'other'
-  isTank?: boolean
+  role: 'Tank' | 'Healer' | 'Damage'
+  melee: boolean
   displayName?: string
 }
 
@@ -94,17 +102,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: deathKnightBloodAbilities,
       icon: 'spell_deathknight_bloodpresence',
       mainStat: 'other',
-      isTank: true,
+      role: 'Tank',
+      melee: true,
     },
     Frost: {
       abilities: deathKnightFrostAbilities,
       icon: 'spell_deathknight_frostpresence',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Unholy: {
       abilities: deathKnightUnholyAbilities,
       icon: 'spell_deathknight_unholypresence',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
   },
   'Demon Hunter': {
@@ -112,13 +125,16 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: havocAbilities,
       icon: 'ability_demonhunter_specdps',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Vengeance: {
       abilities: vengeanceAbilities,
       icon: 'ability_demonhunter_spectank',
       mainStat: 'other',
-      isTank: true,
+      role: 'Tank',
       displayName: 'VDH',
+      melee: true,
     },
   },
   Druid: {
@@ -126,23 +142,30 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: druidBalanceAbilities,
       icon: 'spell_nature_starfall',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Feral: {
       abilities: druidFeralAbilities,
       icon: 'ability_druid_catform',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Guardian: {
       abilities: druidGuardianAbilities,
       icon: 'ability_racial_bearform',
       mainStat: 'other',
-      isTank: true,
+      role: 'Tank',
+      melee: true,
     },
     Restoration: {
       abilities: druidRestoAbilities,
       icon: 'spell_nature_healingtouch',
       mainStat: 'intellect',
+      role: 'Healer',
       displayName: 'Resto Druid',
+      melee: false,
     },
   },
   Evoker: {
@@ -150,16 +173,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: evokerAugAbilities,
       icon: 'classicon_evoker_augmentation',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Devastation: {
       abilities: evokerDevAbilities,
       icon: 'classicon_evoker_devastation',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Preservation: {
       abilities: evokerPresAbilities,
       icon: 'classicon_evoker_preservation',
       mainStat: 'intellect',
+      role: 'Healer',
+      melee: false,
     },
   },
   Hunter: {
@@ -167,16 +196,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: hunterBmAbilities,
       icon: 'ability_hunter_bestialdiscipline',
       mainStat: 'other',
+      role: 'Damage',
+      melee: false,
     },
     Marksmanship: {
       abilities: hunterMmAbilities,
       icon: 'ability_hunter_focusedaim',
       mainStat: 'other',
+      role: 'Damage',
+      melee: false,
     },
     Survival: {
       abilities: hunterSurvAbilities,
       icon: 'ability_hunter_camouflage',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
   },
   Mage: {
@@ -184,16 +219,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: mageArcaneAbilities,
       icon: 'spell_holy_magicalsentry',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Fire: {
       abilities: mageFireAbilities,
       icon: 'spell_fire_firebolt02',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Frost: {
       abilities: mageFrostAbilities,
       icon: 'spell_frost_frostbolt02',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
   },
   Monk: {
@@ -201,11 +242,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: monkMistweaverAbilities,
       icon: 'spell_monk_mistweaver_spec',
       mainStat: 'intellect',
+      role: 'Healer',
+      melee: true,
     },
     Windwalker: {
       abilities: monkWindwalkerAbilities,
       icon: 'spell_monk_windwalker_spec',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
+    },
+    Brewmaster: {
+      abilities: monkBrewmasterAbilities,
+      icon: 'spell_monk_brewmaster_spec',
+      mainStat: 'other',
+      role: 'Tank',
+      melee: true,
     },
   },
   Paladin: {
@@ -214,18 +266,23 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       icon: 'spell_holy_holybolt',
       mainStat: 'intellect',
       displayName: 'Holy Paladin',
+      role: 'Healer',
+      melee: true,
     },
     Protection: {
       abilities: paladinProtAbilities,
       icon: 'ability_paladin_shieldofthetemplar',
       mainStat: 'other',
-      isTank: true,
-      displayName: 'Prot Pally',
+      role: 'Tank',
+      displayName: 'Prot Paladin',
+      melee: true,
     },
     Retribution: {
       abilities: paladinRetAbilities,
       icon: 'spell_holy_auraoflight',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
   },
   Priest: {
@@ -233,17 +290,23 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: priestDiscAbilities,
       icon: 'spell_holy_powerwordshield',
       mainStat: 'intellect',
+      role: 'Healer',
+      melee: false,
     },
     Holy: {
       abilities: priestHolyAbilities,
       icon: 'spell_holy_guardianspirit',
       mainStat: 'intellect',
       displayName: 'Holy Priest',
+      role: 'Healer',
+      melee: false,
     },
     Shadow: {
       abilities: priestShadowAbilities,
       icon: 'spell_shadow_shadowwordpain',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
   },
   Rogue: {
@@ -251,16 +314,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: rogueAssAbilities,
       icon: 'ability_rogue_eviscerate',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Outlaw: {
       abilities: rogueOutlawAbilities,
       icon: 'ability_rogue_waylay',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Subtlety: {
       abilities: rogueSubAbilities,
       icon: 'ability_stealth',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
   },
   Shaman: {
@@ -268,17 +337,23 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: shamanEnhAbilities,
       icon: 'spell_shaman_improvedstormstrike',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Elemental: {
       abilities: shamanEleAbilities,
       icon: 'spell_nature_lightning',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Restoration: {
       abilities: shamanRestoAbilities,
       icon: 'spell_nature_magicimmunity',
       mainStat: 'intellect',
       displayName: 'Resto Shaman',
+      role: 'Healer',
+      melee: false,
     },
   },
   Warlock: {
@@ -286,16 +361,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: warlockAffAbilities,
       icon: 'spell_shadow_deathcoil',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Demonology: {
       abilities: warlockDemoAbilities,
       icon: 'spell_shadow_metamorphosis',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
     Destruction: {
       abilities: warlockDestroAbilities,
       icon: 'spell_shadow_rainoffire',
       mainStat: 'intellect',
+      role: 'Damage',
+      melee: false,
     },
   },
   Warrior: {
@@ -303,17 +384,22 @@ export const classSpecs: Record<WowClass, Record<WowSpec, SpecDetails>> = {
       abilities: warriorArmsAbilities,
       icon: 'ability_warrior_savageblow',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Fury: {
       abilities: warriorFuryAbilities,
       icon: 'ability_warrior_innerrage',
       mainStat: 'other',
+      role: 'Damage',
+      melee: true,
     },
     Protection: {
       abilities: warriorProtAbilities,
       icon: 'ability_warrior_defensivestance',
       mainStat: 'other',
-      isTank: true,
+      role: 'Tank',
+      melee: true,
     },
   },
 } as const

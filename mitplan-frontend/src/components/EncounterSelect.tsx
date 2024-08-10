@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { RashokEvents } from '../data/encounters/aberrus/Rashok';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Encounter {
   name: string;
@@ -12,20 +13,27 @@ const encounters: Encounter[] = [
 ];
 
 interface EncounterSelectProps {
-  onSelectEncounter: (events: typeof RashokEvents) => void;
+  onSelectEncounter: (events: typeof RashokEvents, timelineLength: number) => void;
 }
 
 const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter }) => {
   const [selectedEncounter, setSelectedEncounter] = useState<string>('');
+  const { darkMode } = useTheme();
 
   const handleEncounterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedEncounter(event.target.value);
   };
 
+  const calculateTimelineLength = (events: typeof RashokEvents): number => {
+    const lastEvent = events[events.length - 1];
+    return lastEvent.timer_dynamic + (lastEvent.phase_start || 0);
+  };
+
   const handleApplyEncounter = () => {
     const encounter = encounters.find(e => e.name === selectedEncounter);
     if (encounter) {
-      onSelectEncounter(encounter.events);
+      const timelineLength = calculateTimelineLength(encounter.events);
+      onSelectEncounter(encounter.events, timelineLength);
     }
   };
 
@@ -34,7 +42,11 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter }) 
       <select
         value={selectedEncounter}
         onChange={handleEncounterChange}
-        className="border border-gray-300 rounded-md p-2"
+        className={`border rounded-md p-2 ${
+          darkMode
+            ? 'bg-gray-700 text-white border-gray-600'
+            : 'bg-white text-gray-800 border-gray-300'
+        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >
         <option value="">Select an encounter</option>
         {encounters.map((encounter) => (
@@ -46,7 +58,13 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter }) 
       <button
         onClick={handleApplyEncounter}
         disabled={!selectedEncounter}
-        className="bg-blue-500 text-white px-4 py-2 rounded-md disabled:bg-gray-300"
+        className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+          selectedEncounter
+            ? darkMode
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              : 'bg-blue-500 hover:bg-blue-600 text-white'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >
         Apply
       </button>

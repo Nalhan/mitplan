@@ -9,7 +9,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 5,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FFFFFF"
     },
     {
         id: 2,
@@ -19,7 +20,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 14,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FF4500"
     },
     {
         id: 3,
@@ -29,7 +31,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 23,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#8A2BE2"
     },
     {
         id: 4,
@@ -39,7 +42,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 26,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FFD700"
     },
     {
         id: 5,
@@ -49,7 +53,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 30,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#00FF00"
     },
     {
         id: 6,
@@ -59,7 +64,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 41,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FF1493"
     },
     {
         id: 7,
@@ -69,7 +75,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 49,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FF1493"
     },
     {
         id: 8,
@@ -79,7 +86,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 57,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FF4500"
     },
     {
         id: 9,
@@ -89,7 +97,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 68,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#8A2BE2"
     },
     {
         id: 10,
@@ -99,7 +108,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 69,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FFD700"
     },
     {
         id: 11,
@@ -109,7 +119,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 73,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#00FF00"
     },
     {
         id: 12,
@@ -119,7 +130,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 90,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FF4500"
     },
     {
         id: 13,
@@ -129,7 +141,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 98,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#FFA500"
     },
     {
         id: 14,
@@ -139,7 +152,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 102,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#8A2BE2"
     },
     {
         id: 15,
@@ -149,7 +163,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 112,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#1E90FF"
     },
     {
         id: 16,
@@ -159,7 +174,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 117,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#1E90FF"
     },
     {
         id: 17,
@@ -169,7 +185,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 122,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#1E90FF"
     },
     {
         id: 18,
@@ -179,7 +196,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 127,
         phase_start: 0,
         phase_end: 600,
-        cleu: ""
+        cleu: "",
+        color: "#1E90FF"
     },
     {
         id: 19,
@@ -189,7 +207,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 20,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#1E90FF"
     },
     {
         id: 20,
@@ -199,7 +218,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 36,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FF4500"
     },
     {
         id: 21,
@@ -209,7 +229,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 44,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#8A2BE2"
     },
     {
         id: 22,
@@ -219,7 +240,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 48,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FFD700"
     },
     {
         id: 23,
@@ -229,7 +251,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 52,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#00FF00"
     },
     {
         id: 24,
@@ -239,7 +262,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 64,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FF1493"
     },
     {
         id: 25,
@@ -249,7 +273,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 72,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FF1493"
     },
     {
         id: 26,
@@ -259,7 +284,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 79,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FF4500"
     },
     {
         id: 27,
@@ -269,7 +295,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 90,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#8A2BE2"
     },
     {
         id: 28,
@@ -279,7 +306,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 95,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FFD700"
     },
     {
         id: 29,
@@ -289,7 +317,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 99,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#00FF00"
     },
     {
         id: 30,
@@ -299,7 +328,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 112,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FF4500"
     },
     {
         id: 31,
@@ -309,7 +339,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 122,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#FFA500"
     },
     {
         id: 32,
@@ -319,7 +350,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 123,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#8A2BE2"
     },
     {
         id: 33,
@@ -329,7 +361,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 135,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#1E90FF"
     },
     {
         id: 34,
@@ -339,7 +372,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 140,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#1E90FF"
     },
     {
         id: 35,
@@ -349,7 +383,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 145,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#1E90FF"
     },
     {
         id: 36,
@@ -359,7 +394,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 150,
         phase_start: 112,
         phase_end: 600,
-        cleu: "SAA:401419:1"
+        cleu: "SAA:401419:1",
+        color: "#1E90FF"
     },
     {
         id: 37,
@@ -369,7 +405,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 20,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#1E90FF"
     },
     {
         id: 38,
@@ -379,7 +416,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 37,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FF4500"
     },
     {
         id: 39,
@@ -389,7 +427,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 44,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#8A2BE2"
     },
     {
         id: 40,
@@ -399,7 +438,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 48,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FFD700"
     },
     {
         id: 41,
@@ -409,7 +449,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 64,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FF1493"
     },
     {
         id: 42,
@@ -419,7 +460,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 72,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FF1493"
     },
     {
         id: 43,
@@ -429,7 +471,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 83,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FF4500"
     },
     {
         id: 44,
@@ -439,7 +482,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 90,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#8A2BE2"
     },
     {
         id: 45,
@@ -449,7 +493,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 95,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FFD700"
     },
     {
         id: 46,
@@ -459,7 +504,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 115,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FF4500"
     },
     {
         id: 47,
@@ -469,7 +515,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 122,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FFA500"
     },
     {
         id: 48,
@@ -479,7 +526,8 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 123,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#8A2BE2"
     },
     {
         id: 49,
@@ -489,6 +537,7 @@ export const RashokEvents: EncounterEventType[] = [
         timer_dynamic: 143,
         phase_start: 247,
         phase_end: 600,
-        cleu: "SAA:401419:2"
+        cleu: "SAA:401419:2",
+        color: "#FF0000"
     }
 ];

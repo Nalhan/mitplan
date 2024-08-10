@@ -1,3 +1,6 @@
+/* will use later when we rework TimelinmeEvent to MitplanEvent */
+
+
 export interface AssignmentEvent {
     id: string;
     type: 'assignment' | 'cooldown' | 'text';

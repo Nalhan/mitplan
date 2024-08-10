@@ -9,6 +9,7 @@ import bodyParser from 'body-parser';
 import { Sequelize, DataTypes, Model } from 'sequelize';
 import fs from 'fs';
 import generateRoomName from './utils/roomNameGenerator';
+import { v4 as uuidv4 } from 'uuid';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '../.env') });

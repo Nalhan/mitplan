@@ -1,3 +1,5 @@
+// TODO: revisit if this is even necessary
+
 import React from 'react';
 import { useDragLayer } from 'react-dnd';
 

@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18
 WORKDIR /app
 # Copy the .env file to both frontend and backend
 # Copy package.json and package-lock.json for both frontend and backend
@@ -24,4 +24,4 @@ COPY .env ./frontend/.env
 EXPOSE 3000 5000
 
 # Start both backend and frontend
-CMD ["sh", "-c", "cd backend && npm run dev & cd frontend && npm start"]
+CMD ["sh", "-c", "cd backend && npm run dev & cd frontend && npm run dev"]

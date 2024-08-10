@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
-import CooldownPalette from './CooldownPalette';
-import EventForm from './EventForm';
+// import CooldownPalette from './CooldownPalette';
+// import EventForm from './EventForm';
 import EncounterSelect from './EncounterSelect';
 import { useTheme } from '../contexts/ThemeContext';
 import { EncounterEventType } from '../data/types';
@@ -48,15 +48,17 @@ const SheetComponent: React.FC<Sheet & {
 }) => {
   const { darkMode } = useTheme();
 
-  const createEvent = (formData: { eventName: string, eventTimestamp: number, eventColumn: number }) => {
-    const newEvent: Event = { 
-      key: Date.now().toString(),
-      name: formData.eventName, 
-      timestamp: parseFloat(formData.eventTimestamp.toString()),
-      columnId: parseInt(formData.eventColumn.toString()) || 1
-    };
-    onCreateEvent(newEvent);
-  };
+
+  // TODO: I expect this is unneeded since we can just add events to the structure directly
+  // const createEvent = (formData: { eventName: string, eventTimestamp: number, eventColumn: number }) => {
+  //   const newEvent: Event = { 
+  //     key: Date.now().toString(),
+  //     name: formData.eventName, 
+  //     timestamp: parseFloat(formData.eventTimestamp.toString()),
+  //     columnId: parseInt(formData.eventColumn.toString()) || 1
+  //   };
+  //   onCreateEvent(newEvent);
+  // };
 
   const moveEvent = (id: string, newTimestamp: number, columnId: number) => {
     const updatedEvent = events.find(event => event.key === id);
@@ -97,7 +99,6 @@ const SheetComponent: React.FC<Sheet & {
         <h2 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{name}</h2>
         <div className="space-y-6">
           <EncounterSelect onSelectEncounter={handleSelectEncounter} />
-          <EventForm onSubmit={createEvent} columnCount={columnCount} />
           <button
             onClick={onClearEvents}
             className={`${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'} text-white px-6 py-2 rounded font-semibold transition duration-300 ease-in-out`}
@@ -118,7 +119,7 @@ const SheetComponent: React.FC<Sheet & {
               />
             </div>
             <div className="absolute right-0 top-0 bottom-0 w-64">
-              <CooldownPalette />
+              {/* <CooldownPalette /> */}
             </div>
           </div>
         </div>

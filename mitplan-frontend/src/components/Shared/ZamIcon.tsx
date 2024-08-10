@@ -1,3 +1,5 @@
+/* shouts out to not even close*/
+
 import { forwardRef, type ComponentPropsWithoutRef } from 'react'
 
 interface ZamIconProps extends Omit<ComponentPropsWithoutRef<'img'>, 'src' | 'width' | 'height'> {
