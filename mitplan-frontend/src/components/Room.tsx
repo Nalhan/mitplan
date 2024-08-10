@@ -7,6 +7,7 @@ import { ContextMenuProvider } from './Shared/ContextMenu';
 import RenameSheetModal from './Shared/RenameSheetModal';
 import CopyToClipboard from './Shared/CopyToClipboard';
 import { useTheme } from '../contexts/ThemeContext';
+import { EncounterEventType } from '../data/types';
 
 interface Event {
   key: string;
@@ -18,6 +19,8 @@ interface Event {
   icon?: string;
 }
 
+
+
 interface RoomParams {
   roomId: string;
 }
@@ -26,19 +29,20 @@ const Room: React.FC = () => {
   const { roomId } = useParams<keyof RoomParams>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sheets, setSheets] = useState<{ [sheetId: string]: { name: string, events: Event[], timelineLength: number, columnCount: number } }>({});
+  const [sheets, setSheets] = useState<{ [sheetId: string]: { name: string, events: Event[], timelineLength: number, columnCount: number, encounterEvents: EncounterEventType[] } }>({});
   const [activeSheetId, setActiveSheetId] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [sheetToRename, setSheetToRename] = useState<string | null>(null);
   const { darkMode } = useTheme();
 
-  const formatSheets = (sheets: { [sheetId: string]: { name: string, events: Event[], settings: { timelineLength: number, columnCount: number } } }): { [sheetId: string]: { name: string, events: Event[], timelineLength: number, columnCount: number } } => {
+  const formatSheets = (sheets: { [sheetId: string]: { name: string, events: Event[], encounterEvents: EncounterEventType[], settings: { timelineLength: number, columnCount: number } } }): { [sheetId: string]: { name: string, events: Event[], timelineLength: number, columnCount: number, encounterEvents: EncounterEventType[] } } => {
     return Object.entries(sheets).reduce((acc, [sheetId, sheet]) => ({
       ...acc,
       [sheetId]: { 
         name: sheet.name,
-        events: sheet.events, 
+        events: sheet.events,
+        encounterEvents: sheet.encounterEvents,
         timelineLength: sheet.settings.timelineLength, 
         columnCount: sheet.settings.columnCount 
       }
@@ -53,7 +57,7 @@ const Room: React.FC = () => {
       newSocket.emit('joinRoom', roomId);
     });
 
-    newSocket.on('initialState', (data: { sheets?: { [sheetId: string]: { name: string, events: Event[], settings: { timelineLength: number, columnCount: number } } } }) => {
+    newSocket.on('initialState', (data: { sheets?: { [sheetId: string]: { name: string, events: Event[], encounterEvents: EncounterEventType[], settings: { timelineLength: number, columnCount: number } } } }) => {
       if (data.sheets) {
         const formattedSheets = formatSheets(data.sheets);
         setSheets(formattedSheets);
@@ -67,8 +71,11 @@ const Room: React.FC = () => {
       }
     });
 
-    newSocket.on('stateUpdate', ((data: { sheets?: { [sheetId: string]: { name: string, events: Event[], settings: { timelineLength: number, columnCount: number } } } }) => {
-      if (data.sheets) setSheets(formatSheets(data.sheets));
+    newSocket.on('stateUpdate', ((data: { sheets?: { [sheetId: string]: { name: string, events: Event[], encounterEvents: EncounterEventType[], settings: { timelineLength: number, columnCount: number } } } }) => {
+      if (data.sheets) {
+        setSheets(formatSheets(data.sheets));
+        console.log('State updated:', data.sheets);
+      }
     }) as any);
 
     newSocket.on('error', (error: string) => {
@@ -131,6 +138,11 @@ const Room: React.FC = () => {
       }
     });
   };
+  
+  const updateEncounterEvents = (sheetId: string, encounterEvents: EncounterEventType[]) => {
+    if (!socket) return;
+    socket.emit('updateEncounterEvents', roomId, sheetId, encounterEvents);
+  };
 
   const deleteEvent = (sheetId: string, eventKey: string) => {
     if (!socket) return;
@@ -160,6 +172,7 @@ const Room: React.FC = () => {
               events={sheets[activeSheetId].events}
               timelineLength={sheets[activeSheetId].timelineLength}
               columnCount={sheets[activeSheetId].columnCount}
+              encounterEvents={sheets[activeSheetId].encounterEvents}
               onCreateEvent={createEvent}
               onClearEvents={() => clearEvents(activeSheetId)}
               onUpdateEvent={(updatedEvent) => {
@@ -167,6 +180,7 @@ const Room: React.FC = () => {
                 updateEvent(activeSheetId, updatedEvent);
               }}
               onDeleteEvent={(eventKey) => deleteEvent(activeSheetId, eventKey)}
+              onUpdateEncounterEvents={(encounterEvents) => updateEncounterEvents(activeSheetId, encounterEvents)}
             />
           )}
         </div>

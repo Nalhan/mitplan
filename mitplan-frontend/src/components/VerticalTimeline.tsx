@@ -1,8 +1,10 @@
 import React, { useRef, useCallback, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
 import TimelineEvent from './TimelineEvent';
+import EncounterEvent from './EncounterEvent';
 import { useTheme } from '../contexts/ThemeContext';
 import { useContextMenu } from './Shared/ContextMenu';
+import { EncounterEventType } from '../data/types';
 
 const ItemType = 'TIMELINE_EVENT';
 
@@ -89,10 +91,25 @@ interface VerticalTimelineProps {
   onDragEnd: (id: string, newTimestamp: number, columnId: number) => void;
   onDrop: (item: any, columnId: number, newTimestamp: number) => void;
   onDeleteEvent: (key: string) => void;
+  encounterEvents?: EncounterEventType[]; // Make this prop optional
 }
 
-const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd, onDrop, onDeleteEvent }) => {
+const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ 
+  events, 
+  moveEvent, 
+  timelineLength, 
+  columnCount = 2, 
+  onDragEnd, 
+  onDrop, 
+  onDeleteEvent, 
+  encounterEvents = [] // Provide a default empty array
+}) => {
   const { darkMode } = useTheme();
+
+  useEffect(() => {
+    console.log('VerticalTimeline events updated:', events);
+  }, [events]);
+
   const handleMoveEvent = useCallback((id: string, newTimestamp: number, columnId: number) => {
     moveEvent(id, newTimestamp, columnId);
   }, [moveEvent]);
@@ -115,7 +132,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ events, moveEvent, 
 
   return (
     <div className={`flex h-screen ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden`}>
-      <TimestampColumn timelineLength={timelineLength} />
+      <TimestampColumn timelineLength={timelineLength} encounterEvents={encounterEvents} />
       <div className={`flex flex-grow ${darkMode ? 'divide-gray-700' : 'divide-gray-200'} divide-x`}>
         {columnEvents.map((events, index) => (
           <div key={index} className="flex-grow flex-basis-0">
@@ -137,9 +154,10 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ events, moveEvent, 
 
 interface TimestampColumnProps {
   timelineLength: number;
+  encounterEvents: EncounterEventType[];
 }
 
-const TimestampColumn: React.FC<TimestampColumnProps> = ({ timelineLength }) => {
+const TimestampColumn: React.FC<TimestampColumnProps> = ({ timelineLength, encounterEvents }) => {
   const { darkMode } = useTheme();
   return (
     <div className={`w-20 flex-shrink-0 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'} border-r relative`}>
@@ -152,6 +170,9 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({ timelineLength }) => 
           {i * 5} sec
           <div className={`absolute right-0 w-2 h-px ${darkMode ? 'bg-gray-500' : 'bg-gray-400'}`}></div>
         </div>
+      ))}
+      {encounterEvents && encounterEvents.map((event) => (
+        <EncounterEvent key={event.id} event={event} timelineLength={timelineLength} />
       ))}
     </div>
   );

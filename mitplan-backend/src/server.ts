@@ -19,6 +19,7 @@ interface RoomState {
     [key: string]: {
       name: string;
       events: any[];
+      encounterEvents: any[];
       settings: {
         timelineLength: number;
         columnCount: number;
@@ -105,12 +106,13 @@ interface ClientToServerEvents {
   joinRoom: (roomId: string) => void;
   clearEvents: (roomId: string, sheetId: string) => void;
   createEvent: (roomId: string, sheetId: string, newEvent: any) => void;
-  updateEvent: (roomId: string, sheetId: string, updatedEvent: any) => void;
   updateSettings: (roomId: string, sheetId: string, newSettings: any) => void;
   deleteEvent: (roomId: string, sheetId: string, eventKey: string) => void;
   createSheet: (roomId: string, sheetId: string) => void;
   deleteSheet: (roomId: string, sheetId: string) => void;
   renameSheet: (roomId: string, sheetId: string, newName: string) => void;
+  updateEvent: (roomId: string, sheetId: string, updatedEvent: any) => void;
+  updateEncounterEvents: (roomId: string, sheetId: string, encounterEvents: any[]) => void;
 }
 
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
@@ -151,7 +153,12 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       const room: RoomState = JSON.parse(roomData);
       if (!room.sheets) room.sheets = {};
       if (!room.sheets[sheetId]) {
-        room.sheets[sheetId] = { name: sheetId, events: [], settings: { timelineLength: 121, columnCount: 2 } };
+        room.sheets[sheetId] = { 
+          name: sheetId, 
+          events: [], 
+          encounterEvents: [],
+          settings: { timelineLength: 121, columnCount: 2 } 
+        };
       }
       room.sheets[sheetId].events.push(event);
       await redis.set(`room:${roomId}`, JSON.stringify(room));
@@ -213,7 +220,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     if (roomData) {
       const room: RoomState = JSON.parse(roomData);
       if (!room.sheets) room.sheets = {};
-      room.sheets[sheetId] = { name: sheetId, events: [], settings: { timelineLength: 121, columnCount: 2 } };
+      room.sheets[sheetId] = { name: sheetId, events: [], encounterEvents: [], settings: { timelineLength: 121, columnCount: 2 } };
       await redis.set(`room:${roomId}`, JSON.stringify(room));
       io.to(roomId).emit('stateUpdate', { sheets: room.sheets });
     }
@@ -237,6 +244,19 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         room.sheets[sheetId].name = newName;
         await redis.set(`room:${roomId}`, JSON.stringify(room));
         console.log(`Sheet renamed: roomId=${roomId}, sheetId=${sheetId}, newName=${newName}`);
+        io.to(roomId).emit('stateUpdate', { sheets: room.sheets });
+      }
+    }
+  });
+
+  socket.on('updateEncounterEvents', async (roomId: string, sheetId: string, encounterEvents: any[]) => {
+    const roomData = await redis.get(`room:${roomId}`);
+    if (roomData) {
+      const room: RoomState = JSON.parse(roomData);
+      if (room.sheets && room.sheets[sheetId]) {
+        room.sheets[sheetId].encounterEvents = encounterEvents;
+        await redis.set(`room:${roomId}`, JSON.stringify(room));
+        console.log(`Encounter events updated: roomId=${roomId}, sheetId=${sheetId}`);
         io.to(roomId).emit('stateUpdate', { sheets: room.sheets });
       }
     }
