@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import io, { Socket } from 'socket.io-client';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import VerticalTimeline from './VerticalTimeline';
-import CooldownPalette from './CooldownPalette';
-import EventForm from './EventForm';
+import SheetComponent from './Sheet';
+import SheetNavigation from './SheetNavigation';
+import { ContextMenuProvider } from './Shared/ContextMenu';
+import RenameSheetModal from './Shared/RenameSheetModal';
+import CopyToClipboard from './Shared/CopyToClipboard';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Event {
   key: string;
@@ -23,10 +24,26 @@ interface RoomParams {
 
 const Room: React.FC = () => {
   const { roomId } = useParams<keyof RoomParams>();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [timelineLength, setTimelineLength] = useState<number | null>(null);
-  const [columnCount, setColumnCount] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sheets, setSheets] = useState<{ [sheetId: string]: { name: string, events: Event[], timelineLength: number, columnCount: number } }>({});
+  const [activeSheetId, setActiveSheetId] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [sheetToRename, setSheetToRename] = useState<string | null>(null);
+  const { darkMode } = useTheme();
+
+  const formatSheets = (sheets: { [sheetId: string]: { name: string, events: Event[], settings: { timelineLength: number, columnCount: number } } }): { [sheetId: string]: { name: string, events: Event[], timelineLength: number, columnCount: number } } => {
+    return Object.entries(sheets).reduce((acc, [sheetId, sheet]) => ({
+      ...acc,
+      [sheetId]: { 
+        name: sheet.name,
+        events: sheet.events, 
+        timelineLength: sheet.settings.timelineLength, 
+        columnCount: sheet.settings.columnCount 
+      }
+    }), {});
+  };
 
   useEffect(() => {
     const newSocket = io(process.env.REACT_APP_BACKEND_URL as string);
@@ -36,21 +53,23 @@ const Room: React.FC = () => {
       newSocket.emit('joinRoom', roomId);
     });
 
-    newSocket.on('initialState', (data: { events?: Event[], settings?: { timelineLength: number, columnCount: number } }) => {
-      if (data.events) setEvents(data.events);
-      if (data.settings) {
-        setTimelineLength(data.settings.timelineLength);
-        setColumnCount(data.settings.columnCount);
+    newSocket.on('initialState', (data: { sheets?: { [sheetId: string]: { name: string, events: Event[], settings: { timelineLength: number, columnCount: number } } } }) => {
+      if (data.sheets) {
+        const formattedSheets = formatSheets(data.sheets);
+        setSheets(formattedSheets);
+        
+        const hashSheetId = location.hash.slice(1);
+        if (hashSheetId && formattedSheets[hashSheetId]) {
+          setActiveSheetId(hashSheetId);
+        } else if (Object.keys(formattedSheets).length > 0) {
+          setActiveSheetId(Object.keys(formattedSheets)[0]);
+        }
       }
     });
 
-    newSocket.on('stateUpdate', (data: { events?: Event[], settings?: { timelineLength: number, columnCount: number } }) => {
-      if (data.events) setEvents(data.events);
-      if (data.settings) {
-        setTimelineLength(data.settings.timelineLength);
-        setColumnCount(data.settings.columnCount);
-      }
-    });
+    newSocket.on('stateUpdate', ((data: { sheets?: { [sheetId: string]: { name: string, events: Event[], settings: { timelineLength: number, columnCount: number } } } }) => {
+      if (data.sheets) setSheets(formatSheets(data.sheets));
+    }) as any);
 
     newSocket.on('error', (error: string) => {
       console.error('Socket error:', error);
@@ -61,154 +80,121 @@ const Room: React.FC = () => {
     return () => {
       newSocket.disconnect();
     };
-  }, [roomId]);
+  }, [roomId, location.hash]);
 
   useEffect(() => {
-    if (socket && timelineLength !== null && columnCount !== null) {
-      socket.emit('updateSettings', roomId, { timelineLength, columnCount });
+    // Update URL hash when active sheet changes
+    if (activeSheetId) {
+      navigate(`#${activeSheetId}`, { replace: true });
     }
-  }, [timelineLength, columnCount, socket, roomId]);
+  }, [activeSheetId, navigate]);
 
-  const createEvent = (formData: { eventName: string, eventTimestamp: number, eventColumn: number }) => {
-    if (!socket) {
-      console.error('Socket connection not established');
-      return;
-    }
-    const newEvent: Event = { 
-      key: events.length.toString(), 
-      name: formData.eventName, 
-      timestamp: parseFloat(formData.eventTimestamp.toString()),
-      columnId: parseInt(formData.eventColumn.toString()) || 1
-    };
-    socket.emit('createEvent', roomId, newEvent);
+  const createSheet = (sheetId: string) => {
+    if (!socket) return;
+    socket.emit('createSheet', roomId, sheetId);
   };
 
-  const clearEvents = () => {
-    if (!socket) {
-      console.error('Socket connection not established');
-      return;
-    }
-    socket.emit('clearEvents', roomId);
+  const switchSheet = (sheetId: string) => {
+    setActiveSheetId(sheetId);
   };
 
-  const moveEvent = (id: string, newTimestamp: number, columnId: number) => {
-    const updatedEvents = events.map(event => {
-      if (event.key === id) {
-        return { ...event, timestamp: parseFloat(newTimestamp.toFixed(2)), columnId };
+  const deleteSheet = (sheetId: string) => {
+    if (!socket) return;
+    socket.emit('deleteSheet', roomId, sheetId);
+  };
+
+  const createEvent = (newEvent: Event) => {
+    if (!socket || !activeSheetId) return;
+    socket.emit('createEvent', roomId, activeSheetId, newEvent);
+  };
+
+  const clearEvents = (sheetId: string) => {
+    if (!socket) return;
+    socket.emit('clearEvents', roomId, sheetId);
+  };
+
+  const updateEvent = (sheetId: string, updatedEvent: Event) => {
+    console.log('Attempting to update event:', { sheetId, updatedEvent });
+    if (!socket) {
+      console.error('Socket is not connected');
+      return;
+    }
+    if (!socket.connected) {
+      console.error('Socket is not in connected state');
+      return;
+    }
+    socket.emit('updateEvent', roomId, sheetId, updatedEvent, (error: any) => {
+      if (error) {
+        console.error('Error updating event:', error);
+      } else {
+        console.log('Event update emitted successfully');
       }
-      return event;
     });
-
-    setEvents(updatedEvents);
   };
 
-  const handleDragEnd = (id: string, newTimestamp: number, columnId: number) => {
-    const updatedEvents = events.map(event => {
-      if (event.key === id) {
-        return { ...event, timestamp: parseFloat(newTimestamp.toFixed(2)), columnId };
-      }
-      return event;
-    });
-
-    setEvents(updatedEvents);
-    saveEventsToBackend(updatedEvents);
+  const deleteEvent = (sheetId: string, eventKey: string) => {
+    if (!socket) return;
+    console.log(`Deleting event: sheetId=${sheetId}, eventKey=${eventKey}`);
+    socket.emit('deleteEvent', roomId, sheetId, eventKey);
   };
 
-  const saveEventsToBackend = (updatedEvents: Event[]) => {
-    if (!socket) {
-      console.error('Socket connection not established');
-      return;
-    }
-    socket.emit('updateEvents', roomId, updatedEvents);
-  };
-
-  const handleDrop = (item: any, columnId: number, timestamp: number) => {
-    if (item.isNew) {
-      const newEvent: Event = {
-        key: events.length.toString(),
-        name: item.name,
-        timestamp: parseFloat(timestamp.toFixed(2)),
-        columnId: columnId,
-        duration: item.duration,
-        color: item.color,
-        icon: item.icon,
-      };
-      socket?.emit('createEvent', roomId, newEvent);
-    } else {
-      const updatedEvents = events.map(event => {
-        if (event.key === item.id) {
-          return { ...event, timestamp: parseFloat(timestamp.toFixed(2)), columnId };
-        }
-        return event;
-      });
-      setEvents(updatedEvents);
-      saveEventsToBackend(updatedEvents);
-    }
-  };
-
-  const onDeleteEvent = (eventKey: string) => {
-    if (!socket) {
-      console.error('Socket connection not established');
-      return;
-    }
-    const updatedEvents = events.filter(event => event.key !== eventKey);
-    setEvents(updatedEvents);
-    socket.emit('deleteEvent', roomId, eventKey);
+  const renameSheet = (sheetId: string, newName: string) => {
+    if (!socket) return;
+    socket.emit('renameSheet', roomId, sheetId, newName);
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="container mx-auto py-8 px-4">
-        <h1 className="text-4xl font-bold mb-6 text-gray-800">Mitplan - Room {roomId}</h1>
-        {timelineLength !== null && columnCount !== null ? (
-          <div className="space-y-6">
-            <div className="flex space-x-4">
-              <input
-                type="number"
-                value={timelineLength}
-                onChange={(e) => setTimelineLength(Math.max(1, parseInt(e.target.value) || 1))}
-                placeholder="Timeline Length"
-                min="1"
-                className="border border-gray-300 rounded px-4 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="number"
-                value={columnCount}
-                onChange={(e) => setColumnCount(Math.max(1, parseInt(e.target.value) || 1))}
-                placeholder="Number of Columns"
-                min="1"
-                className="border border-gray-300 rounded px-4 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <EventForm onSubmit={createEvent} columnCount={columnCount} />
-            <button
-              onClick={clearEvents}
-              className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-semibold transition duration-300 ease-in-out"
-            >
-              Clear Events
-            </button>
-            <div className="flex relative">
-              <div className="flex-1 mr-64">
-                <VerticalTimeline 
-                  events={events} 
-                  moveEvent={moveEvent} 
-                  timelineLength={timelineLength}
-                  columnCount={columnCount}
-                  onDragEnd={handleDragEnd}
-                  onDrop={handleDrop}
-                  onDeleteEvent={onDeleteEvent}
-                />
-              </div>
-              <div className="absolute right-0 top-0 bottom-0 w-64">
-                <CooldownPalette />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-lg text-gray-600">Loading...</p>
-        )}
+    <ContextMenuProvider>
+      <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+        <div className="flex-grow overflow-auto p-4">
+          <h1 className="text-4xl font-bold mb-1 text-gray-800 dark:text-gray-200">Mitplan</h1>
+          <CopyToClipboard text={`${window.location.origin}/room/${roomId}` || ''} popupText="Link copied!">
+            <h2 className="text-2xl font-bold mb-0 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-0 py-1 inline-block">
+              Room: {roomId}
+            </h2>
+          </CopyToClipboard>
+          {activeSheetId && sheets[activeSheetId] && (
+            <SheetComponent
+              id={activeSheetId}
+              name={sheets[activeSheetId].name}
+              events={sheets[activeSheetId].events}
+              timelineLength={sheets[activeSheetId].timelineLength}
+              columnCount={sheets[activeSheetId].columnCount}
+              onCreateEvent={createEvent}
+              onClearEvents={() => clearEvents(activeSheetId)}
+              onUpdateEvent={(updatedEvent) => {
+                console.log('SheetComponent triggered onUpdateEvent:', updatedEvent);
+                updateEvent(activeSheetId, updatedEvent);
+              }}
+              onDeleteEvent={(eventKey) => deleteEvent(activeSheetId, eventKey)}
+            />
+          )}
+        </div>
+        <div className="bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 p-2">
+          <SheetNavigation
+            sheets={Object.entries(sheets).map(([id, sheet]) => ({ id, name: sheet.name }))}
+            currentSheetId={activeSheetId ?? ''}
+            onSheetChange={switchSheet}
+            onCreateSheet={() => createSheet(`sheet-${Date.now()}`)}
+            onRenameSheet={(sheetId) => {
+              setSheetToRename(sheetId);
+              setIsRenameModalOpen(true);
+            }}
+            onDeleteSheet={deleteSheet}
+          />
+        </div>
       </div>
-    </DndProvider>
+      <RenameSheetModal
+        isOpen={isRenameModalOpen}
+        onClose={() => setIsRenameModalOpen(false)}
+        onRename={(newName: string) => {
+          if (sheetToRename) {
+            renameSheet(sheetToRename, newName);
+            setSheetToRename(null);
+          }
+        }}
+      />
+    </ContextMenuProvider>
   );
 };
 

@@ -1,6 +1,8 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
 import TimelineEvent from './TimelineEvent';
+import { useTheme } from '../contexts/ThemeContext';
+import { useContextMenu } from './Shared/ContextMenu';
 
 const ItemType = 'TIMELINE_EVENT';
 
@@ -23,6 +25,8 @@ interface EventColumnProps {
 
 const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, columnId, onDeleteEvent }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const { showContextMenu } = useContextMenu();
+
   const [, drop] = useDrop({
     accept: ItemType,
     hover: (item: any, monitor) => {
@@ -46,10 +50,25 @@ const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLe
     return Math.max(0, Math.min((relativeY / columnRect.height) * timelineLength, timelineLength));
   }, [timelineLength]);
 
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const timestamp = calculateTimestamp(e.clientY);
+    showContextMenu([
+      {
+        label: 'Add new event',
+        action: () => onDrop({ isNew: true }, columnId, timestamp)
+      }
+    ], e.clientX, e.clientY);
+  }, [showContextMenu, calculateTimestamp, onDrop, columnId]);
+
   drop(ref);
 
   return (
-    <div ref={ref} className="relative h-full w-full">
+    <div 
+      ref={ref} 
+      className="relative h-full w-full"
+      onContextMenu={handleContextMenu}
+    >
       {events.map((event) => (
         <TimelineEvent 
           key={event.key} 
@@ -73,6 +92,7 @@ interface VerticalTimelineProps {
 }
 
 const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd, onDrop, onDeleteEvent }) => {
+  const { darkMode } = useTheme();
   const handleMoveEvent = useCallback((id: string, newTimestamp: number, columnId: number) => {
     moveEvent(id, newTimestamp, columnId);
   }, [moveEvent]);
@@ -81,10 +101,22 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ events, moveEvent, 
     events.filter(event => event.columnId === index + 1 || (!event.columnId && index === 0))
   );
 
+  useEffect(() => {
+    const handleMouseUp = () => {
+      document.body.style.cursor = '';
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   return (
-    <div className="flex h-screen bg-gray-100 rounded-lg shadow-lg overflow-hidden">
+    <div className={`flex h-screen ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden`}>
       <TimestampColumn timelineLength={timelineLength} />
-      <div className="flex flex-grow divide-x divide-gray-200">
+      <div className={`flex flex-grow ${darkMode ? 'divide-gray-700' : 'divide-gray-200'} divide-x`}>
         {columnEvents.map((events, index) => (
           <div key={index} className="flex-grow flex-basis-0">
             <EventColumn 
@@ -107,19 +139,22 @@ interface TimestampColumnProps {
   timelineLength: number;
 }
 
-const TimestampColumn: React.FC<TimestampColumnProps> = ({ timelineLength }) => (
-  <div className="w-20 flex-shrink-0 bg-gray-200 border-r border-gray-300 relative">
-    {Array.from({ length: Math.floor(timelineLength / 5) + 1 }, (_, i) => (
-      <div 
-        key={i * 5} 
-        className="absolute left-0 right-0 flex items-center justify-end pr-2 h-5 text-sm text-gray-600"
-        style={{ top: `${(i * 5 / timelineLength) * 100}%`, transform: 'translateY(-50%)' }}
-      >
-        {i * 5} sec
-        <div className="absolute right-0 w-2 h-px bg-gray-400"></div>
-      </div>
-    ))}
-  </div>
-);
+const TimestampColumn: React.FC<TimestampColumnProps> = ({ timelineLength }) => {
+  const { darkMode } = useTheme();
+  return (
+    <div className={`w-20 flex-shrink-0 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'} border-r relative`}>
+      {Array.from({ length: Math.floor(timelineLength / 5) + 1 }, (_, i) => (
+        <div 
+          key={i * 5} 
+          className={`absolute left-0 right-0 flex items-center justify-end pr-2 h-5 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+          style={{ top: `${(i * 5 / timelineLength) * 100}%`, transform: 'translateY(-50%)' }}
+        >
+          {i * 5} sec
+          <div className={`absolute right-0 w-2 h-px ${darkMode ? 'bg-gray-500' : 'bg-gray-400'}`}></div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default VerticalTimeline;

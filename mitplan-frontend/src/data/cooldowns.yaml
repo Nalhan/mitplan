@@ -111,14 +111,6 @@
   className: Priest Discipline
   category: Discipline
 - id: 194509
-  name: Radiance 15s
-  duration: 15.0
-  color: '#ffffff'
-  icon: https://wow.zamimg.com/images/wow/icons/large/spell_priest_power-word.jpg
-  referenceLink: https://www.wowhead.com/spell=194509/power-word-radiance
-  className: Priest Discipline
-  category: Discipline
-- id: 194509
   name: Radiance 20s
   duration: 20.0
   color: '#ffffff'

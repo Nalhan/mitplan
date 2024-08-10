@@ -55,8 +55,8 @@ const CooldownItem: React.FC<CooldownItemProps> = ({ cooldown }) => {
 
 const CooldownPalette: React.FC = () => {
   return (
-    <div className="bg-gray-100 p-4 rounded-lg shadow">
-      <h2 className="text-xl font-bold mb-4">Cooldowns</h2>
+    <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow">
+      <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Cooldowns</h2>
       <div className="flex flex-wrap justify-center">
         {cooldowns.map((cooldown: Cooldown) => (
           <CooldownItem key={cooldown.id} cooldown={cooldown} />

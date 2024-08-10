@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useDrag } from 'react-dnd';
 import { FaTrash, FaClock } from 'react-icons/fa';
 
@@ -19,13 +19,23 @@ interface TimelineEventProps {
 }
 
 const TimelineEvent: React.FC<TimelineEventProps> = ({ event, timelineLength, onDelete }) => {
-  const [{ isDragging }, drag] = useDrag({
+  const ref = useRef<HTMLDivElement>(null);
+  const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: ItemType,
     item: { id: event.key, timestamp: event.timestamp },
     collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
+      isDragging: !!monitor.isDragging(),
     }),
-  });
+  }));
+
+  useEffect(() => {
+    // Create a blank image for the drag preview
+    const img = new Image();
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    preview(img);
+  }, [preview]);
+
+  drag(ref);
 
   const top = `${(event.timestamp / timelineLength) * 100}%`;
 
@@ -44,9 +54,9 @@ const TimelineEvent: React.FC<TimelineEventProps> = ({ event, timelineLength, on
 
   return (
     <div
-      ref={drag}
-      className={`absolute left-2 right-2 p-2 rounded-md shadow-md transition-all duration-200 ${
-        isDragging ? 'opacity-50 scale-105' : 'opacity-100'
+      ref={ref}
+      className={`absolute left-2 right-2 p-2 rounded-md shadow-md cursor-grab ${
+        isDragging ? 'opacity-50' : ''
       }`}
       style={{
         top,
