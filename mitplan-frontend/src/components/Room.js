@@ -136,19 +136,30 @@ function Room() {
     }
   };
 
+  const onDeleteEvent = (eventKey, columnId) => {
+    if (!socket) {
+      console.error('Socket connection not established');
+      return;
+    }
+    const updatedEvents = events.filter(event => event.key !== eventKey);
+    setEvents(updatedEvents);
+    socket.emit('deleteEvent', roomId, eventKey);
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="Room">
-        <h1>Mitplan - Room {roomId}</h1>
+      <div className="container mx-auto py-8 px-4">
+        <h1 className="text-4xl font-bold mb-6 text-gray-800">Mitplan - Room {roomId}</h1>
         {timelineLength !== null && columnCount !== null ? (
-          <>
-            <div>
+          <div className="space-y-6">
+            <div className="flex space-x-4">
               <input
                 type="number"
                 value={timelineLength}
                 onChange={(e) => setTimelineLength(Math.max(1, parseInt(e.target.value) || 1))}
                 placeholder="Timeline Length"
                 min="1"
+                className="border border-gray-300 rounded px-4 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="number"
@@ -156,12 +167,18 @@ function Room() {
                 onChange={(e) => setColumnCount(Math.max(1, parseInt(e.target.value) || 1))}
                 placeholder="Number of Columns"
                 min="1"
+                className="border border-gray-300 rounded px-4 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <EventForm onSubmit={createEvent} columnCount={columnCount} />
-            <button onClick={clearEvents}>Clear Events</button>
-            <div className="content-wrapper" style={{ display: 'flex', position: 'relative' }}>
-              <div className="timeline-container" style={{ flex: 1 }}>
+            <button
+              onClick={clearEvents}
+              className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-semibold transition duration-300 ease-in-out"
+            >
+              Clear Events
+            </button>
+            <div className="flex relative">
+              <div className="flex-1 mr-64">
                 <VerticalTimeline 
                   events={events} 
                   moveEvent={moveEvent} 
@@ -169,15 +186,16 @@ function Room() {
                   columnCount={columnCount}
                   onDragEnd={handleDragEnd}
                   onDrop={handleDrop}
+                  onDeleteEvent={onDeleteEvent}
                 />
               </div>
-              <div className="cooldown-palette-container" style={{ position: 'absolute', right: 0, top: 0, bottom: 0 }}>
+              <div className="absolute right-0 top-0 bottom-0 w-64">
                 <CooldownPalette />
               </div>
             </div>
-          </>
+          </div>
         ) : (
-          <p>Loading...</p>
+          <p className="text-lg text-gray-600">Loading...</p>
         )}
       </div>
     </DndProvider>

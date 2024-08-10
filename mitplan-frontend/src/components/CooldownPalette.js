@@ -23,27 +23,17 @@ const CooldownItem = ({ cooldown }) => {
   return (
     <div
       ref={drag}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-        cursor: 'move',
-        width: '50px',
-        height: '50px',
-        margin: '4px',
-        backgroundColor: cooldown.color,
-        borderRadius: '5px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
+      className={`w-12 h-12 m-1 rounded cursor-move flex justify-center items-center ${isDragging ? 'opacity-50' : ''}`}
+      style={{ backgroundColor: cooldown.color }}
       title={`${cooldown.name} (${cooldown.duration}s)`}
     >
       {imageError ? (
-        <span>{cooldown.name[0]}</span>
+        <span className="text-white font-bold">{cooldown.name[0]}</span>
       ) : (
         <img 
           src={cooldown.icon} 
           alt={cooldown.name} 
-          style={{ width: '44px', height: '44px' }} 
+          className="w-11 h-11"
           onError={() => setImageError(true)}
         />
       )}
@@ -52,15 +42,10 @@ const CooldownItem = ({ cooldown }) => {
 };
 
 const CooldownPalette = () => {
-  if (!cooldowns || !Array.isArray(cooldowns)) {
-    console.error('Invalid cooldowns data:', cooldowns);
-    return <div>Error: Invalid cooldowns data</div>;
-  }
-
   return (
-    <div className="cooldown-palette" style={{ width: '200px', padding: '10px' }}>
-      <h3>Cooldowns</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0px' }}>
+    <div className="bg-gray-100 p-4 rounded-lg shadow">
+      <h2 className="text-xl font-bold mb-4">Cooldowns</h2>
+      <div className="flex flex-wrap justify-center">
         {cooldowns.map((cooldown) => (
           <CooldownItem key={cooldown.id} cooldown={cooldown} />
         ))}

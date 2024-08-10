@@ -32,7 +32,7 @@ const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, col
   drop(ref);
 
   return (
-    <div ref={ref} style={{ position: 'relative', height: '100%', width: '100%' }}>
+    <div ref={ref} className="relative h-full w-full">
       {events.map((event) => (
         <TimelineEvent 
           key={event.key} 
@@ -57,11 +57,11 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, 
   const timestampWidth = 70;
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <TimestampColumn timelineLength={timelineLength} timestampWidth={timestampWidth} />
-      <div style={{ display: 'flex', flexGrow: 1 }}>
+    <div className="flex h-screen bg-gray-100 rounded-lg shadow-lg overflow-hidden">
+      <TimestampColumn timelineLength={timelineLength} />
+      <div className="flex flex-grow divide-x divide-gray-200">
         {columnEvents.map((events, index) => (
-          <div key={index} style={{ flexGrow: 1, flexBasis: 0 }}>
+          <div key={index} className="flex-grow flex-basis-0">
             <EventColumn 
               events={events} 
               moveEvent={(id, newTimestamp) => handleMoveEvent(id, newTimestamp, index + 1)} 
@@ -78,30 +78,16 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, 
   );
 };
 
-const TimestampColumn = ({ timelineLength, timestampWidth }) => (
-  <div style={{ 
-    width: `${timestampWidth}px`, 
-    flexShrink: 0, 
-    borderRight: '1px solid #ccc', 
-    position: 'relative' 
-  }}>
+const TimestampColumn = ({ timelineLength }) => (
+  <div className="w-20 flex-shrink-0 bg-gray-200 border-r border-gray-300 relative">
     {Array.from({ length: Math.floor(timelineLength / 5) + 1 }, (_, i) => (
       <div 
         key={i * 5} 
-        style={{ 
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: `${(i * 5 / timelineLength) * 100}%`,
-          transform: 'translateY(-50%)',
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'flex-end', 
-          paddingRight: '5px',
-          height: '20px',
-        }}
+        className="absolute left-0 right-0 flex items-center justify-end pr-2 h-5 text-sm text-gray-600"
+        style={{ top: `${(i * 5 / timelineLength) * 100}%`, transform: 'translateY(-50%)' }}
       >
         {i * 5} sec
+        <div className="absolute right-0 w-2 h-px bg-gray-400"></div>
       </div>
     ))}
   </div>

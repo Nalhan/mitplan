@@ -6,7 +6,7 @@ import Room from './components/Room';
 function App() {
   return (
     <Router>
-      <div className="App">
+      <div className="App bg-gray-100 min-h-screen">
         <Routes>
           <Route path="/" element={<RoomSelection />} />
           <Route path="/room/:roomId" element={<Room />} />

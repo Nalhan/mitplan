@@ -1,101 +1,67 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React from 'react';
 import { useDrag } from 'react-dnd';
-import { getEmptyImage } from 'react-dnd-html5-backend';
-import { getContrastColor } from '../utils/colorUtils';
+import { FaTrash, FaClock } from 'react-icons/fa';
 
 const ItemType = 'TIMELINE_EVENT';
 
 const TimelineEvent = ({ event, timelineLength, onDelete }) => {
-  const ref = useRef(null);
-  const [{ isDragging }, drag, preview] = useDrag({
+  const [{ isDragging }, drag] = useDrag({
     type: ItemType,
-    item: { id: event.key, timestamp: event.timestamp || 0 },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    item: { id: event.key, timestamp: event.timestamp },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
   });
 
-  useEffect(() => {
-    preview(getEmptyImage(), { captureDraggingState: true });
-  }, [preview]);
+  const top = `${(event.timestamp / timelineLength) * 100}%`;
 
-  drag(ref);
+  const getContrastColor = (bgColor) => {
+    // Simple function to determine if text should be black or white based on background color
+    const rgb = parseInt(bgColor.slice(1), 16);
+    const r = (rgb >> 16) & 0xff;
+    const g = (rgb >> 8) & 0xff;
+    const b = (rgb >> 0) & 0xff;
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return luma < 128 ? 'text-white' : 'text-gray-800';
+  };
 
-  const timestamp = event.timestamp || 0;
-  const topPosition = `${(timestamp / timelineLength) * 100}%`;
-
-  const backgroundColor = event.color || '#f0f0f0';
-  const textColor = event.color ? getContrastColor(event.color) : '#333';
-
-  const [imageError, setImageError] = useState(false);
+  const bgColor = event.color || '#3b82f6'; // default to blue-500 if no color specified
+  const textColor = getContrastColor(bgColor);
 
   return (
-    <div 
-      ref={ref}
-      style={{ 
-        padding: '10px',
-        border: '1px solid #ccc',
-        borderRadius: '8px',
-        margin: '4px',
-        cursor: 'move',
-        backgroundColor: backgroundColor,
-        color: textColor,
-        position: 'absolute',
-        left: '10px',
-        right: '10px',
-        top: topPosition,
+    <div
+      ref={drag}
+      className={`absolute left-2 right-2 p-2 rounded-md shadow-md transition-all duration-200 ${
+        isDragging ? 'opacity-50 scale-105' : 'opacity-100'
+      }`}
+      style={{
+        top,
         transform: 'translateY(-50%)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        opacity: isDragging ? 0.6 : 1,
-        padding: '5px 10px',
+        backgroundColor: bgColor,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {event.icon && !imageError ? (
-          <img 
-            src={event.icon} 
-            alt={event.name}
-            style={{ width: '24px', height: '24px' }}
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <span style={{ 
-            width: '24px', 
-            height: '24px', 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            backgroundColor: 'rgba(0,0,0,0.1)',
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}>
-            {event.name[0]}
-          </span>
-        )}
-        <span style={{ fontWeight: 'bold' }}>{event.name}</span>
+      <div className={`flex items-center justify-between ${textColor}`}>
+        <div className="flex items-center space-x-2">
+          {event.icon && (
+            <img 
+              src={event.icon} 
+              alt={event.name} 
+              className="w-6 h-6 rounded-full"
+            />
+          )}
+          <span className="font-medium truncate text-sm">{event.name}</span>
+        </div>
+        <div className="flex items-center space-x-1">
+          <FaClock className="text-xs" />
+          <span className="text-xs">{event.timestamp}s</span>
+        </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '0.8em' }}>({timestamp.toFixed(2)}s)</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(event.key);
-          }}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '16px',
-            color: textColor,
-            marginLeft: '10px',
-            padding: '2px 6px',
-            borderRadius: '50%',
-          }}
-        >
-          ×
-        </button>
-      </div>
+      <button
+        onClick={onDelete}
+        className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+      >
+        <FaTrash className="text-xs" />
+      </button>
     </div>
   );
 };

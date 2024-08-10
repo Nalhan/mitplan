@@ -1,9 +1,6 @@
-# Use an official Node runtime as the base image
-FROM node:18
-
-# Set the working directory in the container
+FROM node:18-alpine
 WORKDIR /app
-
+# Copy the .env file to both frontend and backend
 # Copy package.json and package-lock.json for both frontend and backend
 COPY mitplan-backend/package*.json ./backend/
 COPY mitplan-frontend/package*.json ./frontend/
@@ -13,8 +10,8 @@ RUN cd backend && npm install
 RUN cd frontend && npm install
 
 # Copy the rest of the application code
-COPY mitplan-backend ./backend
-COPY mitplan-frontend ./frontend
+# COPY mitplan-backend ./backend
+# COPY mitplan-frontend ./frontend
 
 # Copy the .env file to both frontend and backend
 COPY .env ./backend/.env
@@ -27,4 +24,4 @@ COPY .env ./frontend/.env
 EXPOSE 3000 5000
 
 # Start both backend and frontend
-CMD ["sh", "-c", "cd backend && npm start & cd frontend && npm start"]
+CMD ["sh", "-c", "cd backend && npm run dev & cd frontend && npm start"]
