@@ -4,11 +4,28 @@ import TimelineEvent from './TimelineEvent';
 
 const ItemType = 'TIMELINE_EVENT';
 
-const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, columnId, onDeleteEvent }) => {
-  const ref = useRef(null);
+interface Event {
+  key: string;
+  timestamp: number;
+  columnId: number;
+  name: string;
+}
+
+interface EventColumnProps {
+  events: Event[];
+  moveEvent: (id: string, newTimestamp: number, columnId: number) => void;
+  timelineLength: number;
+  onDragEnd: (id: string, newTimestamp: number, columnId: number) => void;
+  onDrop: (item: any, columnId: number, newTimestamp: number) => void;
+  columnId: number;
+  onDeleteEvent: (key: string) => void;
+}
+
+const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, columnId, onDeleteEvent }) => {
+  const ref = useRef<HTMLDivElement>(null);
   const [, drop] = useDrop({
     accept: ItemType,
-    hover: (item, monitor) => {
+    hover: (item: any, monitor) => {
       const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
       if (draggedTimestamp !== item.timestamp) {
         if (!item.isNew) {
@@ -16,13 +33,13 @@ const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, col
         }
       }
     },
-    drop: (item, monitor) => {
+    drop: (item: any, monitor) => {
       const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
       item.isNew ? onDrop(item, columnId, draggedTimestamp) : onDragEnd(item.id, draggedTimestamp, columnId);
     },
   });
 
-  const calculateTimestamp = useCallback((clientY) => {
+  const calculateTimestamp = useCallback((clientY: number | undefined): number => {
     if (!clientY || !ref.current) return 0;
     const columnRect = ref.current.getBoundingClientRect();
     const relativeY = clientY - columnRect.top;
@@ -45,16 +62,24 @@ const EventColumn = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, col
   );
 };
 
-const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd, onDrop, onDeleteEvent }) => {
-  const handleMoveEvent = useCallback((id, newTimestamp, columnId) => {
+interface VerticalTimelineProps {
+  events: Event[];
+  moveEvent: (id: string, newTimestamp: number, columnId: number) => void;
+  timelineLength: number;
+  columnCount?: number;
+  onDragEnd: (id: string, newTimestamp: number, columnId: number) => void;
+  onDrop: (item: any, columnId: number, newTimestamp: number) => void;
+  onDeleteEvent: (key: string) => void;
+}
+
+const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ events, moveEvent, timelineLength, columnCount = 2, onDragEnd, onDrop, onDeleteEvent }) => {
+  const handleMoveEvent = useCallback((id: string, newTimestamp: number, columnId: number) => {
     moveEvent(id, newTimestamp, columnId);
   }, [moveEvent]);
 
   const columnEvents = Array.from({ length: columnCount }, (_, index) => 
     events.filter(event => event.columnId === index + 1 || (!event.columnId && index === 0))
   );
-
-  const timestampWidth = 70;
 
   return (
     <div className="flex h-screen bg-gray-100 rounded-lg shadow-lg overflow-hidden">
@@ -78,7 +103,11 @@ const VerticalTimeline = ({ events, moveEvent, timelineLength, columnCount = 2, 
   );
 };
 
-const TimestampColumn = ({ timelineLength }) => (
+interface TimestampColumnProps {
+  timelineLength: number;
+}
+
+const TimestampColumn: React.FC<TimestampColumnProps> = ({ timelineLength }) => (
   <div className="w-20 flex-shrink-0 bg-gray-200 border-r border-gray-300 relative">
     {Array.from({ length: Math.floor(timelineLength / 5) + 1 }, (_, i) => (
       <div 

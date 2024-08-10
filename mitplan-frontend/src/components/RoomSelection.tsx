@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function RoomSelection() {
-  const [roomId, setRoomId] = useState('');
+const RoomSelection: React.FC = () => {
+  const [roomId, setRoomId] = useState<string>('');
   const navigate = useNavigate();
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = (): void => {
     if (roomId) {
       navigate(`/room/${roomId}`);
     }
   };
 
-  const handleCreateRoom = async () => {
+  const handleCreateRoom = async (): Promise<void> => {
     try {
-      const response = await axios.post(`/api/rooms`);
+      const response = await axios.post<{ roomId: string }>(`/api/rooms`);
       const { roomId } = response.data;
       navigate(`/room/${roomId}`);
     } catch (error) {
@@ -29,7 +29,7 @@ function RoomSelection() {
       <input
         type="text"
         value={roomId}
-        onChange={(e) => setRoomId(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRoomId(e.target.value)}
         placeholder="Enter room ID"
         className="border border-gray-300 rounded px-4 py-2 mb-4 w-64"
       />
@@ -49,6 +49,6 @@ function RoomSelection() {
       </div>
     </div>
   );
-}
+};
 
 export default RoomSelection;

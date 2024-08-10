@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import RoomSelection from './components/RoomSelection';
 import Room from './components/Room';
 
-function App() {
+const App: React.FC = () => {
   return (
     <Router>
       <div className="App bg-gray-100 min-h-screen">
@@ -14,6 +14,6 @@ function App() {
       </div>
     </Router>
   );
-}
+};
 
 export default App;

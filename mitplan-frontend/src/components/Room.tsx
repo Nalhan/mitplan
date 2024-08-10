@@ -1,28 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
 import CooldownPalette from './CooldownPalette';
 import EventForm from './EventForm';
 
-function Room() {
-  const { roomId } = useParams();
-  const [events, setEvents] = useState([]);
-  const [timelineLength, setTimelineLength] = useState(null);
-  const [columnCount, setColumnCount] = useState(null);
-  const [socket, setSocket] = useState(null);
+interface Event {
+  key: string;
+  name: string;
+  timestamp: number;
+  columnId: number;
+  duration?: number;
+  color?: string;
+  icon?: string;
+}
+
+interface RoomParams {
+  roomId: string;
+}
+
+const Room: React.FC = () => {
+  const { roomId } = useParams<keyof RoomParams>();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [timelineLength, setTimelineLength] = useState<number | null>(null);
+  const [columnCount, setColumnCount] = useState<number | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const newSocket = io(process.env.REACT_APP_BACKEND_URL);
+    const newSocket = io(process.env.REACT_APP_BACKEND_URL as string);
     
     newSocket.on('connect', () => {
       console.log('Connected to backend');
       newSocket.emit('joinRoom', roomId);
     });
 
-    newSocket.on('initialState', (data) => {
+    newSocket.on('initialState', (data: { events?: Event[], settings?: { timelineLength: number, columnCount: number } }) => {
       if (data.events) setEvents(data.events);
       if (data.settings) {
         setTimelineLength(data.settings.timelineLength);
@@ -30,7 +44,7 @@ function Room() {
       }
     });
 
-    newSocket.on('stateUpdate', (data) => {
+    newSocket.on('stateUpdate', (data: { events?: Event[], settings?: { timelineLength: number, columnCount: number } }) => {
       if (data.events) setEvents(data.events);
       if (data.settings) {
         setTimelineLength(data.settings.timelineLength);
@@ -38,7 +52,7 @@ function Room() {
       }
     });
 
-    newSocket.on('error', (error) => {
+    newSocket.on('error', (error: string) => {
       console.error('Socket error:', error);
     });
 
@@ -55,16 +69,16 @@ function Room() {
     }
   }, [timelineLength, columnCount, socket, roomId]);
 
-  const createEvent = (formData) => {
+  const createEvent = (formData: { eventName: string, eventTimestamp: number, eventColumn: number }) => {
     if (!socket) {
       console.error('Socket connection not established');
       return;
     }
-    const newEvent = { 
-      key: events.length, 
+    const newEvent: Event = { 
+      key: events.length.toString(), 
       name: formData.eventName, 
-      timestamp: parseFloat(formData.eventTimestamp),
-      columnId: parseInt(formData.eventColumn) || 1
+      timestamp: parseFloat(formData.eventTimestamp.toString()),
+      columnId: parseInt(formData.eventColumn.toString()) || 1
     };
     socket.emit('createEvent', roomId, newEvent);
   };
@@ -77,11 +91,7 @@ function Room() {
     socket.emit('clearEvents', roomId);
   };
 
-  const moveEvent = (id, newTimestamp, columnId) => {
-    if (!Array.isArray(events)) {
-      console.error('Events is not an array:', events);
-      return;
-    }
+  const moveEvent = (id: string, newTimestamp: number, columnId: number) => {
     const updatedEvents = events.map(event => {
       if (event.key === id) {
         return { ...event, timestamp: parseFloat(newTimestamp.toFixed(2)), columnId };
@@ -92,7 +102,7 @@ function Room() {
     setEvents(updatedEvents);
   };
 
-  const handleDragEnd = (id, newTimestamp, columnId) => {
+  const handleDragEnd = (id: string, newTimestamp: number, columnId: number) => {
     const updatedEvents = events.map(event => {
       if (event.key === id) {
         return { ...event, timestamp: parseFloat(newTimestamp.toFixed(2)), columnId };
@@ -104,7 +114,7 @@ function Room() {
     saveEventsToBackend(updatedEvents);
   };
 
-  const saveEventsToBackend = (updatedEvents) => {
+  const saveEventsToBackend = (updatedEvents: Event[]) => {
     if (!socket) {
       console.error('Socket connection not established');
       return;
@@ -112,18 +122,18 @@ function Room() {
     socket.emit('updateEvents', roomId, updatedEvents);
   };
 
-  const handleDrop = (item, columnId, timestamp) => {
+  const handleDrop = (item: any, columnId: number, timestamp: number) => {
     if (item.isNew) {
-      const newEvent = {
-        key: events.length,
+      const newEvent: Event = {
+        key: events.length.toString(),
         name: item.name,
         timestamp: parseFloat(timestamp.toFixed(2)),
         columnId: columnId,
         duration: item.duration,
         color: item.color,
-        icon: item.icon, // Make sure to include the icon
+        icon: item.icon,
       };
-      socket.emit('createEvent', roomId, newEvent);
+      socket?.emit('createEvent', roomId, newEvent);
     } else {
       const updatedEvents = events.map(event => {
         if (event.key === item.id) {
@@ -136,7 +146,7 @@ function Room() {
     }
   };
 
-  const onDeleteEvent = (eventKey, columnId) => {
+  const onDeleteEvent = (eventKey: string) => {
     if (!socket) {
       console.error('Socket connection not established');
       return;
@@ -200,6 +210,6 @@ function Room() {
       </div>
     </DndProvider>
   );
-}
+};
 
 export default Room;

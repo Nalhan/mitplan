@@ -4,7 +4,21 @@ import { FaTrash, FaClock } from 'react-icons/fa';
 
 const ItemType = 'TIMELINE_EVENT';
 
-const TimelineEvent = ({ event, timelineLength, onDelete }) => {
+interface Event {
+  key: string;
+  timestamp: number;
+  name: string;
+  color?: string;
+  icon?: string;
+}
+
+interface TimelineEventProps {
+  event: Event;
+  timelineLength: number;
+  onDelete: () => void;
+}
+
+const TimelineEvent: React.FC<TimelineEventProps> = ({ event, timelineLength, onDelete }) => {
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
     item: { id: event.key, timestamp: event.timestamp },
@@ -15,7 +29,7 @@ const TimelineEvent = ({ event, timelineLength, onDelete }) => {
 
   const top = `${(event.timestamp / timelineLength) * 100}%`;
 
-  const getContrastColor = (bgColor) => {
+  const getContrastColor = (bgColor: string): string => {
     // Simple function to determine if text should be black or white based on background color
     const rgb = parseInt(bgColor.slice(1), 16);
     const r = (rgb >> 16) & 0xff;

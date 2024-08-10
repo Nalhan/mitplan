@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDrag } from 'react-dnd';
 import cooldowns from '../data/cooldowns.yaml';
 
-const CooldownItem = ({ cooldown }) => {
+interface Cooldown {
+  id: string;
+  name: string;
+  duration: number;
+  color: string;
+  icon: string;
+}
+
+interface CooldownItemProps {
+  cooldown: Cooldown;
+}
+
+const CooldownItem: React.FC<CooldownItemProps> = ({ cooldown }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'TIMELINE_EVENT',
     item: { 
@@ -18,7 +30,7 @@ const CooldownItem = ({ cooldown }) => {
     }),
   }));
 
-  const [imageError, setImageError] = React.useState(false);
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div
@@ -41,12 +53,12 @@ const CooldownItem = ({ cooldown }) => {
   );
 };
 
-const CooldownPalette = () => {
+const CooldownPalette: React.FC = () => {
   return (
     <div className="bg-gray-100 p-4 rounded-lg shadow">
       <h2 className="text-xl font-bold mb-4">Cooldowns</h2>
       <div className="flex flex-wrap justify-center">
-        {cooldowns.map((cooldown) => (
+        {cooldowns.map((cooldown: Cooldown) => (
           <CooldownItem key={cooldown.id} cooldown={cooldown} />
         ))}
       </div>
