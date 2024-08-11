@@ -8,37 +8,32 @@ import { ContextMenuProvider } from './Shared/ContextMenu';
 import RenameSheetModal from './Shared/RenameSheetModal';
 import CopyToClipboard from './Shared/CopyToClipboard';
 import { useTheme } from '../contexts/ThemeContext';
-import { setActiveSheet, updateSheet, fetchRoomData, listenForStateUpdates } from '../store/roomsSlice';
-import { initializeSocket } from '../store/socketService';
+import { setActiveSheet, updateSheet, setRoom } from '../store/roomsSlice';
+import { initializeSocket, joinRoom } from '../store/socketService';
 
 interface RoomProps {
-  roomId: string;
+  room: NonNullable<RootState['room']>;
 }
 
-const Room: React.FC<RoomProps> = ({ roomId }) => {
-  const dispatch = useDispatch();
-  const room = useSelector((state: RootState) => state.rooms[roomId]);
+const Room: React.FC<RoomProps> = ({ room }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [sheetToRename, setSheetToRename] = useState<string | null>(null);
   const { darkMode } = useTheme();
 
   useEffect(() => {
     if (room && !room.activeSheetId && Object.keys(room.sheets).length > 0) {
-      dispatch(setActiveSheet({ roomId, sheetId: Object.keys(room.sheets)[0] }));
+      dispatch(setActiveSheet(Object.keys(room.sheets)[0]));
     }
-  }, [room, dispatch, roomId]);
-
-  if (!room) {
-    return <div className="p-4 text-gray-600">Loading room data...</div>;
-  }
+  }, [room, dispatch]);
 
   const { sheets, activeSheetId } = room;
 
   const handleRenameSheet = (newName: string) => {
     if (sheetToRename) {
       dispatch(updateSheet({
-        roomId,
-        updates: { [sheetToRename]: { name: newName } }
+        sheetId: sheetToRename,
+        updates: { name: newName }
       }));
       setSheetToRename(null);
     }
@@ -50,16 +45,16 @@ const Room: React.FC<RoomProps> = ({ roomId }) => {
       <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
         <div className="flex-grow overflow-auto p-4">
           <h1 className="text-4xl font-bold mb-1 text-gray-800 dark:text-gray-200">Mitplan</h1>
-          <CopyToClipboard text={`${window.location.origin}/room/${roomId}` || ''} popupText="Link copied!">
+          <CopyToClipboard text={`${window.location.origin}/room/${room.id}` || ''} popupText="Link copied!">
             <h2 className="text-2xl font-bold mb-0 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-0 py-1 inline-block">
-              Room: {roomId}
+              Room: {room.id}
             </h2>
           </CopyToClipboard>
           <div className="mt-4">
             {activeSheetId && sheets[activeSheetId] && (
               <SheetComponent
                 {...sheets[activeSheetId]}
-                roomId={roomId}
+                roomId={room.id}
                 sheetId={activeSheetId}
               />
             )}
@@ -67,7 +62,7 @@ const Room: React.FC<RoomProps> = ({ roomId }) => {
         </div>
         <div className="bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 p-2">
           <SheetNavigation
-            roomId={roomId}
+            roomId={room.id}
             onRenameSheet={(sheetId) => {
               setSheetToRename(sheetId);
               setIsRenameModalOpen(true);
@@ -87,13 +82,26 @@ const Room: React.FC<RoomProps> = ({ roomId }) => {
 const RoomWrapper: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const dispatch = useDispatch<AppDispatch>();
+  const room = useSelector((state: RootState) => state.room);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (roomId) {
-      console.log('trying to fetch room', roomId);
       const socket = initializeSocket();
-      dispatch(fetchRoomData({ roomId, socket }));
-      dispatch(listenForStateUpdates(socket));
+      
+      joinRoom(roomId)
+        .then((roomData) => {
+          dispatch(setRoom(roomData));
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Error joining room:', error);
+          setLoading(false);
+        });
+
+      // return () => {
+      //   socket.emit('leaveRoom', roomId);
+      // };
     }
   }, [roomId, dispatch]);
 
@@ -101,7 +109,11 @@ const RoomWrapper: React.FC = () => {
     return <div className="p-4 text-red-600">Error: Room ID is missing</div>;
   }
 
-  return <Room roomId={roomId} />;
+  if (loading) {
+    return <div className="p-4 text-gray-600">Loading room data...</div>;
+  }
+
+  return room ? <Room room={room} /> : <div className="p-4 text-gray-600">Room not found</div>;
 };
 
 export default RoomWrapper;

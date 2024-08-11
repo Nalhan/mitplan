@@ -11,12 +11,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 >;
 
 export interface RootState {
-  rooms: RoomsState;
-}
-
-export interface RoomsState {
-  [roomId: string]: Room;
-
+  room: Room | null;
 }
 
 export interface Room {

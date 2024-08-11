@@ -22,6 +22,8 @@ services:
     volumes:
       - ~/mitplan/mitplan-frontend:/app/frontend
       - ~/mitplan/mitplan-backend:/app/backend
+    ports:
+      - 9229:9229
 
   mitplan-postgres:
     container_name: mitplan-postgres

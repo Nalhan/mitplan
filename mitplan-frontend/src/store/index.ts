@@ -1,11 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { roomsReducer } from './roomsSlice';
+import { roomReducer } from './roomsSlice';
+import { syncMiddleware } from './syncMiddleware';
 import { RootState } from '../types';
 
 export const store = configureStore({
   reducer: {
-    rooms: roomsReducer,
+    room: roomReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(syncMiddleware),
 });
 
 export type AppDispatch = typeof store.dispatch;
