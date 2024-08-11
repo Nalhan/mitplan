@@ -1,21 +1,20 @@
 /* will use later when we rework TimelinmeEvent to MitplanEvent */
 
 
-export interface AssignmentEvent {
+export interface AssignmentEventType {
     id: string;
     type: 'assignment' | 'cooldown' | 'text';
     title: string;
     description?: string;
-    startDate: Date;
-    endDate: Date;
+    assignee?: string;
   }
   
-  export interface CooldownEvent extends AssignmentEvent {
+  export interface CooldownEventType extends AssignmentEventType {
     type: 'cooldown';
     cooldownDuration: number; // in minutes
   }
   
-  export interface TextEvent extends AssignmentEvent {
+  export interface TextEventType extends AssignmentEventType {
     type: 'text';
     content: string;
   }

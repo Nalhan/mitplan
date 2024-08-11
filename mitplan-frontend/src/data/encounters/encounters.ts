@@ -1,4 +1,4 @@
-import type { Encounter } from '../types'
+import type { Encounter } from '../../types'
 // Function to import all encounters from a folder
 async function importEncounters(folderName: string) {
   const context = import.meta.glob('./**/*.ts', { eager: true })

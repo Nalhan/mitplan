@@ -1,5 +1,5 @@
 import React from 'react';
-import TimelineEvent from './TimelineEvent';
+import TimelineEvent from './AssignmentEvent';
 
 interface MitplanEventProps {
   key: string;

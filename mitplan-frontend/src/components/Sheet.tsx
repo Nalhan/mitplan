@@ -1,96 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
-// import CooldownPalette from './CooldownPalette';
-// import EventForm from './EventForm';
 import EncounterSelect from './EncounterSelect';
 import { useTheme } from '../contexts/ThemeContext';
-import { EncounterEventType } from '../data/types';
+import { Sheet as SheetType, EncounterEventType } from '../types';
+import { deleteAssignmentEvents, updateEncounterEvents } from '../store/roomsSlice';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../store';
 
-export interface Event {
-  key: string;
-  name: string;
-  timestamp: number;
-  columnId: number;
-  duration?: number;
-  color?: string;
-  icon?: string;
-}
-
-export interface Sheet {
-  id: string;
-  name: string;
-  events: Event[];
-  encounterEvents: EncounterEventType[];
-  timelineLength: number;
-  columnCount: number;
-}
-
-const SheetComponent: React.FC<Sheet & {
-  onCreateEvent: (event: Event) => void;
-  onClearEvents: () => void;
-  onUpdateEvent: (event: Event) => void;
-  onDeleteEvent: (eventKey: string) => void;
-  onUpdateEncounterEvents: (encounterEvents: EncounterEventType[]) => void;
+const SheetComponent: React.FC<SheetType & {
+  roomId: string;
+  sheetId: string;
 }> = ({
   id,
   name,
-  events,
+  assignmentEvents,
   encounterEvents,
   timelineLength,
   columnCount,
-  onCreateEvent,
-  onClearEvents,
-  onUpdateEvent,
-  onDeleteEvent,
-  onUpdateEncounterEvents,
+  roomId,
+  sheetId,
 }) => {
   const { darkMode } = useTheme();
+  const dispatch = useDispatch<AppDispatch>();
 
-
-  // TODO: I expect this is unneeded since we can just add events to the structure directly
-  // const createEvent = (formData: { eventName: string, eventTimestamp: number, eventColumn: number }) => {
-  //   const newEvent: Event = { 
-  //     key: Date.now().toString(),
-  //     name: formData.eventName, 
-  //     timestamp: parseFloat(formData.eventTimestamp.toString()),
-  //     columnId: parseInt(formData.eventColumn.toString()) || 1
-  //   };
-  //   onCreateEvent(newEvent);
-  // };
-
-  const moveEvent = (id: string, newTimestamp: number, columnId: number) => {
-    const updatedEvent = events.find(event => event.key === id);
-    if (updatedEvent) {
-      const newEvent = { ...updatedEvent, timestamp: parseFloat(newTimestamp.toFixed(2)), columnId };
-      onUpdateEvent(newEvent);
-    }
-  };
-
-  const handleDragEnd = (id: string, newTimestamp: number, columnId: number) => {
-    moveEvent(id, newTimestamp, columnId);
-  };
-
-  const handleDrop = (item: any, columnId: number, timestamp: number) => {
-    if (item.isNew) {
-      const newEvent: Event = {
-        key: Date.now().toString(),
-        name: item.name,
-        timestamp: parseFloat(timestamp.toFixed(2)),
-        columnId: columnId,
-        duration: item.duration,
-        color: item.color,
-        icon: item.icon,
-      };
-      onCreateEvent(newEvent);
-    } else {
-      moveEvent(item.id, timestamp, columnId);
-    }
+  const handleClearEvents = () => {
+    dispatch(deleteAssignmentEvents({ roomId, sheetId }));
   };
 
   const handleSelectEncounter = (selectedEvents: EncounterEventType[]) => {
-    onUpdateEncounterEvents(selectedEvents);
+    dispatch(updateEncounterEvents({ roomId, sheetId, events: selectedEvents }));
   };
 
   return (
@@ -100,7 +40,7 @@ const SheetComponent: React.FC<Sheet & {
         <div className="space-y-6">
           <EncounterSelect onSelectEncounter={handleSelectEncounter} />
           <button
-            onClick={onClearEvents}
+            onClick={handleClearEvents}
             className={`${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'} text-white px-6 py-2 rounded font-semibold transition duration-300 ease-in-out`}
           >
             Clear Events
@@ -108,14 +48,12 @@ const SheetComponent: React.FC<Sheet & {
           <div className="flex relative">
             <div className="flex-1 mr-64">
               <VerticalTimeline 
-                events={events} 
+                roomId={roomId}
+                sheetId={sheetId}
+                events={assignmentEvents} 
                 encounterEvents={encounterEvents}
-                moveEvent={moveEvent} 
                 timelineLength={timelineLength}
                 columnCount={columnCount}
-                onDragEnd={handleDragEnd}
-                onDrop={handleDrop}
-                onDeleteEvent={onDeleteEvent}
               />
             </div>
             <div className="absolute right-0 top-0 bottom-0 w-64">

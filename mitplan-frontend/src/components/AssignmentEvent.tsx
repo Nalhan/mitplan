@@ -1,28 +1,21 @@
 import React, { useRef, useEffect } from 'react';
 import { useDrag } from 'react-dnd';
 import { FaTrash, FaClock } from 'react-icons/fa';
+import { AssignmentEventType } from '../types';
 
-const ItemType = 'TIMELINE_EVENT';
+const ItemType = 'ASSIGNMENT_EVENT';
 
-interface Event {
-  key: string;
-  timestamp: number;
-  name: string;
-  color?: string;
-  icon?: string;
-}
-
-interface TimelineEventProps {
-  event: Event;
+interface AssignmentEventProps {
+  event: AssignmentEventType;
   timelineLength: number;
   onDelete: () => void;
 }
 
-const TimelineEvent: React.FC<TimelineEventProps> = ({ event, timelineLength, onDelete }) => {
+const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength, onDelete }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: ItemType,
-    item: { id: event.key, timestamp: event.timestamp },
+    item: { id: event.id, timestamp: event.timestamp, columnId: event.columnId },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -90,4 +83,4 @@ const TimelineEvent: React.FC<TimelineEventProps> = ({ event, timelineLength, on
   );
 };
 
-export default TimelineEvent;
+export default AssignmentEvent;

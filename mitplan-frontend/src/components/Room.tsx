@@ -1,31 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch, RootState } from '../store';
 import SheetComponent from './Sheet';
 import SheetNavigation from './SheetNavigation';
 import { ContextMenuProvider } from './Shared/ContextMenu';
 import RenameSheetModal from './Shared/RenameSheetModal';
 import CopyToClipboard from './Shared/CopyToClipboard';
 import { useTheme } from '../contexts/ThemeContext';
-import { useRoomState } from '../state/RoomState';
+import { setActiveSheet, updateSheet, fetchRoomData, listenForStateUpdates } from '../store/roomsSlice';
+import { initializeSocket } from '../store/socketService';
 
-const Room: React.FC = () => {
-  const {
-    roomId,
-    sheets,
-    activeSheetId,
-    createSheet,
-    switchSheet,
-    deleteSheet,
-    createEvent,
-    clearEvents,
-    updateEvent,
-    updateEncounterEvents,
-    deleteEvent,
-    renameSheet,
-  } = useRoomState();
+interface RoomProps {
+  roomId: string;
+}
 
+const Room: React.FC<RoomProps> = ({ roomId }) => {
+  const dispatch = useDispatch();
+  const room = useSelector((state: RootState) => state.rooms[roomId]);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [sheetToRename, setSheetToRename] = useState<string | null>(null);
   const { darkMode } = useTheme();
+
+  useEffect(() => {
+    if (room && !room.activeSheetId && Object.keys(room.sheets).length > 0) {
+      dispatch(setActiveSheet({ roomId, sheetId: Object.keys(room.sheets)[0] }));
+    }
+  }, [room, dispatch, roomId]);
+
+  if (!room) {
+    return <div className="p-4 text-gray-600">Loading room data...</div>;
+  }
+
+  const { sheets, activeSheetId } = room;
+
+  const handleRenameSheet = (newName: string) => {
+    if (sheetToRename) {
+      dispatch(updateSheet({
+        roomId,
+        updates: { [sheetToRename]: { name: newName } }
+      }));
+      setSheetToRename(null);
+    }
+    setIsRenameModalOpen(false);
+  };
 
   return (
     <ContextMenuProvider>
@@ -40,50 +58,50 @@ const Room: React.FC = () => {
           <div className="mt-4">
             {activeSheetId && sheets[activeSheetId] && (
               <SheetComponent
-                id={activeSheetId}
-                name={sheets[activeSheetId].name}
-                events={sheets[activeSheetId].events}
-                timelineLength={sheets[activeSheetId].timelineLength}
-                columnCount={sheets[activeSheetId].columnCount}
-                encounterEvents={sheets[activeSheetId].encounterEvents}
-                onCreateEvent={createEvent}
-                onClearEvents={() => clearEvents(activeSheetId)}
-                onUpdateEvent={(updatedEvent) => {
-                  console.log('SheetComponent triggered onUpdateEvent:', updatedEvent);
-                  updateEvent(activeSheetId, updatedEvent);
-                }}
-                onDeleteEvent={(eventKey) => deleteEvent(activeSheetId, eventKey)}
-                onUpdateEncounterEvents={(encounterEvents) => updateEncounterEvents(activeSheetId, encounterEvents)}
+                {...sheets[activeSheetId]}
+                roomId={roomId}
+                sheetId={activeSheetId}
               />
             )}
           </div>
         </div>
         <div className="bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 p-2">
           <SheetNavigation
-            sheets={Object.entries(sheets as Record<string, { name: string }>).map(([id, sheet]) => ({ id, name: sheet.name }))}
-            currentSheetId={activeSheetId ?? ''}
-            onSheetChange={switchSheet}
-            onCreateSheet={() => createSheet(`sheet-${Date.now()}`)}
+            roomId={roomId}
             onRenameSheet={(sheetId) => {
               setSheetToRename(sheetId);
               setIsRenameModalOpen(true);
             }}
-            onDeleteSheet={deleteSheet}
           />
         </div>
       </div>
       <RenameSheetModal
         isOpen={isRenameModalOpen}
         onClose={() => setIsRenameModalOpen(false)}
-        onRename={(newName: string) => {
-          if (sheetToRename) {
-            renameSheet(sheetToRename, newName);
-            setSheetToRename(null);
-          }
-        }}
+        onRename={handleRenameSheet}
       />
     </ContextMenuProvider>
   );
 };
 
-export default Room;
+const RoomWrapper: React.FC = () => {
+  const { roomId } = useParams<{ roomId: string }>();
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    if (roomId) {
+      console.log('trying to fetch room', roomId);
+      const socket = initializeSocket();
+      dispatch(fetchRoomData({ roomId, socket }));
+      dispatch(listenForStateUpdates(socket));
+    }
+  }, [roomId, dispatch]);
+
+  if (!roomId) {
+    return <div className="p-4 text-red-600">Error: Room ID is missing</div>;
+  }
+
+  return <Room roomId={roomId} />;
+};
+
+export default RoomWrapper;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { EncounterEventType } from '../data/types';
+import { EncounterEventType } from '../types';
 import { getContrastColor } from '../utils/colorUtils';
 
 interface EncounterEventProps {

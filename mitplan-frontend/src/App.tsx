@@ -3,17 +3,16 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import RoomSelection from './components/RoomSelection';
 import Room from './components/Room';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { Provider as ReduxProvider } from 'react-redux';
+import { store } from './store';
+import { initializeSocket } from './store/socketService';
 
 const AppContent: React.FC = () => {
   const { darkMode, toggleDarkMode } = useTheme();
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
+    initializeSocket();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">
@@ -42,11 +41,13 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <ReduxProvider store={store}>
+      <ThemeProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
+    </ReduxProvider>
   );
 };
 

@@ -1,4 +1,4 @@
-import { EncounterEventType } from '../../types';
+import { EncounterEventType } from '../../../types/encounterTypes';
 
 export const RashokEvents: EncounterEventType[] = [
     {
