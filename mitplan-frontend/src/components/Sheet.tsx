@@ -13,7 +13,6 @@ const SheetComponent: React.FC<SheetType & {
   roomId: string;
   sheetId: string;
 }> = ({
-  id,
   name,
   assignmentEvents,
   encounterEvents,
@@ -26,7 +25,7 @@ const SheetComponent: React.FC<SheetType & {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleClearEvents = () => {
-    dispatch(deleteAssignmentEvents({ roomId, sheetId }));
+    dispatch(deleteAssignmentEvents({ roomId, sheetId}));
   };
 
   const handleSelectEncounter = (selectedEvents: EncounterEventType[]) => {
@@ -50,10 +49,6 @@ const SheetComponent: React.FC<SheetType & {
               <VerticalTimeline 
                 roomId={roomId}
                 sheetId={sheetId}
-                events={assignmentEvents} 
-                encounterEvents={encounterEvents}
-                timelineLength={timelineLength}
-                columnCount={columnCount}
               />
             </div>
             <div className="absolute right-0 top-0 bottom-0 w-64">

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 type ContextMenuItem = {
@@ -19,6 +19,7 @@ export const ContextMenuProvider: React.FC<React.PropsWithChildren<{}>> = ({ chi
   const [contextMenuItems, setContextMenuItems] = useState<ContextMenuItem[]>([]);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const { darkMode } = useTheme();
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const adjustMenuPosition = useCallback((x: number, y: number, menuWidth: number, menuHeight: number) => {
     const windowWidth = window.innerWidth;
@@ -44,7 +45,6 @@ export const ContextMenuProvider: React.FC<React.PropsWithChildren<{}>> = ({ chi
 
   const showContextMenu = useCallback((items: ContextMenuItem[], x: number, y: number) => {
     setContextMenuItems(items);
-    // We'll set an initial position, then adjust it after the menu is rendered
     setContextMenuPosition({ x, y });
   }, []);
 
@@ -53,21 +53,24 @@ export const ContextMenuProvider: React.FC<React.PropsWithChildren<{}>> = ({ chi
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = () => hideContextMenu();
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        hideContextMenu();
+      }
+    };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [hideContextMenu]);
 
   useEffect(() => {
-    if (contextMenuPosition) {
-      const menu = document.getElementById('context-menu');
-      if (menu) {
-        const { x, y } = adjustMenuPosition(
-          contextMenuPosition.x,
-          contextMenuPosition.y,
-          menu.offsetWidth,
-          menu.offsetHeight
-        );
+    if (contextMenuPosition && menuRef.current) {
+      const { x, y } = adjustMenuPosition(
+        contextMenuPosition.x,
+        contextMenuPosition.y,
+        menuRef.current.offsetWidth,
+        menuRef.current.offsetHeight
+      );
+      if (x !== contextMenuPosition.x || y !== contextMenuPosition.y) {
         setContextMenuPosition({ x, y });
       }
     }
@@ -77,33 +80,28 @@ export const ContextMenuProvider: React.FC<React.PropsWithChildren<{}>> = ({ chi
     <ContextMenuContext.Provider value={{ showContextMenu, hideContextMenu, contextMenuItems, contextMenuPosition }}>
       {children}
       {contextMenuPosition && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={hideContextMenu}
-          />
-          <div
-            id="context-menu"
-            className={`fixed z-50 ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'} border rounded-md shadow-md`}
-            style={{
-              top: contextMenuPosition.y,
-              left: contextMenuPosition.x,
-            }}
-          >
-            {contextMenuItems.map((item, index) => (
-              <div
-                key={index}
-                onClick={() => {
-                  item.action();
-                  hideContextMenu();
-                }}
-                className={`px-4 py-2 cursor-pointer ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-              >
-                {item.label}
-              </div>
-            ))}
-          </div>
-        </>
+        <div
+          ref={menuRef}
+          id="context-menu"
+          className={`fixed z-50 ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'} border rounded-md shadow-md`}
+          style={{
+            top: contextMenuPosition.y,
+            left: contextMenuPosition.x,
+          }}
+        >
+          {contextMenuItems.map((item, index) => (
+            <div
+              key={index}
+              onClick={() => {
+                item.action();
+                hideContextMenu();
+              }}
+              className={`px-4 py-2 cursor-pointer ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
       )}
     </ContextMenuContext.Provider>
   );

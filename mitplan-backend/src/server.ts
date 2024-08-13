@@ -3,6 +3,7 @@ import path from 'path';
 import express, { Request, Response } from 'express';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
+import { Transport } from 'engine.io';
 import Redis from 'ioredis';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -97,11 +98,12 @@ app.post('/api/rooms', async (req: Request, res: Response) => {
   const initialState = {
     sheets: {
       default: {
-        id: 'default',
+        id: '1',
         name: 'Default Sheet',
         assignmentEvents: [],
         encounterEvents: [],
-        settings: { timelineLength: 121, columnCount: 2 }
+        timelineLength: 121, 
+        columnCount: 2 
       }
     },
     activeSheetId: 'default'
@@ -112,24 +114,24 @@ app.post('/api/rooms', async (req: Request, res: Response) => {
 });
 
 interface ServerToClientEvents {
-  initialState: (state: any) => void;
+  roomState: (roomId: string, state: any) => void;
   error: (error: { message: string }) => void;
-  stateUpdate: (update: { sheets?: any, activeSheetId?: string }) => void;
+  stateUpdate: (roomId: string, update: RoomState) => void;
 }
 
 interface ClientToServerEvents {
-  joinRoom: (roomId: string) => void;
-  stateUpdate: (roomId: string, action: any) => void;
+  joinRoom: (roomId: string, callback: (response: any) => void) => void;
+  stateUpdate: (roomId: string, state: RoomState) => void;
 }
 
 const debug = debugModule('engine:socket');
 
 io.engine.on('connection', (socket) => {
   debug('New transport connection:', socket.transport.name);
-  socket.on('upgrade', (transport) => {
+  socket.on('upgrade', (transport: Transport) => {
     debug('Transport upgraded from', socket.transport.name, 'to', transport.name);
   });
-  socket.on('error', (error) => {
+  socket.on('error', (error: Error) => {
     debug('Transport error:', error);
   });
 });
@@ -141,7 +143,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     console.log('Client disconnected', socket.id);
   });
 
-  socket.on('joinRoom', async (roomId) => {
+  socket.on('joinRoom', async (roomId, callback) => {
     console.log(`Client ${socket.id} attempting to join room ${roomId}`);
     socket.join(roomId);
     let roomData = await redis.get(`room:${roomId}`);
@@ -158,19 +160,25 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     }
     if (roomData) {
       console.log(`Emitting initial state for room ${roomId}`);
-      socket.emit('initialState', JSON.parse(roomData));
+      const parsedRoomData = JSON.parse(roomData);
+      socket.emit('roomState', roomId, parsedRoomData);
+      callback({ status: 'success' });
     } else {
       console.log(`Error: Room ${roomId} not found`);
-      socket.emit('error', { message: 'Room not found' });
+      callback({ status: 'error', message: 'Room not found' });
     }
   });
 
-  socket.on('stateUpdate', ({ roomId, action }) => {
-    // Apply the action to the server-side state
-    applyActionToServerState(roomId, action);
+  socket.on('stateUpdate', async (roomId: string, state: RoomState) => {
+    console.log(`Received state update for room ${roomId}`);
+    // Update the room state in Redis
+    await redis.set(`room:${roomId}`, JSON.stringify(state));
     
-    // Broadcast the action to all other clients in the room
-    socket.to(roomId).emit('serverUpdate', action);
+    // Update the room state in the database
+    await Room.update({ state }, { where: { roomId } });
+    
+    // Broadcast the updated state to all clients in the room, including the sender
+    io.to(roomId).emit('roomState', roomId, state);
   });
 });
 
@@ -189,18 +197,23 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // Helper function to apply an action to the server-side state
-function applyActionToServerState(roomId: string, action: any) {
+async function applyActionToServerState(roomId: string, action: any) {
   // Retrieve the current room state from Redis
-  const roomData = redis.get(`room:${roomId}`);
+  const roomData = await redis.get(`room:${roomId}`);
   
-  // Apply the action to the state
-  const newState = applyActionToState(JSON.parse(roomData), action);
-  
-  // Update the room state in Redis
-  redis.set(`room:${roomId}`, JSON.stringify(newState));
-  
-  // Update the room state in the database
-  Room.update({ state: newState }, { where: { roomId } });
+  if (roomData) {
+    // Apply the action to the state
+    const newState = applyActionToState(JSON.parse(roomData), action);
+    
+    // Update the room state in Redis
+    await redis.set(`room:${roomId}`, JSON.stringify(newState));
+    
+    // Update the room state in the database
+    await Room.update({ state: newState }, { where: { roomId } });
+  } else {
+    // Handle the case where the room is not found in Redis
+    // ...
+  }
 }
 
 // Helper function to apply an action to a room state

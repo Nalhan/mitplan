@@ -1,96 +1,79 @@
 import io, { Socket } from 'socket.io-client';
-import { AppDispatch } from './index';
-import { setRoom, updateRoom } from './roomsSlice';
-import { store } from './index'; // Import the store
+import { Room } from '../types';
 
 let socket: Socket | null = null;
+let updateStateCallback: ((roomId: string, state: Room) => void) | null = null;
 
-const getDispatch = (): AppDispatch => store.dispatch;
-
-export const initializeSocket = (): Socket => {
+export const initializeSocket = (callback: (roomId: string, state: Room) => void): Socket => {
+  console.log('Initializing socket...');
+  updateStateCallback = callback;
   if (!socket) {
-    console.log('Initializing socket connection...');
+    console.log('Creating new socket connection to:', import.meta.env.VITE_BACKEND_URL);
     socket = io(import.meta.env.VITE_BACKEND_URL);
 
     socket.on('connect', () => {
       console.log('Socket connected:', socket?.id);
     });
 
-    socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+    socket.on('disconnect', () => {
+      console.log('Socket disconnected');
     });
 
-    socket.on('error', (error) => {
+    socket.on('error', (error: Error) => {
       console.error('Socket error:', error);
     });
 
-    socket.on('serverUpdate', (action) => {
-      // Dispatch the action to update local state
-      store.dispatch(action);
+    socket.on('roomState', (roomId: string, state: Room) => {
+      console.log('Received room state update for room:', roomId, state);
+      updateStateCallback?.(roomId, state);
     });
-
-    console.log('Socket connection initialized.');
+  } else {
+    console.log('Using existing socket connection:', socket.id);
   }
   return socket;
 };
 
-export const joinRoom = (roomId: string): Promise<any> => {
+export const joinRoom = (roomId: string): Promise<void> => {
+  console.log('Attempting to join room:', roomId);
   return new Promise((resolve, reject) => {
-    console.log('Attempting to join room:', roomId);
     if (!socket) {
-      console.error('Socket not initialized. Call initializeSocket first.');
-      reject(new Error('Socket not initialized'));
+      console.error('Socket is not initialized');
+      reject(new Error('Socket is not initialized'));
       return;
     }
 
-    socket.emit('joinRoom', roomId, (error: any, data: any) => {
-      if (error) {
-        console.error('Error joining room:', error);
-        reject(error);
+    const timeout = setTimeout(() => {
+      console.error('Join room timeout for room:', roomId);
+      reject(new Error('Join room timeout'));
+    }, 10000); // 10 second timeout
+
+    console.log('Emitting joinRoom event for room:', roomId);
+    socket.emit('joinRoom', roomId, (response: any) => {
+      clearTimeout(timeout);
+      console.log('Join room response:', response);
+      if (response && response.status === 'success') {
+        console.log('Successfully joined room:', roomId);
+        resolve();
       } else {
-        console.log('Joined room successfully, received data:', data);
-        // Set up room-specific event listeners
-        setupRoomListeners(roomId);
-        resolve(data);
+        console.error('Failed to join room:', roomId, 'Error:', response ? response.message : 'No response');
+        reject(new Error(response ? response.message : 'No response from server'));
       }
+    });
+
+    // Add a one-time listener for potential errors
+    socket.once('error', (error) => {
+      clearTimeout(timeout);
+      console.error('Socket error while joining room:', error);
+      reject(new Error('Socket error: ' + error.message));
     });
   });
 };
 
-const setupRoomListeners = (roomId: string) => {
-  if (!socket) return;
-
-  socket.on('initialState', (state) => {
-    console.log('Received initial state:', state);
-    getDispatch()(setRoom(state));
-  });
-
-  socket.on('stateUpdate', (update) => {
-    console.log('Received state update:', update);
-    getDispatch()(updateRoom(update));
-  });
-};
-
-export const getSocket = (): Socket | null => {
-  return socket;
-};
-
-export const disconnectSocket = () => {
+export const updateServerState = (roomId: string, state: Room): void => {
+  console.log('Sending state update to server:', roomId, state);
   if (socket) {
-    console.log('Disconnecting socket...');
-    socket.disconnect();
-    socket = null;
-    console.log('Socket disconnected.');
+    socket.emit('stateUpdate', roomId, state);
   } else {
-    console.log('No socket connection to disconnect.');
-  }
-};
-
-export const leaveRoom = (roomId: string) => {
-  if (socket) {
-    socket.emit('leaveRoom', roomId);
-    // Remove room-specific listeners
-    socket.off('initialState');
-    socket.off('stateUpdate');
+    console.error('Cannot update server state: Socket is not initialized');
   }
 };

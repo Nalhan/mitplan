@@ -11,7 +11,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 >;
 
 export interface RootState {
-  room: Room | null;
+  rooms: { [roomId: string]: Room };
 }
 
 export interface Room {
@@ -24,7 +24,7 @@ export interface Room {
 export interface Sheet {
   id: string;
   name: string;
-  assignmentEvents: AssignmentEventType[];
+  assignmentEvents: { [id: string]: AssignmentEventType };
   encounterEvents: EncounterEventType[];
   timelineLength: number;
   columnCount: number;

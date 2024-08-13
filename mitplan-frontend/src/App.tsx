@@ -4,15 +4,12 @@ import RoomSelection from './components/RoomSelection';
 import Room from './components/Room';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { Provider as ReduxProvider } from 'react-redux';
-import { store } from './store';
 import { initializeSocket } from './store/socketService';
+import store from './store';
 
 const AppContent: React.FC = () => {
-  const { darkMode, toggleDarkMode } = useTheme();
+  const { darkMode, toggleDarkMode } = useTheme();  
 
-  useEffect(() => {
-    initializeSocket();
-  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">

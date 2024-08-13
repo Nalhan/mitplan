@@ -19,7 +19,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
   const { darkMode } = useTheme();
   const dispatch = useDispatch();
 
-  const room = useSelector((state: RootState) => state.room);
+  const room = useSelector((state: RootState) => state.rooms[roomId]);
   const { sheets, activeSheetId } = room || {};
 
   const handleContextMenu = (event: React.MouseEvent, sheetId: string) => {
@@ -38,7 +38,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
       sheet: {
         id: newSheetId,
         name: `New Sheet ${Object.keys(sheets || {}).length + 1}`,
-        assignmentEvents: [],
+        assignmentEvents: {},
         encounterEvents: [],
         timelineLength: 600,
         columnCount: 5,
@@ -47,9 +47,13 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
     dispatch(setActiveSheet({ roomId, sheetId: newSheetId }));
   };
 
+  if (!sheets) {
+    return null;
+  }
+
   return (
     <div className={`flex items-center ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-300'} border-t p-1 overflow-x-auto`}>
-      {sheets && Object.values(sheets).map((sheet) => (
+      {Object.values(sheets).map((sheet) => (
         <button
           key={sheet.id}
           className={`px-4 py-2 text-sm font-medium rounded-t-lg mr-1 transition-colors ${

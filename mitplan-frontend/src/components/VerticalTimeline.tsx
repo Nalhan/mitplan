@@ -1,46 +1,36 @@
-import React, { useRef, useCallback, useEffect } from 'react';
-import { useDrop } from 'react-dnd';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useDrop, useDragLayer } from 'react-dnd';
+import { v4 as uuidv4 } from 'uuid';
 import AssignmentEvent from './AssignmentEvent';
 import EncounterEvent from './EncounterEvent';
 import { useTheme } from '../contexts/ThemeContext';
 import { useContextMenu } from './Shared/ContextMenu';
-import { EncounterEventType, AssignmentEventType } from '../types';
-import { updateAssignmentEvents, deleteAssignmentEvents } from '../store/roomsSlice';
-import { AppDispatch } from '../store';
-import { useDispatch } from 'react-redux';
+import { EncounterEventType, AssignmentEventType, RootState } from '../types';
+import { updateSheet } from '../store/roomsSlice';
 
-const ItemType = 'TIMELINE_EVENT';
+const ItemType = 'ASSIGNMENT_EVENT';
 
 interface EventColumnProps {
-  events: AssignmentEventType[];
+  events: { [id: string]: AssignmentEventType };
   moveEvent: (id: string, newTimestamp: number, columnId: number) => void;
   timelineLength: number;
   onDragEnd: (id: string, newTimestamp: number, columnId: number) => void;
   onDrop: (item: any, columnId: number, newTimestamp: number) => void;
   columnId: number;
-  onDeleteEvent: (id: string) => void;
+  roomId: string;
+  sheetId: string;
 }
 
-const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLength, onDragEnd, onDrop, columnId, onDeleteEvent }) => {
+const EventColumn: React.FC<EventColumnProps> = ({ events, timelineLength, onDragEnd, onDrop, columnId, roomId, sheetId }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { showContextMenu } = useContextMenu();
 
   const [, drop] = useDrop({
     accept: ItemType,
-    hover: (item: AssignmentEventType, monitor) => {
-      const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
-      if (draggedTimestamp !== item.timestamp) {
-        item.timestamp = draggedTimestamp;
-        item.columnId = columnId;
-      }
-    },
     drop: (item: AssignmentEventType, monitor) => {
       const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
-      if ('isNew' in item && item.isNew) {
-        onDrop(item, columnId, draggedTimestamp);
-      } else {
-        onDragEnd(item.id, draggedTimestamp, columnId);
-      }
+      onDragEnd(item.id, draggedTimestamp, columnId);
     },
   });
 
@@ -70,12 +60,13 @@ const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLe
       className="relative h-full w-full"
       onContextMenu={handleContextMenu}
     >
-      {events.map((event) => (
+      {Object.values(events).map((event) => (
         <AssignmentEvent 
           key={event.id} 
           event={event} 
           timelineLength={timelineLength}
-          onDelete={() => onDeleteEvent(event.id)}
+          roomId={roomId}
+          sheetId={sheetId}
         />
       ))}
     </div>
@@ -85,69 +76,46 @@ const EventColumn: React.FC<EventColumnProps> = ({ events, moveEvent, timelineLe
 interface VerticalTimelineProps {
   roomId: string;
   sheetId: string;
-  events: AssignmentEventType[];
-  timelineLength: number;
-  columnCount?: number;
-  encounterEvents?: EncounterEventType[];
 }
 
-const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ 
-  roomId,
-  sheetId,
-  events, 
-  timelineLength, 
-  columnCount = 2, 
-  encounterEvents = []
-}) => {
+const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) => {
   const { darkMode } = useTheme();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch();
+
+  const sheet = useSelector((state: RootState) => state.rooms[roomId]?.sheets[sheetId]);
+  const { assignmentEvents, encounterEvents, timelineLength, columnCount } = sheet || {};
+
+  const updateSheetEvents = useCallback((updatedEvents: { [id: string]: AssignmentEventType }) => {
+    const newEvents = { ...assignmentEvents, ...updatedEvents };
+    dispatch(updateSheet({ roomId, sheetId, updates: { assignmentEvents: newEvents } }));
+  }, [dispatch, roomId, sheetId, assignmentEvents]);
 
   const handleMoveEvent = useCallback((id: string, newTimestamp: number, columnId: number) => {
-    dispatch(updateAssignmentEvents({
-      roomId,
-      sheetId,
-      events: { [id]: { id, timestamp: newTimestamp, columnId } }
-    }));
-  }, [dispatch, roomId, sheetId]);
-
-  const handleDragEnd = useCallback((id: string, newTimestamp: number, columnId: number) => {
-    dispatch(updateAssignmentEvents({
-      roomId,
-      sheetId,
-      events: { [id]: { id, timestamp: newTimestamp, columnId } }
-    }));
-  }, [dispatch, roomId, sheetId]);
+    if (assignmentEvents && id in assignmentEvents) {
+      updateSheetEvents({ [id]: { ...assignmentEvents[id], timestamp: newTimestamp, columnId } });
+    }
+  }, [updateSheetEvents, assignmentEvents]);
 
   const handleDrop = useCallback((item: any, columnId: number, newTimestamp: number) => {
     if (item.isNew) {
       const newEvent: AssignmentEventType = {
-        id: Date.now().toString(), // Generate a unique ID
+        id: uuidv4(),
+        name: item.name,
         timestamp: newTimestamp,
         columnId: columnId,
-        name: item.name
       };
-      dispatch(updateAssignmentEvents({
-        roomId,
-        sheetId,
-        events: { [newEvent.id]: newEvent }
-      }));
+      updateSheetEvents({ [newEvent.id]: newEvent });
+    } else {
+      handleMoveEvent(item.id, newTimestamp, columnId);
     }
-  }, [dispatch, roomId, sheetId]);
+  }, [updateSheetEvents, handleMoveEvent]);
 
-  const handleDeleteEvent = useCallback((key: string) => {
-    dispatch(deleteAssignmentEvents({
-      roomId,
-      sheetId,
-      eventId: key
-    }));
-  }, [dispatch, roomId, sheetId]);
-
-  useEffect(() => {
-    console.log('VerticalTimeline events updated:', events);
-  }, [events]);
-
-  const columnEvents = Array.from({ length: columnCount }, (_, index) => 
-    events.filter(event => event.columnId === index + 1 || (!event.columnId && index === 0))
+  const columnEvents = Array.from({ length: columnCount || 2 }, (_, index) => 
+    Object.fromEntries(
+      Object.entries(assignmentEvents || {}).filter(([_, event]) => 
+        event.columnId === index + 1 || (!event.columnId && index === 0)
+      )
+    )
   );
 
   useEffect(() => {
@@ -162,25 +130,62 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({
     };
   }, []);
 
-  return (
-    <div className={`flex h-screen ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden`}>
-      <TimestampColumn timelineLength={timelineLength} encounterEvents={encounterEvents} />
-      <div className={`flex flex-grow ${darkMode ? 'divide-gray-700' : 'divide-gray-200'} divide-x`}>
-        {columnEvents.map((events, index) => (
-          <div key={index} className="flex-grow flex-basis-0">
-            <EventColumn 
-              events={events} 
-              moveEvent={handleMoveEvent}
-              timelineLength={timelineLength} 
-              onDragEnd={handleDragEnd}
-              onDrop={handleDrop}
-              columnId={index + 1}
-              onDeleteEvent={handleDeleteEvent}
-            />
-          </div>
-        ))}
+  const CustomDragLayer = () => {
+    const { isDragging, item, currentOffset } = useDragLayer((monitor) => ({
+      item: monitor.getItem(),
+      currentOffset: monitor.getSourceClientOffset(),
+      isDragging: monitor.isDragging(),
+    }));
+
+    if (!isDragging || !currentOffset) {
+      return null;
+    }
+
+    const { y } = currentOffset;
+    const timestamp = Math.max(0, Math.min(Math.round((y / window.innerHeight) * timelineLength), timelineLength));
+
+    return (
+      <div style={{
+        position: 'fixed',
+        pointerEvents: 'none',
+        zIndex: 100,
+        left: currentOffset.x,
+        top: currentOffset.y,
+      }}>
+        <AssignmentEvent
+          event={{ ...item, timestamp }}
+          timelineLength={timelineLength}
+          roomId={roomId}
+          sheetId={sheetId}
+          isDragging
+        />
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <>
+      <div className={`flex h-screen ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden`}>
+        <TimestampColumn timelineLength={timelineLength || 0} encounterEvents={encounterEvents || []} />
+        <div className={`flex flex-grow ${darkMode ? 'divide-gray-700' : 'divide-gray-200'} divide-x`}>
+          {columnEvents.map((events, index) => (
+            <div key={index} className="flex-grow flex-basis-0">
+              <EventColumn 
+                events={events} 
+                moveEvent={handleMoveEvent}
+                timelineLength={timelineLength || 0} 
+                onDragEnd={handleMoveEvent}
+                onDrop={handleDrop}
+                columnId={index + 1}
+                roomId={roomId}
+                sheetId={sheetId}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <CustomDragLayer />
+    </>
   );
 };
 
@@ -210,4 +215,4 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({ timelineLength, encou
   );
 };
 
-export default VerticalTimeline; 
+export default VerticalTimeline;
