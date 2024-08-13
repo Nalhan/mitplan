@@ -3,6 +3,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
 import EncounterSelect from './EncounterSelect';
+import CooldownPalette from './CooldownPalette';
 import { useTheme } from '../contexts/ThemeContext';
 import { Sheet as SheetType, EncounterEventType } from '../types';
 import { deleteAssignmentEvents, updateEncounterEvents } from '../store/roomsSlice';
@@ -52,7 +53,7 @@ const SheetComponent: React.FC<SheetType & {
               />
             </div>
             <div className="absolute right-0 top-0 bottom-0 w-64">
-              {/* <CooldownPalette /> */}
+              <CooldownPalette />
             </div>
           </div>
         </div>

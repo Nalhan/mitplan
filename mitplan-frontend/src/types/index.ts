@@ -2,6 +2,7 @@
 
 import { ThunkAction } from 'redux-thunk';
 import { Action } from '@reduxjs/toolkit';
+import { Ability } from '../data/ability';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
@@ -34,15 +35,28 @@ export interface Roster {
   // Define roster properties here
 }
 
-export interface AssignmentEventType {
+export interface BaseEventType {
   id: string;
   name: string;
   timestamp: number;
   columnId: number;
   color?: string;
-  icon?: string;    // wow icon name, will be resolved to zam url later
-  // other properties...
+  icon?: string;
+  assignee?: string;
+  type?: string;
 }
+
+export interface CooldownEventType extends BaseEventType {
+  type: 'cooldown';
+  ability: Ability;
+}
+
+export interface TextEventType extends BaseEventType {
+  type: 'text';
+  content: string;
+}
+
+export type AssignmentEventType = BaseEventType | CooldownEventType | TextEventType;
 
 export interface EncounterEventType {
     id: number;
