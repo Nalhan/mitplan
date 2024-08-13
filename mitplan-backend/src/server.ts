@@ -25,10 +25,8 @@ interface RoomState {
       name: string;
       assignmentEvents: any[];
       encounterEvents: any[];
-      settings: {
-        timelineLength: number;
-        columnCount: number;
-      };
+      timelineLength: number;
+      columnCount: number;      
     };
   };
 }
@@ -49,7 +47,7 @@ const redis = new Redis(process.env.REDIS_URL!);
 
 // Read Docker secrets
 const DB_PASSWORD = fs.readFileSync('/run/secrets/db_password', 'utf8').trim();
-const JWT_SECRET = fs.readFileSync('/run/secrets/jwt_secret', 'utf8').trim();
+// const JWT_SECRET = fs.readFileSync('/run/secrets/jwt_secret', 'utf8').trim();
 
 // Initialize Sequelize
 const sequelize = new Sequelize(process.env.DB_NAME!, process.env.DB_USER!, DB_PASSWORD, {

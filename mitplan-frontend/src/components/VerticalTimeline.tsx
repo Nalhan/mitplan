@@ -1,12 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useDrop, useDragLayer } from 'react-dnd';
 import { v4 as uuidv4 } from 'uuid';
-import AssignmentEvent from './AssignmentEvent';
-import EncounterEvent from './EncounterEvent';
 import { useTheme } from '../contexts/ThemeContext';
-import { useContextMenu } from './Shared/ContextMenu';
-import { EncounterEventType, AssignmentEventType, RootState, CooldownEventType } from '../types';
+import { AssignmentEventType, RootState } from '../types';
 import { updateSheet, setTimeScale } from '../store/roomsSlice';
 import EventColumn from './EventColumn';
 import CustomDragLayer from './CustomDragLayer';
@@ -21,7 +17,6 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
   const { darkMode } = useTheme();
   const dispatch = useDispatch();
   const [scrollTop, setScrollTop] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const sheet = useSelector((state: RootState) => state.rooms[roomId]?.sheets[sheetId]);
@@ -72,19 +67,20 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
-    setScrollLeft(e.currentTarget.scrollLeft);
   };
 
   const handleTimeScaleChange = useCallback((newTimeScale: number) => {
     dispatch(setTimeScale({ roomId, sheetId, timeScale: newTimeScale }));
   }, [dispatch, roomId, sheetId]);
 
+  const columnWidth = 200; // Fixed width for each column
+
   return (
     <>
-      <div className={`flex h-screen ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden select-none`}>
+      <div className={`flex h-screen  ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden select-none`}>
         <div className="flex-grow overflow-auto" onScroll={handleScroll} ref={containerRef}>
           <div className="flex" style={{ height: `${timelineLength * timeScale + 20}px`, minWidth: '100%', width: 'max-content' }}>
-            <div className="flex-shrink-0" style={{ width: '120px', height: '100%' }}>
+            <div className="flex-shrink-0" style={{ width: '150px', height: '100%' }}>
               <TimestampColumn 
                 timelineLength={timelineLength || 0} 
                 encounterEvents={encounterEvents || []} 
@@ -93,9 +89,9 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
                 onTimeScaleChange={handleTimeScaleChange}
               />
             </div>
-            <div className={`flex flex-grow ${darkMode ? 'divide-gray-700' : 'divide-gray-200'} divide-x`}>
+            <div className={`flex ${darkMode ? 'divide-gray-700' : 'divide-gray-200'} divide-x`}>
               {columnEvents.map((events, index) => (
-                <div key={index} className="flex-grow">
+                <div key={index} style={{ width: `${columnWidth}px`, flexShrink: 0 }}>
                   <EventColumn 
                     events={events} 
                     timelineLength={timelineLength || 0} 

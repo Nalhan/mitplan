@@ -35,7 +35,7 @@ const CooldownItem: React.FC<CooldownItemProps> = ({ ability, classColor }) => {
   return (
     <div
       ref={drag}
-      className={`w-12 h-12 m-1 rounded cursor-move flex justify-center items-center ${isDragging ? 'opacity-50' : ''} ${darkMode ? 'shadow-md shadow-gray-700' : 'shadow-sm shadow-gray-300'}`}
+      className={`w-12 h-12 m-1 rounded cursor-move flex justify-center items-center hover:ring-2 hover:ring-inset hover:ring-blue-500 ${isDragging ? 'opacity-50' : ''} ${darkMode ? 'shadow-md shadow-gray-700' : 'shadow-sm shadow-gray-300'}`}
       style={{ backgroundColor: classColor }}
       title={`${ability.name} (${ability.cooldown}s)`}
     >

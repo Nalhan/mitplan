@@ -41,7 +41,7 @@ const EncounterEvent: React.FC<EncounterEventProps> = ({ event, timelineLength, 
 
   return (
     <div 
-      className={`absolute left-0 right-0 flex flex-col px-2 text-xs select-none overflow-hidden`}
+      className={`absolute left-0 right-2 flex flex-col px-2 text-xs select-none overflow-hidden`}
       style={{ 
         top: topPosition, 
         height: height,

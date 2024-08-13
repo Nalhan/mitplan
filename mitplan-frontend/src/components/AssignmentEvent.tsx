@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react';
-import { useDrag } from 'react-dnd';
+import { useDrag, DragPreviewImage } from 'react-dnd';
 import { FaTrash, FaClock } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { AssignmentEventType, CooldownEventType, TextEventType } from '../types';
@@ -23,7 +23,7 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
   const dispatch = useDispatch();
   const ref = useRef<HTMLDivElement>(null);
   const { darkMode } = useTheme();
-  const [{ isDragging: isBeingDragged }, drag] = useDrag(() => ({
+  const [{ isDragging: isBeingDragged }, drag, preview] = useDrag(() => ({
     type: ItemType,
     item: { ...event, type: ItemType },
     collect: (monitor) => ({
@@ -60,22 +60,23 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
 
   return (
     <>
+      <DragPreviewImage connect={preview} src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
       <div
-        className={`absolute left-2 right-2 bg-opacity-5 backdrop-filter backdrop-blur-sm`}
+        className={`absolute left-2 right-1/2 bg-opacity-5 backdrop-filter backdrop-blur-xl`}
         style={{
           top: top,
           height: durationHeight,
           backgroundColor: bgColor,
           display: isDragging ? 'none' : 'block',
           borderRadius: '4px',
-          boxShadow: `0 0 10px ${bgColor}40`,
+          //boxShadow: `0 0 10px ${bgColor}40`,
         }}
       />
       <div
         ref={ref}
-        className={`absolute left-2 right-2 p-2 rounded-md cursor-grab ${
-          isBeingDragged ? 'opacity-50' : ''
-        } ${darkMode ? 'shadow-lg shadow-gray-700' : 'shadow-md shadow-gray-300'}`}
+        className={`absolute left-2 right-2 p-2 rounded-md cursor-grab hover:ring-2 hover:ring-blue-500  ${
+          isBeingDragged ? 'opacity-100' : ''
+        } ${darkMode ? 'shadow-lg shadow-gray-700' : 'shadow-md shadow-gray-300'} group`}
         style={{
           top: top,
           backgroundColor: bgColor,
@@ -100,7 +101,7 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
         </div>
         <button
           onClick={handleDelete}
-          className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+          className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors duration-200 opacity-0 group-hover:opacity-100 transition-opacity ease-in-out"
         >
           <FaTrash className="text-xs" />
         </button>
