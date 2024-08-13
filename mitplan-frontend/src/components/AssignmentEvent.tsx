@@ -15,9 +15,11 @@ interface AssignmentEventProps {
   roomId: string;
   sheetId: string;
   isDragging?: boolean;
+  timeScale: number;
+  scrollTop: number;
 }
 
-const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength, roomId, sheetId, isDragging = false }) => {
+const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength, roomId, sheetId, isDragging = false, timeScale, scrollTop }) => {
   const dispatch = useDispatch();
   const ref = useRef<HTMLDivElement>(null);
   const { darkMode } = useTheme();
@@ -31,7 +33,8 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
 
   drag(ref);
 
-  const top = `${(event.timestamp / timelineLength) * 100}%`;
+  const top = `${event.timestamp * timeScale}px`;
+  const durationHeight = event.ability?.duration ? `${event.ability.duration * timeScale}px` : '0';
 
   const getContrastColor = (bgColor: string): string => {
     const rgb = parseInt(bgColor.slice(1), 16);
@@ -55,14 +58,12 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const durationHeight = event.ability?.duration ? `${(event.ability.duration / timelineLength) * 100}%` : '0';
-
   return (
     <>
       <div
         className={`absolute left-2 right-2 bg-opacity-5 backdrop-filter backdrop-blur-sm`}
         style={{
-          top,
+          top: top,
           height: durationHeight,
           backgroundColor: bgColor,
           display: isDragging ? 'none' : 'block',
@@ -76,8 +77,7 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
           isBeingDragged ? 'opacity-50' : ''
         } ${darkMode ? 'shadow-lg shadow-gray-700' : 'shadow-md shadow-gray-300'}`}
         style={{
-          top,
-          transform: 'translateY(-50%)',
+          top: top,
           backgroundColor: bgColor,
           display: isDragging ? 'none' : 'block',
         }}

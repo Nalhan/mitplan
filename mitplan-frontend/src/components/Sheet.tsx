@@ -35,26 +35,28 @@ const SheetComponent: React.FC<SheetType & {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className={`container mx-auto py-8 px-4 ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
-        <h2 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{name}</h2>
-        <div className="space-y-6">
-          <EncounterSelect onSelectEncounter={handleSelectEncounter} />
-          <button
-            onClick={handleClearEvents}
-            className={`${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'} text-white px-6 py-2 rounded font-semibold transition duration-300 ease-in-out`}
-          >
-            Clear Events
-          </button>
-          <div className="flex relative">
-            <div className="flex-1 mr-64">
-              <VerticalTimeline 
-                roomId={roomId}
-                sheetId={sheetId}
-              />
-            </div>
-            <div className="absolute right-0 top-0 bottom-0 w-64">
-              <CooldownPalette />
-            </div>
+      <div className={`h-full flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} px-6`}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{name}</h2>
+          <div className="flex items-center space-x-4">
+            <EncounterSelect onSelectEncounter={handleSelectEncounter} />
+            <button
+              onClick={handleClearEvents}
+              className={`${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'} text-white px-4 py-1 rounded font-semibold transition duration-300 ease-in-out text-sm`}
+            >
+              Clear Events
+            </button>
+          </div>
+        </div>
+        <div className="flex-grow flex overflow-hidden">
+          <div className="flex-grow overflow-hidden pr-10">
+            <VerticalTimeline 
+              roomId={roomId}
+              sheetId={sheetId}
+            />
+          </div>
+          <div className="w-36 flex-shrink-0">
+            <CooldownPalette />
           </div>
         </div>
       </div>

@@ -15,11 +15,14 @@ export interface RootState {
   rooms: { [roomId: string]: Room };
 }
 
-export interface Room {
-  id: string;
+export interface ServerSyncedRoom {
   sheets: { [sheetId: string]: Sheet };
-  roster: Roster;
+  // Add other properties that should be synced to the server
+}
+
+export interface Room extends ServerSyncedRoom {
   activeSheetId: string | null;
+  timeScale: number;
 }
 
 export interface Sheet {
@@ -63,6 +66,7 @@ export interface EncounterEventType {
     name: string;
     simple_name?: string;
     spellid?: number;
+    duration?: number;
     timer_dynamic: number;
     phase_start?: number;
     phase_end?: number;
@@ -72,3 +76,4 @@ export interface EncounterEventType {
 
 
 export type Encounter = EncounterEventType[];
+

@@ -1,5 +1,5 @@
 import io, { Socket } from 'socket.io-client';
-import { Room } from '../types';
+import { Room, ServerSyncedRoom } from '../types';
 
 let socket: Socket | null = null;
 let updateStateCallback: ((roomId: string, state: Room) => void) | null = null;
@@ -69,10 +69,10 @@ export const joinRoom = (roomId: string): Promise<void> => {
   });
 };
 
-export const updateServerState = (roomId: string, state: Room): void => {
-  console.log('Sending state update to server:', roomId, state);
+export const updateServerState = (roomId: string, roomState: ServerSyncedRoom) => {
+  console.log('Sending state update to server:', roomId, roomState);
   if (socket) {
-    socket.emit('stateUpdate', roomId, state);
+    socket.emit('stateUpdate', roomId, roomState);
   } else {
     console.error('Cannot update server state: Socket is not initialized');
   }

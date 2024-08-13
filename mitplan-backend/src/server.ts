@@ -31,7 +31,6 @@ interface RoomState {
       };
     };
   };
-  activeSheetId: string | null;
 }
 
 const app = express();
@@ -95,10 +94,11 @@ app.post('/api/rooms', async (req: Request, res: Response) => {
   do {
     roomId = generateRoomName();
   } while (await redis.exists(`room:${roomId}`));
+  const defaultSheetId = uuidv4();
   const initialState = {
     sheets: {
-      default: {
-        id: '1',
+      [defaultSheetId]: {
+        id: defaultSheetId,
         name: 'Default Sheet',
         assignmentEvents: [],
         encounterEvents: [],
@@ -106,7 +106,6 @@ app.post('/api/rooms', async (req: Request, res: Response) => {
         columnCount: 2 
       }
     },
-    activeSheetId: 'default'
   };
   await redis.set(`room:${roomId}`, JSON.stringify(initialState));
   await Room.create({ roomId, state: initialState });
