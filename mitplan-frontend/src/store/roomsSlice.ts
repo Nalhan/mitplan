@@ -1,13 +1,19 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Room, Sheet, AssignmentEventType, EncounterEventType, ServerSyncedRoom } from '../types';
+import { Room, Sheet, AssignmentEventType, EncounterEventType, ServerSyncedRoom, ServerSyncedSheet } from '../types';
 import { updateServerState } from './socketService';
 
 const initialState: { [roomId: string]: Room } = {};
 
 // Helper function to extract ServerSyncedRoom data
 const getServerSyncedState = (room: Room): ServerSyncedRoom => {
-  const { activeSheetId, timeScale, ...serverSyncedState } = room;
+  const { activeSheetId, ...serverSyncedState } = room;
   return serverSyncedState;
+};
+
+// Helper function to extract ServerSyncedSheet data
+const getServerSyncedSheet = (sheet: Sheet): ServerSyncedSheet => {
+  const { timeScale, ...serverSyncedSheet } = sheet;
+  return serverSyncedSheet;
 };
 
 const roomsSlice = createSlice({
@@ -52,7 +58,8 @@ const roomsSlice = createSlice({
       state[roomId].sheets[sheetId] = { 
         ...state[roomId].sheets[sheetId], 
         ...updates,
-        assignmentEvents: updates.assignmentEvents || state[roomId].sheets[sheetId].assignmentEvents || {}
+        assignmentEvents: updates.assignmentEvents || state[roomId].sheets[sheetId].assignmentEvents || {},
+        timelineLength: updates.timelineLength !== undefined ? updates.timelineLength : state[roomId].sheets[sheetId].timelineLength
       };
       updateServerState(roomId, getServerSyncedState(state[roomId]));
     },

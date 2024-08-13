@@ -1,39 +1,60 @@
-import React, { useState } from 'react';
-import { RashokEvents } from '../data/encounters/aberrus/Rashok';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { allEncounters } from '../data/encounters/encounters';
 import { useTheme } from '../contexts/ThemeContext';
-
-interface Encounter {
-  name: string;
-  events: typeof RashokEvents;
-}
-
-const encounters: Encounter[] = [
-  { name: 'Rashok', events: RashokEvents },
-  // Add more encounters here as they become available
-];
+import { Encounter, RootState } from '../types';
+import { updateSheet } from '../store/roomsSlice';
 
 interface EncounterSelectProps {
-  onSelectEncounter: (events: typeof RashokEvents, timelineLength: number) => void;
+  onSelectEncounter: (events: Encounter['events']) => void;
+  roomId: string;
 }
 
-const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter }) => {
+const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter, roomId }) => {
   const [selectedEncounter, setSelectedEncounter] = useState<string>('');
+  const [encounterList, setEncounterList] = useState<Record<string, Encounter>>({});
   const { darkMode } = useTheme();
+  const dispatch = useDispatch();
+  const activeRoom = useSelector((state: RootState) => state.rooms[roomId]);
+
+  useEffect(() => {
+    const loadEncounters = async () => {
+      try {
+        const encounters = await allEncounters;
+        setEncounterList(encounters);
+        console.log('Loaded encounters:', encounters); // Debug print
+      } catch (error) {
+        console.error('Failed to load encounters:', error);
+      }
+    };
+
+    loadEncounters();
+  }, []);
 
   const handleEncounterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedEncounter(event.target.value);
   };
 
-  const calculateTimelineLength = (events: typeof RashokEvents): number => {
-    const lastEvent = events[events.length - 1];
-    return lastEvent.timer_dynamic + (lastEvent.phase_start || 0);
-  };
-
   const handleApplyEncounter = () => {
-    const encounter = encounters.find(e => e.name === selectedEncounter);
-    if (encounter) {
-      const timelineLength = calculateTimelineLength(encounter.events);
-      onSelectEncounter(encounter.events, timelineLength);
+    const encounter = encounterList[selectedEncounter];
+    if (encounter && activeRoom) {
+      onSelectEncounter(encounter.events);
+      
+      // Update the sheet's timeline length
+      const activeSheetId = activeRoom.activeSheetId;
+      if (activeSheetId) {
+        console.log(`Attempting to update sheet: roomId=${roomId}, sheetId=${activeSheetId}, new timelineLength=${encounter.fightLength}`);
+        dispatch(updateSheet({
+          roomId,
+          sheetId: activeSheetId,
+          updates: { timelineLength: encounter.fightLength }
+        }));
+        console.log(`Updated timeline length to ${encounter.fightLength} for room ${roomId}, sheet ${activeSheetId}`); // Debug log
+      } else {
+        console.error('No active sheet found');
+      }
+    } else {
+      console.error('No encounter selected or active room not found');
     }
   };
 
@@ -49,8 +70,8 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter }) 
         } focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >
         <option value="">Select an encounter</option>
-        {encounters.map((encounter) => (
-          <option key={encounter.name} value={encounter.name}>
+        {Object.entries(encounterList).map(([id, encounter]) => (
+          <option key={id} value={id}>
             {encounter.name}
           </option>
         ))}

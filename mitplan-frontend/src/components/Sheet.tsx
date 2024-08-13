@@ -39,7 +39,7 @@ const SheetComponent: React.FC<SheetType & {
         <div className="flex justify-between items-center mb-4">
           <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{name}</h2>
           <div className="flex items-center space-x-4">
-            <EncounterSelect onSelectEncounter={handleSelectEncounter} />
+            <EncounterSelect onSelectEncounter={handleSelectEncounter} roomId={roomId} />
             <button
               onClick={handleClearEvents}
               className={`${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'} text-white px-4 py-1 rounded font-semibold transition duration-300 ease-in-out text-sm`}

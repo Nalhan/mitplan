@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import EncounterEvent from './EncounterEvent';
 import { EncounterEventType } from '../types';
@@ -22,6 +22,8 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startTimeScale, setStartTimeScale] = useState(timeScale);
+  const handleMouseMoveRef = useRef<(e: MouseEvent) => void>();
+  const handleMouseUpRef = useRef<(e: MouseEvent) => void>();
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     setIsDragging(true);
@@ -29,26 +31,27 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
     setStartTimeScale(timeScale);
   }, [timeScale]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isDragging) {
-      const newY = e.clientY;
-      const newTimeScale = Math.max(1, Math.min(startTimeScale * (1 + (newY - startY) / 100), 100));
-      onTimeScaleChange(newTimeScale);
-    }
-  }, [isDragging, startY, startTimeScale, onTimeScaleChange]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
   useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+    handleMouseMoveRef.current = (e: MouseEvent) => {
+      if (isDragging) {
+        const newY = e.clientY;
+        const newTimeScale = Math.max(1, Math.min(startTimeScale * (1 + (newY - startY) / 100), 100));
+        onTimeScaleChange(newTimeScale);
+      }
     };
-  }, [handleMouseMove, handleMouseUp]);
+
+    handleMouseUpRef.current = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMoveRef.current);
+    document.addEventListener('mouseup', handleMouseUpRef.current);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMoveRef.current!);
+      document.removeEventListener('mouseup', handleMouseUpRef.current!);
+    };
+  }, [isDragging, startY, startTimeScale, onTimeScaleChange]);
 
   const isTimestampNearEvent = (timestamp: number) => {
     return encounterEvents.some(event => {

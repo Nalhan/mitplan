@@ -45,6 +45,7 @@ const CustomDragLayer: React.FC<CustomDragLayerProps> = ({
         sheetId={sheetId}
         isDragging
         timeScale={timeScale}
+        scrollTop={scrollTop}
       />
     </div>
   );

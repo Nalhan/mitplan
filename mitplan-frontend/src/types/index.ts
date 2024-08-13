@@ -22,10 +22,10 @@ export interface ServerSyncedRoom {
 
 export interface Room extends ServerSyncedRoom {
   activeSheetId: string | null;
-  timeScale: number;
+  // timeScale: number;
 }
 
-export interface Sheet {
+export interface ServerSyncedSheet {
   id: string;
   name: string;
   assignmentEvents: { [id: string]: AssignmentEventType };
@@ -34,6 +34,9 @@ export interface Sheet {
   columnCount: number;
 }
 
+export interface Sheet extends ServerSyncedSheet {
+  timeScale: number;
+}
 export interface Roster {
   // Define roster properties here
 }
@@ -75,5 +78,10 @@ export interface EncounterEventType {
 }
 
 
-export type Encounter = EncounterEventType[];
+export type Encounter = {
+  events: EncounterEventType[];
+  name: string;
+  id: string;
+  fightLength: number;
+};
 

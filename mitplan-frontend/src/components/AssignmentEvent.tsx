@@ -33,8 +33,11 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
 
   drag(ref);
 
+  const isCooldownEvent = (event: AssignmentEventType): event is CooldownEventType => 
+    'ability' in event;
+
   const top = `${event.timestamp * timeScale}px`;
-  const durationHeight = event.ability?.duration ? `${event.ability.duration * timeScale}px` : '0';
+  const durationHeight = isCooldownEvent(event) ? `${event.ability.duration * timeScale}px` : '0';
 
   const getContrastColor = (bgColor: string): string => {
     const rgb = parseInt(bgColor.slice(1), 16);
@@ -75,8 +78,8 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
       <div
         ref={ref}
         className={`absolute left-2 right-2 p-2 rounded-md cursor-grab hover:ring-2 hover:ring-blue-500  ${
-          isBeingDragged ? 'opacity-100' : ''
-        } ${darkMode ? 'shadow-lg shadow-gray-700' : 'shadow-md shadow-gray-300'} group`}
+          isBeingDragged ? '' : ''
+        } ${darkMode ? 'shadow-sm shadow-gray-700' : 'shadow-sm shadow-gray-700'} group`}
         style={{
           top: top,
           backgroundColor: bgColor,
@@ -101,7 +104,7 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
         </div>
         <button
           onClick={handleDelete}
-          className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors duration-200 opacity-0 group-hover:opacity-100 transition-opacity ease-in-out"
+          className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 duration-200 opacity-0 group-hover:opacity-100 transition-opacity ease-in-out"
         >
           <FaTrash className="text-xs" />
         </button>
