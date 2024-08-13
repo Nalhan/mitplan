@@ -50,14 +50,16 @@ const Room: React.FC = () => {
   return (
     <ContextMenuProvider>
       <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
-        <div className="flex-grow overflow-auto p-4">
+        <div className="flex-shrink-0 p-4">
           <h1 className={`text-4xl font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Mitplan</h1>
           <CopyToClipboard text={`${window.location.origin}/room/${roomId}` || ''} popupText="Link copied!">
             <h2 className={`text-2xl font-bold mb-0 ${darkMode ? 'text-white hover:bg-gray-800' : 'text-gray-800 hover:bg-gray-100'} rounded px-0 py-1 inline-block`}>
               Room: {roomId}
             </h2>
           </CopyToClipboard>
-          <div className="mt-4">
+        </div>
+        <div className="flex flex-col flex-grow overflow-hidden">
+          <div className="flex-grow overflow-auto">
             {activeSheetId && sheets[activeSheetId] && (
               <SheetComponent
                 {...sheets[activeSheetId]}
@@ -66,15 +68,15 @@ const Room: React.FC = () => {
               />
             )}
           </div>
-        </div>
-        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-200 border-gray-300'} border-t p-2`}>
-          <SheetNavigation
-            roomId={roomId!}
-            onRenameSheet={(sheetId) => {
-              setSheetToRename(sheetId);
-              setIsRenameModalOpen(true);
-            }}
-          />
+          <div className={`flex-shrink-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-200 border-gray-300'} border-t p-0`}>
+            <SheetNavigation
+              roomId={roomId!}
+              onRenameSheet={(sheetId) => {
+                setSheetToRename(sheetId);
+                setIsRenameModalOpen(true);
+              }}
+            />
+          </div>
         </div>
       </div>
       <RenameSheetModal

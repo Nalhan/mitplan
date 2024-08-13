@@ -1,17 +1,17 @@
-import { EncounterEventType } from '../../../types/encounterTypes';
+import { EncounterEventType } from '../../../types';
 
 export const RashokEvents: EncounterEventType[] = [
-    {
-        id: 1,
-        name: "On Pull",
-        simple_name: "On Pull",
-        spellid: 0,
-        timer_dynamic: 5,
-        phase_start: 0,
-        phase_end: 600,
-        cleu: "",
-        color: "#FFFFFF"
-    },
+    // {
+    //     id: 1,
+    //     name: "On Pull",
+    //     simple_name: "On Pull",
+    //     spellid: 0,
+    //     timer_dynamic: 5,
+    //     phase_start: 0,
+    //     phase_end: 600,
+    //     cleu: "",
+    //     color: "#FFFFFF"
+    // },
     {
         id: 2,
         name: "Searing Slam",
@@ -158,58 +158,59 @@ export const RashokEvents: EncounterEventType[] = [
     {
         id: 15,
         name: "Elder's Conduit",
-        simple_name: "Intermission 0/20 sec",
+        simple_name: "Intermission",
         spellid: 404448,
         timer_dynamic: 112,
         phase_start: 0,
         phase_end: 600,
+        duration: 20,
         cleu: "",
         color: "#1E90FF"
     },
-    {
-        id: 16,
-        name: "Elder's Conduit",
-        simple_name: "Intermission 5/20 sec",
-        spellid: 404448,
-        timer_dynamic: 117,
-        phase_start: 0,
-        phase_end: 600,
-        cleu: "",
-        color: "#1E90FF"
-    },
-    {
-        id: 17,
-        name: "Elder's Conduit",
-        simple_name: "Intermission 10/20 sec",
-        spellid: 401419,
-        timer_dynamic: 122,
-        phase_start: 0,
-        phase_end: 600,
-        cleu: "",
-        color: "#1E90FF"
-    },
-    {
-        id: 18,
-        name: "Elder's Conduit",
-        simple_name: "Intermission 15/20 sec",
-        spellid: 401419,
-        timer_dynamic: 127,
-        phase_start: 0,
-        phase_end: 600,
-        cleu: "",
-        color: "#1E90FF"
-    },
-    {
-        id: 19,
-        name: "Elder's Conduit",
-        simple_name: "Intermission End",
-        spellid: 404448,
-        timer_dynamic: 20,
-        phase_start: 112,
-        phase_end: 600,
-        cleu: "SAA:401419:1",
-        color: "#1E90FF"
-    },
+    // {
+    //     id: 16,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission 5/20 sec",
+    //     spellid: 404448,
+    //     timer_dynamic: 117,
+    //     phase_start: 0,
+    //     phase_end: 600,
+    //     cleu: "",
+    //     color: "#1E90FF"
+    // },
+    // {
+    //     id: 17,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission 10/20 sec",
+    //     spellid: 401419,
+    //     timer_dynamic: 122,
+    //     phase_start: 0,
+    //     phase_end: 600,
+    //     cleu: "",
+    //     color: "#1E90FF"
+    // },
+    // {
+    //     id: 18,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission 15/20 sec",
+    //     spellid: 401419,
+    //     timer_dynamic: 127,
+    //     phase_start: 0,
+    //     phase_end: 600,
+    //     cleu: "",
+    //     color: "#1E90FF"
+    // },
+    // {
+    //     id: 19,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission End",
+    //     spellid: 404448,
+    //     timer_dynamic: 20,
+    //     phase_start: 112,
+    //     phase_end: 600,
+    //     cleu: "SAA:401419:1",
+    //     color: "#1E90FF"
+    // },
     {
         id: 20,
         name: "Searing Slam",
@@ -356,58 +357,59 @@ export const RashokEvents: EncounterEventType[] = [
     {
         id: 33,
         name: "Elder's Conduit",
-        simple_name: "Intermission 0/20 sec",
+        simple_name: "Intermission",
         spellid: 404448,
         timer_dynamic: 135,
         phase_start: 112,
         phase_end: 600,
+        duration: 20,
         cleu: "SAA:401419:1",
         color: "#1E90FF"
     },
-    {
-        id: 34,
-        name: "Elder's Conduit",
-        simple_name: "Intermission 5/20 sec",
-        spellid: 404448,
-        timer_dynamic: 140,
-        phase_start: 112,
-        phase_end: 600,
-        cleu: "SAA:401419:1",
-        color: "#1E90FF"
-    },
-    {
-        id: 35,
-        name: "Elder's Conduit",
-        simple_name: "Intermission 10/20 sec",
-        spellid: 401419,
-        timer_dynamic: 145,
-        phase_start: 112,
-        phase_end: 600,
-        cleu: "SAA:401419:1",
-        color: "#1E90FF"
-    },
-    {
-        id: 36,
-        name: "Elder's Conduit",
-        simple_name: "Intermission 15/20 sec",
-        spellid: 401419,
-        timer_dynamic: 150,
-        phase_start: 112,
-        phase_end: 600,
-        cleu: "SAA:401419:1",
-        color: "#1E90FF"
-    },
-    {
-        id: 37,
-        name: "Elder's Conduit",
-        simple_name: "Intermission End",
-        spellid: 404448,
-        timer_dynamic: 20,
-        phase_start: 247,
-        phase_end: 600,
-        cleu: "SAA:401419:2",
-        color: "#1E90FF"
-    },
+    // {
+    //     id: 34,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission 5/20 sec",
+    //     spellid: 404448,
+    //     timer_dynamic: 140,
+    //     phase_start: 112,
+    //     phase_end: 600,
+    //     cleu: "SAA:401419:1",
+    //     color: "#1E90FF"
+    // },
+    // {
+    //     id: 35,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission 10/20 sec",
+    //     spellid: 401419,
+    //     timer_dynamic: 145,
+    //     phase_start: 112,
+    //     phase_end: 600,
+    //     cleu: "SAA:401419:1",
+    //     color: "#1E90FF"
+    // },
+    // {
+    //     id: 36,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission 15/20 sec",
+    //     spellid: 401419,
+    //     timer_dynamic: 150,
+    //     phase_start: 112,
+    //     phase_end: 600,
+    //     cleu: "SAA:401419:1",
+    //     color: "#1E90FF"
+    // },
+    // {
+    //     id: 37,
+    //     name: "Elder's Conduit",
+    //     simple_name: "Intermission End",
+    //     spellid: 404448,
+    //     timer_dynamic: 20,
+    //     phase_start: 247,
+    //     phase_end: 600,
+    //     cleu: "SAA:401419:2",
+    //     color: "#1E90FF"
+    // },
     {
         id: 38,
         name: "Searing Slam",

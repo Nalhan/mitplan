@@ -2,6 +2,7 @@
 
 import { ThunkAction } from 'redux-thunk';
 import { Action } from '@reduxjs/toolkit';
+import { Ability } from '../data/ability';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
@@ -14,11 +15,14 @@ export interface RootState {
   rooms: { [roomId: string]: Room };
 }
 
-export interface Room {
-  id: string;
+export interface ServerSyncedRoom {
   sheets: { [sheetId: string]: Sheet };
-  roster: Roster;
+  // Add other properties that should be synced to the server
+}
+
+export interface Room extends ServerSyncedRoom {
   activeSheetId: string | null;
+  timeScale: number;
 }
 
 export interface Sheet {
@@ -34,21 +38,35 @@ export interface Roster {
   // Define roster properties here
 }
 
-export interface AssignmentEventType {
+export interface BaseEventType {
   id: string;
   name: string;
   timestamp: number;
   columnId: number;
   color?: string;
-  icon?: string;    // wow icon name, will be resolved to zam url later
-  // other properties...
+  icon?: string;
+  assignee?: string;
+  type?: string;
 }
+
+export interface CooldownEventType extends BaseEventType {
+  type: 'cooldown';
+  ability: Ability;
+}
+
+export interface TextEventType extends BaseEventType {
+  type: 'text';
+  content: string;
+}
+
+export type AssignmentEventType = BaseEventType | CooldownEventType | TextEventType;
 
 export interface EncounterEventType {
     id: number;
     name: string;
     simple_name?: string;
     spellid?: number;
+    duration?: number;
     timer_dynamic: number;
     phase_start?: number;
     phase_end?: number;
@@ -58,3 +76,4 @@ export interface EncounterEventType {
 
 
 export type Encounter = EncounterEventType[];
+

@@ -26,6 +26,8 @@ export type Ability = {
   name: string
   id: number
   icon: string
+  cooldown: number
+  duration: number
   onByDefault?: boolean
   notes?: string
   heroTree?: string

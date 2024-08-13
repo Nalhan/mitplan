@@ -1,22 +1,35 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Room, Sheet, AssignmentEventType, EncounterEventType } from '../types';
+import { Room, Sheet, AssignmentEventType, EncounterEventType, ServerSyncedRoom } from '../types';
 import { updateServerState } from './socketService';
 
 const initialState: { [roomId: string]: Room } = {};
+
+// Helper function to extract ServerSyncedRoom data
+const getServerSyncedState = (room: Room): ServerSyncedRoom => {
+  const { activeSheetId, timeScale, ...serverSyncedState } = room;
+  return serverSyncedState;
+};
 
 const roomsSlice = createSlice({
   name: 'rooms',
   initialState,
   reducers: {
-    setRoom: (state, action: PayloadAction<{ roomId: string; state: Room }>) => {
+    setRoom: (state, action: PayloadAction<{ roomId: string; state: ServerSyncedRoom }>) => {
       const { roomId, state: roomState } = action.payload;
       console.log('Setting room state in reducer:', roomId, roomState);
-      state[roomId] = roomState;
+      
+      // Preserve the current activeSheetId if it exists
+      const currentActiveSheetId = state[roomId]?.activeSheetId;
+      
+      state[roomId] = {
+        ...roomState,
+        activeSheetId: currentActiveSheetId || Object.keys(roomState.sheets)[0] || null
+      };
     },
     updateRoom: (state, action: PayloadAction<{ roomId: string; updates: Partial<Room> }>) => {
       const { roomId, updates } = action.payload;
       state[roomId] = { ...state[roomId], ...updates };
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     addSheet: (state, action: PayloadAction<{ roomId: string; sheet: Sheet }>) => {
       const { roomId, sheet } = action.payload;
@@ -24,7 +37,7 @@ const roomsSlice = createSlice({
         ...sheet,
         assignmentEvents: sheet.assignmentEvents || {}
       };
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     deleteSheet: (state, action: PayloadAction<{ roomId: string; sheetId: string }>) => {
       const { roomId, sheetId } = action.payload;
@@ -32,22 +45,20 @@ const roomsSlice = createSlice({
       if (state[roomId].activeSheetId === sheetId) {
         state[roomId].activeSheetId = null;
       }
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     updateSheet: (state, action: PayloadAction<{ roomId: string; sheetId: string; updates: Partial<Sheet> }>) => {
       const { roomId, sheetId, updates } = action.payload;
-      const currentSheet = state[roomId].sheets[sheetId];
       state[roomId].sheets[sheetId] = { 
-        ...currentSheet, 
+        ...state[roomId].sheets[sheetId], 
         ...updates,
-        assignmentEvents: updates.assignmentEvents || currentSheet.assignmentEvents || {}
+        assignmentEvents: updates.assignmentEvents || state[roomId].sheets[sheetId].assignmentEvents || {}
       };
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     setActiveSheet: (state, action: PayloadAction<{ roomId: string; sheetId: string }>) => {
       const { roomId, sheetId } = action.payload;
       state[roomId].activeSheetId = sheetId;
-      updateServerState(roomId, state[roomId]);
     },
     updateAssignmentEvents: (state, action: PayloadAction<{ 
       roomId: string; 
@@ -63,14 +74,13 @@ const roomsSlice = createSlice({
 
       if ('id' in events) {
         // Single event object
-        // wow that's fuckin weird just accept the type man
         const eventWithStringId = events as AssignmentEventType & { id: string };
         sheet.assignmentEvents[eventWithStringId.id] = eventWithStringId;
       } else {
         // Object with event IDs as keys
         Object.assign(sheet.assignmentEvents, events);
       }
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     deleteAssignmentEvents: (state, action: PayloadAction<{ roomId: string; sheetId: string; eventId?: string | string[] }>) => {
       const { roomId, sheetId, eventId } = action.payload;
@@ -85,7 +95,7 @@ const roomsSlice = createSlice({
       } else {
         delete sheet.assignmentEvents[eventId];
       }
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     addAssignmentEvent: (state, action: PayloadAction<{ roomId: string; sheetId: string; event: AssignmentEventType }>) => {
       const { roomId, sheetId, event } = action.payload;
@@ -96,7 +106,7 @@ const roomsSlice = createSlice({
       }
       
       sheet.assignmentEvents[event.id] = event;
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     updateEncounterEvents: (state, action: PayloadAction<{ roomId: string; sheetId: string; events: EncounterEventType | EncounterEventType[] | { [eventId: number]: Partial<EncounterEventType> } }>) => {
       const { roomId, sheetId, events } = action.payload;
@@ -125,8 +135,8 @@ const roomsSlice = createSlice({
           });
         }
       }
-      updateServerState(roomId, state[roomId]);
-    },
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
+    },  
     deleteEncounterEvents: (state, action: PayloadAction<{ roomId: string; sheetId: string; eventId?: number | number[] }>) => {
       const { roomId, sheetId, eventId } = action.payload;
       const sheet = state[roomId].sheets[sheetId];
@@ -142,7 +152,13 @@ const roomsSlice = createSlice({
         const eventIds = Array.isArray(eventId) ? eventId : [eventId];
         sheet.encounterEvents = sheet.encounterEvents.filter(e => !eventIds.includes(e.id));
       }
-      updateServerState(roomId, state[roomId]);
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
+    },
+    setTimeScale: (state, action: PayloadAction<{ roomId: string; sheetId: string; timeScale: number }>) => {
+      const { roomId, sheetId, timeScale } = action.payload;
+      if (state[roomId] && state[roomId].sheets[sheetId]) {
+        state[roomId].sheets[sheetId].timeScale = timeScale;
+      }
     },
   },
 });
@@ -157,7 +173,8 @@ export const {
   updateAssignmentEvents,
   deleteAssignmentEvents,
   updateEncounterEvents,
-  deleteEncounterEvents
+  deleteEncounterEvents,
+  setTimeScale
 } = roomsSlice.actions;
 
 export default roomsSlice.reducer;

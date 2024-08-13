@@ -10,12 +10,11 @@ import store from './store';
 const AppContent: React.FC = () => {
   const { darkMode, toggleDarkMode } = useTheme();  
 
-
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">
+    <div className="h-screen overflow-hidden bg-white dark:bg-gray-900 text-black dark:text-white">
       <button
         onClick={toggleDarkMode}
-        className="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+        className="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white z-10"
         title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       >
         {darkMode ? (
@@ -28,10 +27,12 @@ const AppContent: React.FC = () => {
           </svg>
         )}
       </button>
-      <Routes>
-        <Route path="/" element={<RoomSelection />} />
-        <Route path="/room/:roomId" element={<Room />} />
-      </Routes>
+      <div className="h-full overflow-auto">
+        <Routes>
+          <Route path="/" element={<RoomSelection />} />
+          <Route path="/room/:roomId" element={<Room />} />
+        </Routes>
+      </div>
     </div>
   );
 };
