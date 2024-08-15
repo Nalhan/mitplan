@@ -23,10 +23,24 @@ interface RoomState {
     [key: string]: {
       id: string;
       name: string;
-      assignmentEvents: any[];
-      encounterEvents: any[];
-      timelineLength: number;
-      columnCount: number;      
+      assignmentEvents: { [id: string]: any };
+      encounter: {
+        events: any[];
+        name: string;
+        id: string;
+        fightLength: number;
+      };
+      columnCount: number;
+      timeScale: number;
+    };
+  };
+  roster: {
+    [key: string]: {
+      id: string;
+      name: string;
+      class: string;
+      spec: string;
+      assignedSheets: string[];
     };
   };
 }
@@ -93,17 +107,24 @@ app.post('/api/rooms', async (req: Request, res: Response) => {
     roomId = generateRoomName();
   } while (await redis.exists(`room:${roomId}`));
   const defaultSheetId = uuidv4();
-  const initialState = {
+  const initialState: RoomState = {
+    id: roomId,
     sheets: {
       [defaultSheetId]: {
         id: defaultSheetId,
         name: 'Default Sheet',
-        assignmentEvents: [],
-        encounterEvents: [],
-        timelineLength: 121, 
-        columnCount: 2 
+        assignmentEvents: {},
+        encounter: {
+          events: [],
+          name: 'Default Encounter',
+          id: 'default',
+          fightLength: 600 // 10 minutes default fight length
+        },
+        columnCount: 2,
+        timeScale: 1
       }
     },
+    roster: {} // Initialize an empty roster
   };
   await redis.set(`room:${roomId}`, JSON.stringify(initialState));
   await Room.create({ roomId, state: initialState });

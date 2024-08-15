@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { RootState } from '../types';
 import { addSheet, deleteSheet, setActiveSheet } from '../store/roomsSlice';
 import { v4 as uuidv4 } from 'uuid';
+import { allEncounters } from '../data/encounters/encounters';
 
 interface SheetNavigationProps {
   roomId: string;
@@ -33,15 +34,18 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
 
   const handleCreateSheet = () => {
     const newSheetId = uuidv4();
+    const defaultEncounterId = Object.keys(allEncounters)[0];
+    const defaultEncounter = allEncounters[defaultEncounterId];
+
     dispatch(addSheet({
       roomId,
       sheet: {
         id: newSheetId,
         name: `New Sheet ${Object.keys(sheets || {}).length + 1}`,
         assignmentEvents: {},
-        encounterEvents: [],
-        timelineLength: 600,
+        encounter: defaultEncounter,
         columnCount: 5,
+        timeScale: 1,
       }
     }));
     dispatch(setActiveSheet({ roomId, sheetId: newSheetId }));

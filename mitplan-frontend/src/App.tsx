@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import RoomSelection from './components/RoomSelection';
 import Room from './components/Room';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { Provider as ReduxProvider } from 'react-redux';
-import { initializeSocket } from './store/socketService';
 import store from './store';
 
 const AppContent: React.FC = () => {

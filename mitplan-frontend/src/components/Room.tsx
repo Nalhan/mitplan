@@ -10,16 +10,16 @@ import CopyToClipboard from './Shared/CopyToClipboard';
 import { useTheme } from '../contexts/ThemeContext';
 import { setActiveSheet, updateSheet } from '../store/roomsSlice';
 import { initializeSocket, joinRoom } from '../store/socketService';
-import store from '../store';
+
 
 const Room: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const room = useSelector((state: RootState) => {
-    console.log('Current rooms state:', state.rooms);
+    // console.log('Current rooms state:', state.rooms);
     return state.rooms[roomId!];
   });
-  console.log('Room data:', room);
+  // console.log('Room data:', room);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [sheetToRename, setSheetToRename] = useState<string | null>(null);
   const { darkMode } = useTheme();
@@ -58,25 +58,23 @@ const Room: React.FC = () => {
             </h2>
           </CopyToClipboard>
         </div>
-        <div className="flex flex-col flex-grow overflow-hidden">
-          <div className="flex-grow overflow-auto">
-            {activeSheetId && sheets[activeSheetId] && (
-              <SheetComponent
-                {...sheets[activeSheetId]}
-                roomId={roomId!}
-                sheetId={activeSheetId}
-              />
-            )}
-          </div>
-          <div className={`flex-shrink-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-200 border-gray-300'} border-t p-0`}>
-            <SheetNavigation
+        <div className="flex-grow overflow-hidden">
+          {activeSheetId && sheets[activeSheetId] && (
+            <SheetComponent
+              {...sheets[activeSheetId]}
               roomId={roomId!}
-              onRenameSheet={(sheetId) => {
-                setSheetToRename(sheetId);
-                setIsRenameModalOpen(true);
-              }}
+              sheetId={activeSheetId}
             />
-          </div>
+          )}
+        </div>
+        <div className={`flex-shrink-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-200 border-gray-300'} border-t p-0`}>
+          <SheetNavigation
+            roomId={roomId!}
+            onRenameSheet={(sheetId) => {
+              setSheetToRename(sheetId);
+              setIsRenameModalOpen(true);
+            }}
+          />
         </div>
       </div>
       <RenameSheetModal
@@ -93,24 +91,24 @@ const RoomWrapper: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const room = useSelector((state: RootState) => {
-    console.log('RoomWrapper - Current rooms state:', state.rooms);
+    // console.log('RoomWrapper - Current rooms state:', state.rooms);
     return state.rooms[roomId!];
   });
-  console.log('RoomWrapper - Room data:', room);
+  // console.log('RoomWrapper - Room data:', room);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     if (roomId) {
-      console.log('Initializing socket...');
+      // console.log('Initializing socket...');
       initializeSocket((roomId, state) => {
-        console.log('Room state updated:', roomId, state);
+        // console.log('Room state updated:', roomId, state);
         dispatch({ type: 'rooms/setRoom', payload: { roomId, state } });
       });
       
-      console.log('Joining room:', roomId);
+      // console.log('Joining room:', roomId);
       joinRoom(roomId)
         .then(() => {
-          console.log('Successfully joined room:', roomId);
+          // console.log('Successfully joined room:', roomId);
           setLoading(false);
         })
         .catch((error) => {

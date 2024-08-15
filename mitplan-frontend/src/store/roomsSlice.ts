@@ -1,19 +1,36 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Room, Sheet, AssignmentEventType, EncounterEventType, ServerSyncedRoom, ServerSyncedSheet } from '../types';
+import { Room, ServerSyncedRoom, Sheet, ServerSyncedSheet, AssignmentEventType, Encounter, Roster } from '../types';
 import { updateServerState } from './socketService';
+import { allEncounters } from '../data/encounters/encounters';
+import { storageService } from './clientStorage';
 
 const initialState: { [roomId: string]: Room } = {};
-
-// Helper function to extract ServerSyncedRoom data
-const getServerSyncedState = (room: Room): ServerSyncedRoom => {
-  const { activeSheetId, ...serverSyncedState } = room;
-  return serverSyncedState;
-};
 
 // Helper function to extract ServerSyncedSheet data
 const getServerSyncedSheet = (sheet: Sheet): ServerSyncedSheet => {
   const { timeScale, ...serverSyncedSheet } = sheet;
   return serverSyncedSheet;
+};
+
+// Helper function to extract ServerSyncedRoom data
+const getServerSyncedState = (room: Room): ServerSyncedRoom => {
+  const { activeSheetId, ...serverSyncedRoom } = room;
+  const syncedSheets: { [id: string]: ServerSyncedSheet } = {};
+  
+  for (const [sheetId, sheet] of Object.entries(room.sheets)) {
+    syncedSheets[sheetId] = getServerSyncedSheet(sheet);
+  }
+  
+  return {
+    ...serverSyncedRoom,
+    sheets: syncedSheets
+  };
+};
+
+// Helper function to get the default encounter
+const getDefaultEncounter = (): Encounter => {
+  const firstEncounterId = Object.keys(allEncounters)[0];
+  return allEncounters[firstEncounterId];
 };
 
 const roomsSlice = createSlice({
@@ -22,26 +39,51 @@ const roomsSlice = createSlice({
   reducers: {
     setRoom: (state, action: PayloadAction<{ roomId: string; state: ServerSyncedRoom }>) => {
       const { roomId, state: roomState } = action.payload;
-      console.log('Setting room state in reducer:', roomId, roomState);
       
-      // Preserve the current activeSheetId if it exists
-      const currentActiveSheetId = state[roomId]?.activeSheetId;
+      // Load client state from storage
+      const storedClientState = storageService.loadRoomClientState(roomId);
       
       state[roomId] = {
         ...roomState,
-        activeSheetId: currentActiveSheetId || Object.keys(roomState.sheets)[0] || null
+        activeSheetId: storedClientState?.activeSheetId || Object.keys(roomState.sheets)[0] || null,
+        sheets: Object.entries(roomState.sheets).reduce((acc, [sheetId, sheet]) => {
+          acc[sheetId] = {
+            ...sheet,
+            timeScale: storedClientState?.sheets[sheetId]?.timeScale || 1
+          };
+          return acc;
+        }, {} as { [id: string]: Sheet })
       };
+
+      // Save client state
+      storageService.saveClientState(roomId, {
+        activeSheetId: state[roomId].activeSheetId,
+        sheets: Object.entries(state[roomId].sheets).reduce((acc, [sheetId, sheet]) => {
+          acc[sheetId] = { timeScale: sheet.timeScale };
+          return acc;
+        }, {} as { [sheetId: string]: { timeScale: number } })
+      });
     },
     updateRoom: (state, action: PayloadAction<{ roomId: string; updates: Partial<Room> }>) => {
       const { roomId, updates } = action.payload;
       state[roomId] = { ...state[roomId], ...updates };
       updateServerState(roomId, getServerSyncedState(state[roomId]));
+
+      // Save client state
+      storageService.saveClientState(roomId, {
+        activeSheetId: state[roomId].activeSheetId,
+        sheets: Object.entries(state[roomId].sheets).reduce((acc, [sheetId, sheet]) => {
+          acc[sheetId] = { timeScale: sheet.timeScale };
+          return acc;
+        }, {} as { [sheetId: string]: { timeScale: number } })
+      });
     },
     addSheet: (state, action: PayloadAction<{ roomId: string; sheet: Sheet }>) => {
       const { roomId, sheet } = action.payload;
       state[roomId].sheets[sheet.id] = {
         ...sheet,
-        assignmentEvents: sheet.assignmentEvents || {}
+        assignmentEvents: sheet.assignmentEvents || {},
+        encounter: sheet.encounter || getDefaultEncounter()
       };
       updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
@@ -55,17 +97,27 @@ const roomsSlice = createSlice({
     },
     updateSheet: (state, action: PayloadAction<{ roomId: string; sheetId: string; updates: Partial<Sheet> }>) => {
       const { roomId, sheetId, updates } = action.payload;
+      const currentSheet = state[roomId].sheets[sheetId];
       state[roomId].sheets[sheetId] = { 
-        ...state[roomId].sheets[sheetId], 
+        ...currentSheet, 
         ...updates,
-        assignmentEvents: updates.assignmentEvents || state[roomId].sheets[sheetId].assignmentEvents || {},
-        timelineLength: updates.timelineLength !== undefined ? updates.timelineLength : state[roomId].sheets[sheetId].timelineLength
+        assignmentEvents: updates.assignmentEvents || currentSheet.assignmentEvents || {},
+        encounter: updates.encounter || currentSheet.encounter || getDefaultEncounter()
       };
       updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
     setActiveSheet: (state, action: PayloadAction<{ roomId: string; sheetId: string }>) => {
       const { roomId, sheetId } = action.payload;
       state[roomId].activeSheetId = sheetId;
+
+      // Save client state
+      storageService.saveClientState(roomId, {
+        activeSheetId: sheetId,
+        sheets: Object.entries(state[roomId].sheets).reduce((acc, [id, sheet]) => {
+          acc[id] = { timeScale: sheet.timeScale };
+          return acc;
+        }, {} as { [sheetId: string]: { timeScale: number } })
+      });
     },
     updateAssignmentEvents: (state, action: PayloadAction<{ 
       roomId: string; 
@@ -115,58 +167,25 @@ const roomsSlice = createSlice({
       sheet.assignmentEvents[event.id] = event;
       updateServerState(roomId, getServerSyncedState(state[roomId]));
     },
-    updateEncounterEvents: (state, action: PayloadAction<{ roomId: string; sheetId: string; events: EncounterEventType | EncounterEventType[] | { [eventId: number]: Partial<EncounterEventType> } }>) => {
-      const { roomId, sheetId, events } = action.payload;
-      const sheet = state[roomId].sheets[sheetId];
-
-      if (!Array.isArray(sheet.encounterEvents)) {
-        sheet.encounterEvents = [];
-      }
-
-      if (Array.isArray(events)) {
-        sheet.encounterEvents = events;
-      } else if (typeof events === 'object' && events !== null) {
-        if ('id' in events) {
-          const index = sheet.encounterEvents.findIndex(e => e.id === events.id);
-          if (index !== -1) {
-            sheet.encounterEvents[index] = { ...sheet.encounterEvents[index], ...events };
-          } else {
-            sheet.encounterEvents.push(events as EncounterEventType);
-          }
-        } else {
-          Object.entries(events).forEach(([eventId, updates]) => {
-            const index = sheet.encounterEvents.findIndex(e => e.id === Number(eventId));
-            if (index !== -1) {
-              sheet.encounterEvents[index] = { ...sheet.encounterEvents[index], ...updates };
-            }
-          });
-        }
-      }
-      updateServerState(roomId, getServerSyncedState(state[roomId]));
-    },  
-    deleteEncounterEvents: (state, action: PayloadAction<{ roomId: string; sheetId: string; eventId?: number | number[] }>) => {
-      const { roomId, sheetId, eventId } = action.payload;
-      const sheet = state[roomId].sheets[sheetId];
-
-      if (!Array.isArray(sheet.encounterEvents)) {
-        sheet.encounterEvents = [];
-        return;
-      }
-
-      if (eventId === undefined) {
-        sheet.encounterEvents = [];
-      } else {
-        const eventIds = Array.isArray(eventId) ? eventId : [eventId];
-        sheet.encounterEvents = sheet.encounterEvents.filter(e => !eventIds.includes(e.id));
-      }
-      updateServerState(roomId, getServerSyncedState(state[roomId]));
-    },
     setTimeScale: (state, action: PayloadAction<{ roomId: string; sheetId: string; timeScale: number }>) => {
       const { roomId, sheetId, timeScale } = action.payload;
       if (state[roomId] && state[roomId].sheets[sheetId]) {
         state[roomId].sheets[sheetId].timeScale = timeScale;
+
+        // Save client state
+        storageService.saveClientState(roomId, {
+          activeSheetId: state[roomId].activeSheetId,
+          sheets: {
+            ...Object.entries(state[roomId].sheets).reduce((acc, [id, sheet]) => {
+              acc[id] = { timeScale: sheet.timeScale };
+              return acc;
+            }, {} as { [sheetId: string]: { timeScale: number } }),
+            [sheetId]: { timeScale }
+          }
+        });
       }
     },
+    
   },
 });
 
@@ -179,8 +198,6 @@ export const {
   setActiveSheet,
   updateAssignmentEvents,
   deleteAssignmentEvents,
-  updateEncounterEvents,
-  deleteEncounterEvents,
   setTimeScale
 } = roomsSlice.actions;
 

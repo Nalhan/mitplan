@@ -6,11 +6,10 @@ import { Encounter, RootState } from '../types';
 import { updateSheet } from '../store/roomsSlice';
 
 interface EncounterSelectProps {
-  onSelectEncounter: (events: Encounter['events']) => void;
   roomId: string;
 }
 
-const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter, roomId }) => {
+const EncounterSelect: React.FC<EncounterSelectProps> = ({ roomId }) => {
   const [selectedEncounter, setSelectedEncounter] = useState<string>('');
   const [encounterList, setEncounterList] = useState<Record<string, Encounter>>({});
   const { darkMode } = useTheme();
@@ -38,18 +37,15 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ onSelectEncounter, ro
   const handleApplyEncounter = () => {
     const encounter = encounterList[selectedEncounter];
     if (encounter && activeRoom) {
-      onSelectEncounter(encounter.events);
-      
-      // Update the sheet's timeline length
       const activeSheetId = activeRoom.activeSheetId;
       if (activeSheetId) {
-        console.log(`Attempting to update sheet: roomId=${roomId}, sheetId=${activeSheetId}, new timelineLength=${encounter.fightLength}`);
+        console.log(`Updating encounter for room ${roomId}, sheet ${activeSheetId}`);
         dispatch(updateSheet({
           roomId,
           sheetId: activeSheetId,
-          updates: { timelineLength: encounter.fightLength }
+          updates: { encounter }
         }));
-        console.log(`Updated timeline length to ${encounter.fightLength} for room ${roomId}, sheet ${activeSheetId}`); // Debug log
+        console.log(`Updated encounter to ${encounter.name} for room ${roomId}, sheet ${activeSheetId}`); // Debug log
       } else {
         console.error('No active sheet found');
       }

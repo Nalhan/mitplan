@@ -17,10 +17,11 @@ function importEncounters(folderName: string): Record<string, Encounter> {
 
 // Usage example
 export const aberrusEncounters = importEncounters('aberrus')
-
+export const defaultEncounters = importEncounters('default')
 // Combine all encounter lists into a single object
 export const allEncounters: Record<string, Encounter> = {
   ...aberrusEncounters,
+  ...defaultEncounters,
   // Add other encounter lists here as they become available
   // ...otherEncounters,
 }

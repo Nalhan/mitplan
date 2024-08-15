@@ -20,7 +20,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const sheet = useSelector((state: RootState) => state.rooms[roomId]?.sheets[sheetId]);
-  const { assignmentEvents, encounterEvents, timelineLength, columnCount, timeScale = 5 } = sheet || {};
+  const { assignmentEvents, encounter, columnCount, timeScale = 5 } = sheet || {};
 
   const updateSheetEvents = useCallback((updatedEvents: { [id: string]: AssignmentEventType }) => {
     const newEvents = { ...assignmentEvents, ...updatedEvents };
@@ -77,13 +77,13 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
 
   return (
     <>
-      <div className={`flex h-screen  ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden select-none`}>
+      <div className={`flex h-full ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden select-none`}>
         <div className="flex-grow overflow-auto" onScroll={handleScroll} ref={containerRef}>
-          <div className="flex" style={{ height: `${timelineLength * timeScale + 20}px`, minWidth: '100%', width: 'max-content' }}>
+          <div className="flex" style={{ minHeight: `${encounter.fightLength * timeScale + 20}px`, minWidth: '100%', width: 'max-content' }}>
             <div className="flex-shrink-0" style={{ width: '150px', height: '100%' }}>
               <TimestampColumn 
-                timelineLength={timelineLength || 0} 
-                encounterEvents={encounterEvents || []} 
+                timelineLength={encounter.fightLength} 
+                encounterEvents={encounter.events} 
                 scrollTop={scrollTop}
                 timeScale={timeScale}
                 onTimeScaleChange={handleTimeScaleChange}
@@ -94,7 +94,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
                 <div key={index} style={{ width: `${columnWidth}px`, flexShrink: 0 }}>
                   <EventColumn 
                     events={events} 
-                    timelineLength={timelineLength || 0} 
+                    timelineLength={encounter.fightLength} 
                     onDragEnd={handleMoveEvent}
                     onDrop={handleDrop}
                     columnId={index + 1}
@@ -110,7 +110,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
         </div>
       </div>
       <CustomDragLayer 
-        timelineLength={timelineLength || 0}
+        timelineLength={encounter.fightLength}
         roomId={roomId}
         sheetId={sheetId}
         timeScale={timeScale}

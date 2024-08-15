@@ -3,6 +3,7 @@
 import { ThunkAction } from 'redux-thunk';
 import { Action } from '@reduxjs/toolkit';
 import { Ability } from '../data/ability';
+import { WowClass, WowSpec, classSpecs } from '../data/classes';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
@@ -16,29 +17,31 @@ export interface RootState {
 }
 
 export interface ServerSyncedRoom {
-  sheets: { [sheetId: string]: Sheet };
-  // Add other properties that should be synced to the server
-}
-
-export interface Room extends ServerSyncedRoom {
-  activeSheetId: string | null;
-  // timeScale: number;
+  id: string;
+  sheets: { [id: string]: ServerSyncedSheet };
+  roster: Roster;
 }
 
 export interface ServerSyncedSheet {
   id: string;
   name: string;
   assignmentEvents: { [id: string]: AssignmentEventType };
-  encounterEvents: EncounterEventType[];
-  timelineLength: number;
+  encounter: Encounter;
   columnCount: number;
 }
 
-export interface Sheet extends ServerSyncedSheet {
+export interface ClientStoredSheet {
   timeScale: number;
 }
-export interface Roster {
-  // Define roster properties here
+
+export interface ClientStoredRoom {
+  activeSheetId: string | null;
+}
+
+export interface Sheet extends ServerSyncedSheet, ClientStoredSheet {}
+
+export interface Room extends ServerSyncedRoom, ClientStoredRoom {
+  sheets: { [id: string]: Sheet };
 }
 
 export interface BaseEventType {
@@ -85,3 +88,14 @@ export type Encounter = {
   fightLength: number;
 };
 
+export type Roster = {
+  players: { [playerId: string]: Player };
+};
+
+export type Player = {
+  id: string;
+  name: string;
+  class: WowClass;
+  spec: WowSpec;
+  assignedSheets: string[];
+};
