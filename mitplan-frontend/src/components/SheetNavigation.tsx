@@ -1,7 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useContextMenu } from './Shared/ContextMenu';
-import { useTheme } from '../contexts/ThemeContext';
 import { RootState } from '../types';
 import { addSheet, deleteSheet, setActiveSheet } from '../store/roomsSlice';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,7 +16,6 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
   onRenameSheet,
 }) => {
   const { showContextMenu } = useContextMenu();
-  const { darkMode } = useTheme();
   const dispatch = useDispatch();
 
   const room = useSelector((state: RootState) => state.rooms[roomId]);
@@ -56,18 +54,14 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
   }
 
   return (
-    <div className={`flex items-center ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-300'} border-t p-1 overflow-x-auto`}>
+    <div className="flex items-center bg-gray-100 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 p-1 overflow-x-auto">
       {Object.values(sheets).map((sheet) => (
         <button
           key={sheet.id}
           className={`px-4 py-2 text-sm font-medium rounded-t-lg mr-1 transition-colors ${
             sheet.id === activeSheetId
-              ? darkMode
-                ? 'bg-gray-900 text-blue-400 border-t border-l border-r border-gray-700'
-                : 'bg-white text-blue-600 border-t border-l border-r border-gray-300'
-              : darkMode
-                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-t border-l border-r border-gray-300 dark:border-gray-700'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
           onClick={() => dispatch(setActiveSheet({ roomId, sheetId: sheet.id }))}
           onContextMenu={(e) => handleContextMenu(e, sheet.id)}
@@ -76,7 +70,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
         </button>
       ))}
       <button
-        className={`px-4 py-2 text-sm font-medium ${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white rounded-t-lg ml-2 transition-colors`}
+        className="px-4 py-2 text-sm font-medium bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white rounded-t-lg ml-2 transition-colors"
         onClick={handleCreateSheet}
       >
         +

@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
-import SheetComponent from './Sheet';
+import SheetComponent from './Sheet/Sheet';
 import SheetNavigation from './SheetNavigation';
 import { ContextMenuProvider } from './Shared/ContextMenu';
 import RenameSheetModal from './Shared/RenameSheetModal';
 import CopyToClipboard from './Shared/CopyToClipboard';
-import { useTheme } from '../contexts/ThemeContext';
 import { setActiveSheet, updateSheet } from '../store/roomsSlice';
 import { initializeSocket, joinRoom } from '../store/socketService';
-
+import RosterManagementModal from './Roster';
 
 const Room: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -22,7 +21,7 @@ const Room: React.FC = () => {
   // console.log('Room data:', room);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [sheetToRename, setSheetToRename] = useState<string | null>(null);
-  const { darkMode } = useTheme();
+  const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
 
   useEffect(() => {
     if (room && !room.activeSheetId && Object.keys(room.sheets).length > 0) {
@@ -31,7 +30,7 @@ const Room: React.FC = () => {
   }, [room, dispatch, roomId]);
 
   if (!room) {
-    return <div className="p-4 text-gray-600">Loading room data...</div>;
+    return <div className="p-4 text-gray-600 dark:text-gray-400">Loading room data...</div>;
   }
 
   const { sheets, activeSheetId } = room;
@@ -49,14 +48,22 @@ const Room: React.FC = () => {
   };
   return (
     <ContextMenuProvider>
-      <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
-        <div className="flex-shrink-0 p-4">
-          <h1 className={`text-4xl font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Mitplan</h1>
-          <CopyToClipboard text={`${window.location.origin}/room/${roomId}` || ''} popupText="Link copied!">
-            <h2 className={`text-2xl font-bold mb-0 ${darkMode ? 'text-white hover:bg-gray-800' : 'text-gray-800 hover:bg-gray-100'} rounded px-0 py-1 inline-block`}>
-              Room: {roomId}
-            </h2>
-          </CopyToClipboard>
+      <div className="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">
+        <div className="flex-shrink-0 p-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold mb-1 text-gray-800 dark:text-white">Mitplan</h1>
+            <CopyToClipboard text={`${window.location.origin}/room/${roomId}` || ''} popupText="Link copied!">
+              <h2 className="text-2xl font-bold mb-0 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-0 py-1 inline-block">
+                Room: {roomId}
+              </h2>
+            </CopyToClipboard>
+          </div>
+          <button
+            onClick={() => setIsRosterModalOpen(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+          >
+            Manage Roster
+          </button>
         </div>
         <div className="flex-grow overflow-hidden">
           {activeSheetId && sheets[activeSheetId] && (
@@ -67,7 +74,7 @@ const Room: React.FC = () => {
             />
           )}
         </div>
-        <div className={`flex-shrink-0 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-200 border-gray-300'} border-t p-0`}>
+        <div className="flex-shrink-0 bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 p-0">
           <SheetNavigation
             roomId={roomId!}
             onRenameSheet={(sheetId) => {
@@ -82,6 +89,11 @@ const Room: React.FC = () => {
         onClose={() => setIsRenameModalOpen(false)}
         onRename={handleRenameSheet}
       />
+      <RosterManagementModal
+        isOpen={isRosterModalOpen}
+        onClose={() => setIsRosterModalOpen(false)}
+        roomId={roomId!}
+      />
     </ContextMenuProvider>
   );
 };
@@ -91,7 +103,6 @@ const RoomWrapper: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const room = useSelector((state: RootState) => {
-    // console.log('RoomWrapper - Current rooms state:', state.rooms);
     return state.rooms[roomId!];
   });
   // console.log('RoomWrapper - Room data:', room);
@@ -120,15 +131,15 @@ const RoomWrapper: React.FC = () => {
   }, [roomId, dispatch]);
 
   if (!roomId) {
-    return <div className="p-4 text-red-600">Error: Room ID is missing</div>;
+    return <div className="p-4 text-red-600 dark:text-red-400">Error: Room ID is missing</div>;
   }
 
   if (loading || !room) {
-    return <div className="p-4 text-gray-600">Loading room data...</div>;
+    return <div className="p-4 text-gray-600 dark:text-gray-400">Loading room data...</div>;
   }
 
   if (error) {
-    return <div className="p-4 text-red-600">Error: {error}</div>;
+    return <div className="p-4 text-red-600 dark:text-red-400">Error: {error}</div>;
   }
 
   return <Room />;

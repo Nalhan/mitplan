@@ -92,10 +92,14 @@ export type Roster = {
   players: { [playerId: string]: Player };
 };
 
+export type RosterState = 'out' | 'in' | 'tentative' | 'bench' | 'unavailable';
+
+export const ROSTER_STATES: RosterState[] = ['out', 'in', 'tentative', 'bench', 'unavailable'];
+
 export type Player = {
   id: string;
   name: string;
   class: WowClass;
   spec: WowSpec;
-  assignedSheets: string[];
+  rosterStates: { [sheetId: string]: RosterState };
 };

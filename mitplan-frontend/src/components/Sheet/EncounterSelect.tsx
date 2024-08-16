@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { allEncounters } from '../data/encounters/encounters';
-import { useTheme } from '../contexts/ThemeContext';
-import { Encounter, RootState } from '../types';
-import { updateSheet } from '../store/roomsSlice';
+import { allEncounters } from '../../data/encounters/encounters';
+import { Encounter, RootState } from '../../types';
+import { updateSheet } from '../../store/roomsSlice';
 
 interface EncounterSelectProps {
   roomId: string;
@@ -12,7 +11,6 @@ interface EncounterSelectProps {
 const EncounterSelect: React.FC<EncounterSelectProps> = ({ roomId }) => {
   const [selectedEncounter, setSelectedEncounter] = useState<string>('');
   const [encounterList, setEncounterList] = useState<Record<string, Encounter>>({});
-  const { darkMode } = useTheme();
   const dispatch = useDispatch();
   const activeRoom = useSelector((state: RootState) => state.rooms[roomId]);
 
@@ -59,11 +57,7 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ roomId }) => {
       <select
         value={selectedEncounter}
         onChange={handleEncounterChange}
-        className={`border rounded-md p-2 ${
-          darkMode
-            ? 'bg-gray-700 text-white border-gray-600'
-            : 'bg-white text-gray-800 border-gray-300'
-        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        className="border rounded-md p-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="">Select an encounter</option>
         {Object.entries(encounterList).map(([id, encounter]) => (
@@ -77,9 +71,7 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ roomId }) => {
         disabled={!selectedEncounter}
         className={`px-4 py-2 rounded-md transition-colors duration-200 ${
           selectedEncounter
-            ? darkMode
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
+            ? 'bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white'
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         } focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >

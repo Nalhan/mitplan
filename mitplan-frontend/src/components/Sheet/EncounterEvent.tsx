@@ -1,7 +1,6 @@
 import React from 'react';
-import { useTheme } from '../contexts/ThemeContext';
-import { EncounterEventType } from '../types';
-import { getContrastColor } from '../utils/colorUtils';
+import { EncounterEventType } from '../../types';
+import { getContrastColor } from '../../utils/colorUtils';
 
 interface EncounterEventProps {
   event: EncounterEventType;
@@ -10,10 +9,8 @@ interface EncounterEventProps {
 }
 
 const EncounterEvent: React.FC<EncounterEventProps> = ({ event, timelineLength, timeScale }) => {
-  const { darkMode } = useTheme();
-
-  const topPosition = `${((event.timer_dynamic + (event.phase_start || 0)) / timelineLength) * timelineLength * timeScale}px`;
-  const eventColor = event.color || (darkMode ? '#DC2626' : '#EF4444'); // Default to red if no color is provided
+  const topPosition = `${((event.timer_dynamic + (event.phase_start || 0)) / timelineLength) * timelineLength * timeScale  }px`; // Add 20px offset
+  const eventColor = event.color || '#EF4444'; // Default to red if no color is provided
   const textColor = getContrastColor(eventColor);
 
   const height = event.duration
@@ -41,7 +38,7 @@ const EncounterEvent: React.FC<EncounterEventProps> = ({ event, timelineLength, 
 
   return (
     <div 
-      className={`absolute left-0 right-2 flex flex-col px-2 text-xs select-none overflow-hidden`}
+      className={`absolute left-0 right-2 flex flex-col px-2 text-xs select-none overflow-hidden dark:text-white`}
       style={{ 
         top: topPosition, 
         height: height,
@@ -57,13 +54,13 @@ const EncounterEvent: React.FC<EncounterEventProps> = ({ event, timelineLength, 
     >
       <div className={`flex justify-between items-center w-full ${isLarge ? 'mb-1' : ''}`}>
         <span className="font-bold truncate mr-1">{event.name}</span>
-        <span className="text-opacity-80 whitespace-nowrap text-right">
+        <span className="text-opacity-80 whitespace-nowrap text-right dark:text-opacity-80">
           {formattedTimestamp}
           {formattedDuration && ` (${formattedDuration})`}
         </span>
       </div>
       {isLarge && formattedEndTimestamp && (
-        <div className="text-opacity-80 whitespace-nowrap self-end">
+        <div className="text-opacity-80 whitespace-nowrap self-end dark:text-opacity-80">
           {formattedEndTimestamp}
         </div>
       )}

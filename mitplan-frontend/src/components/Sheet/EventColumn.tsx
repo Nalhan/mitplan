@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import AssignmentEvent from './AssignmentEvent';
-import { useContextMenu } from './Shared/ContextMenu';
-import { AssignmentEventType, CooldownEventType } from '../types';
+import { useContextMenu } from '../Shared/ContextMenu';
+import { AssignmentEventType, CooldownEventType } from '../../types';
 
 const ItemType = 'ASSIGNMENT_EVENT';
 
@@ -87,7 +87,7 @@ const EventColumn: React.FC<EventColumnProps> = ({
       className="relative w-full select-none"
       style={{ 
         height: `${timelineLength * timeScale}px`,
-        paddingTop: '20px',
+        //paddingTop: '20px',
         overflow: 'hidden'  // Add this to prevent scrolling within the column
       }}
       onContextMenu={handleContextMenu}

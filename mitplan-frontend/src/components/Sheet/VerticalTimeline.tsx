@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
-import { useTheme } from '../contexts/ThemeContext';
-import { AssignmentEventType, RootState } from '../types';
-import { updateSheet, setTimeScale } from '../store/roomsSlice';
+import { AssignmentEventType, RootState } from '../../types';
+import { updateSheet, setTimeScale } from '../../store/roomsSlice';
 import EventColumn from './EventColumn';
 import CustomDragLayer from './CustomDragLayer';
 import TimestampColumn from './TimestampColumn';
+import CooldownPalette from './CooldownPalette';
 
 interface VerticalTimelineProps {
   roomId: string;
@@ -14,7 +14,6 @@ interface VerticalTimelineProps {
 }
 
 const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) => {
-  const { darkMode } = useTheme();
   const dispatch = useDispatch();
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,6 +42,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
       ...(item.icon && { icon: item.icon }),
       ...(item.type && { type: item.type }),
       ...(item.ability && { ability: item.ability }),
+      ...(item.assignee && { assignee: item.assignee }), // Add this line
     };
     updateSheetEvents({ [newEvent.id]: newEvent });
   }, [updateSheetEvents]);
@@ -74,10 +74,9 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
   }, [dispatch, roomId, sheetId]);
 
   const columnWidth = 200; // Fixed width for each column
-
   return (
     <>
-      <div className={`flex h-full ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg shadow-lg overflow-hidden select-none`}>
+      <div className="flex h-full bg-gray-100 dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden select-none">
         <div className="flex-grow overflow-auto" onScroll={handleScroll} ref={containerRef}>
           <div className="flex" style={{ minHeight: `${encounter.fightLength * timeScale + 20}px`, minWidth: '100%', width: 'max-content' }}>
             <div className="flex-shrink-0" style={{ width: '150px', height: '100%' }}>
@@ -89,7 +88,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
                 onTimeScaleChange={handleTimeScaleChange}
               />
             </div>
-            <div className={`flex ${darkMode ? 'divide-gray-700' : 'divide-gray-200'} divide-x`}>
+            <div className="flex divide-gray-200 dark:divide-gray-700 divide-x">
               {columnEvents.map((events, index) => (
                 <div key={index} style={{ width: `${columnWidth}px`, flexShrink: 0 }}>
                   <EventColumn 
@@ -106,8 +105,18 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
                 </div>
               ))}
             </div>
+            <CooldownPalette 
+              roomId={roomId}
+              sheetId={sheetId}
+            encounterLength={encounter.fightLength}
+            timeScale={timeScale}
+            scrollTop={scrollTop}
+          />
+        </div>
           </div>
         </div>
+        <div className="flex-shrink-0 overflow-y-auto" style={{ minHeight: '100%' }}>
+ 
       </div>
       <CustomDragLayer 
         timelineLength={encounter.fightLength}

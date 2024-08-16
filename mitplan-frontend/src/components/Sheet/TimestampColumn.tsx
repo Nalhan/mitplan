@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import EncounterEvent from './EncounterEvent';
-import { EncounterEventType } from '../types';
+import { EncounterEventType } from '../../types';
 
 interface TimestampColumnProps {
   timelineLength: number;
@@ -18,7 +17,6 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
   timeScale, 
   onTimeScaleChange
 }) => {
-  const { darkMode } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startTimeScale, setStartTimeScale] = useState(timeScale);
@@ -77,19 +75,19 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
     return timestamps;
   };
   return (
-    <div className={`w-full h-full ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+    <div className="w-full h-full bg-gray-100 dark:bg-gray-800">
       <div 
-        className={`w-full h-full flex-shrink-0 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-200 border-gray-300'} border-r relative cursor-ns-resize select-none`} 
+        className="w-full h-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 border-r relative cursor-ns-resize select-none" 
         onMouseDown={handleMouseDown}
       >
         {getVisibleTimestamps().map((timestamp) => (
           <div 
             key={timestamp} 
-            className={`absolute left-0 right-0 flex items-center justify-end pr-4 h-5 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} select-none`}
+            className="absolute left-0 right-0 flex items-center justify-end pr-4 h-5 text-sm text-gray-600 dark:text-gray-300 select-none"
             style={{ top: `${timestamp * timeScale}px` }}
           >
             <span className="font-mono px-1 rounded">{formatTimestamp(timestamp)}</span>
-            <div className={`absolute right-0 w-3 h-px ${darkMode ? 'bg-gray-500' : 'bg-gray-400'}`}></div>
+            <div className="absolute right-0 w-3 h-px bg-gray-400 dark:bg-gray-500"></div>
           </div>
         ))}
         <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none">

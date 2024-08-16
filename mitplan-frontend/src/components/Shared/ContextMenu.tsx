@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 
 type ContextMenuItem = {
   label: string;
@@ -18,7 +17,6 @@ const ContextMenuContext = createContext<ContextMenuContextType | undefined>(und
 export const ContextMenuProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   const [contextMenuItems, setContextMenuItems] = useState<ContextMenuItem[]>([]);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
-  const { darkMode } = useTheme();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const adjustMenuPosition = useCallback((x: number, y: number, menuWidth: number, menuHeight: number) => {
@@ -83,7 +81,7 @@ export const ContextMenuProvider: React.FC<React.PropsWithChildren<{}>> = ({ chi
         <div
           ref={menuRef}
           id="context-menu"
-          className={`fixed z-50 ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'} border rounded-md shadow-md`}
+          className="fixed z-50 bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-700 border rounded-md shadow-md"
           style={{
             top: contextMenuPosition.y,
             left: contextMenuPosition.x,
@@ -96,7 +94,7 @@ export const ContextMenuProvider: React.FC<React.PropsWithChildren<{}>> = ({ chi
                 item.action();
                 hideContextMenu();
               }}
-              className={`px-4 py-2 cursor-pointer ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+              className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               {item.label}
             </div>

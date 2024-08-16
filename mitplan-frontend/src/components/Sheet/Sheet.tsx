@@ -4,11 +4,10 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
 import EncounterSelect from './EncounterSelect';
 import CooldownPalette from './CooldownPalette';
-import { useTheme } from '../contexts/ThemeContext';
-import { Sheet as SheetType, Encounter } from '../types';
-import { deleteAssignmentEvents, updateSheet } from '../store/roomsSlice';
+import { Sheet as SheetType } from '../../types';
+import { deleteAssignmentEvents } from '../../store/roomsSlice';
 import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../store';
+import { AppDispatch } from '../../store';
 
 const SheetComponent: React.FC<SheetType & {
   roomId: string;
@@ -21,7 +20,6 @@ const SheetComponent: React.FC<SheetType & {
   roomId,
   sheetId,
 }) => {
-  const { darkMode } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
 
   const handleClearEvents = () => {
@@ -34,14 +32,14 @@ const SheetComponent: React.FC<SheetType & {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className={`h-full flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} px-6`}>
+      <div className="h-full flex flex-col bg-white dark:bg-gray-900 text-gray-800 dark:text-white px-6">
         <div className="flex-shrink-0 flex justify-between items-center mb-4">
-          <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{name}</h2>
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">{name}</h2>
           <div className="flex items-center space-x-4">
             <EncounterSelect roomId={roomId} />
             <button
               onClick={handleClearEvents}
-              className={`${darkMode ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'} text-white px-4 py-1 rounded font-semibold transition duration-300 ease-in-out text-sm`}
+              className="bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 text-white px-4 py-1 rounded font-semibold transition duration-300 ease-in-out text-sm"
             >
               Clear Events
             </button>
@@ -53,9 +51,6 @@ const SheetComponent: React.FC<SheetType & {
               roomId={roomId}
               sheetId={sheetId}
             />
-          </div>
-          <div className="w-36 flex-shrink-0">
-            <CooldownPalette />
           </div>
         </div>
       </div>

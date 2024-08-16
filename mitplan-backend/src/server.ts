@@ -35,13 +35,7 @@ interface RoomState {
     };
   };
   roster: {
-    [key: string]: {
-      id: string;
-      name: string;
-      class: string;
-      spec: string;
-      assignedSheets: string[];
-    };
+    players: {}
   };
 }
 
@@ -124,7 +118,9 @@ app.post('/api/rooms', async (req: Request, res: Response) => {
         timeScale: 1
       }
     },
-    roster: {} // Initialize an empty roster
+    roster: {
+      players: {}
+    }
   };
   await redis.set(`room:${roomId}`, JSON.stringify(initialState));
   await Room.create({ roomId, state: initialState });

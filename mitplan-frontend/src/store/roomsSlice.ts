@@ -1,8 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Room, ServerSyncedRoom, Sheet, ServerSyncedSheet, AssignmentEventType, Encounter, Roster } from '../types';
+import { Room, ServerSyncedRoom, Sheet, ServerSyncedSheet, AssignmentEventType, Encounter, Player } from '../types';
+import { WowSpec, WowClass } from '../data/classes';
 import { updateServerState } from './socketService';
 import { allEncounters } from '../data/encounters/encounters';
 import { storageService } from './clientStorage';
+import { v4 as uuidv4 } from 'uuid';
 
 const initialState: { [roomId: string]: Room } = {};
 
@@ -185,7 +187,54 @@ const roomsSlice = createSlice({
         });
       }
     },
-    
+    addPlayerToRoster: (state, action: PayloadAction<{ 
+      roomId: string; 
+      name: string; 
+      class: WowClass; 
+      spec: WowSpec 
+    }>) => {
+      const { roomId, name, class: wowClass, spec } = action.payload;
+      const playerId = uuidv4();
+      const newPlayer: Player = {
+        id: playerId,
+        name,
+        class: wowClass,
+        spec,
+        rosterStates: {} // Initialize rosterStates as an empty object
+      };
+      state[roomId].roster.players[playerId] = newPlayer;
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
+    },
+
+    removePlayersFromRoster: (state, action: PayloadAction<{ 
+      roomId: string; 
+      playerIds?: string | string[] 
+    }>) => {
+      const { roomId, playerIds } = action.payload;
+      if (!playerIds) {
+        state[roomId].roster.players = {};
+      } else if (typeof playerIds === 'string') {
+        delete state[roomId].roster.players[playerIds];
+      } else {
+        playerIds.forEach(id => delete state[roomId].roster.players[id]);
+      }
+      updateServerState(roomId, getServerSyncedState(state[roomId]));
+    },
+
+    updatePlayer: (state, action: PayloadAction<{ 
+      roomId: string; 
+      playerId: string; 
+      updates: Partial<Omit<Player, 'id'>> 
+    }>) => {
+      const { roomId, playerId, updates } = action.payload;
+      if (state[roomId].roster.players[playerId]) {
+        state[roomId].roster.players[playerId] = {
+          ...state[roomId].roster.players[playerId],
+          ...updates
+        };
+        updateServerState(roomId, getServerSyncedState(state[roomId]));
+      }
+    },
   },
 });
 
@@ -198,7 +247,11 @@ export const {
   setActiveSheet,
   updateAssignmentEvents,
   deleteAssignmentEvents,
-  setTimeScale
+  addAssignmentEvent,
+  setTimeScale,
+  addPlayerToRoster,
+  removePlayersFromRoster,
+  updatePlayer
 } = roomsSlice.actions;
 
 export default roomsSlice.reducer;

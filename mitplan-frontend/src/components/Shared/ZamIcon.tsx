@@ -15,6 +15,7 @@ export const ZamIcon = forwardRef<HTMLImageElement, ZamIconProps>(({ alt, size, 
     width={size}
     height={size}
     src={`https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`}
+    style={{ flexShrink: 0, ...props.style }}
   />
 ))
 
