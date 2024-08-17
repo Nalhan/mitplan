@@ -27,7 +27,9 @@ You can bind mount your local folders to the containers to edit the code live.
 Run `docker compose build` in the root directory to build the mitplan container.
 Run `docker compose up` to start the containers. 
 
-The app will be available at http://<host>:3000. 
+The page will be available at port 3000.
+
+
 
 
 
