@@ -3,3 +3,5 @@ mitplan-backend/.env
 mitplan-frontend/.env
 .env
 secrets/
+docker-compose.yml
+mitplan-postgres/

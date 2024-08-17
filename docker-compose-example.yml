@@ -19,8 +19,8 @@ services:
     networks:
       - mitplan-network
     volumes:
-      - "C:/Users/bread/mitplan/mitplan-frontend:/app/frontend"
-      - "C:/Users/bread/mitplan/mitplan-backend:/app/backend"
+      - ~/mitplan/mitplan-frontend:/app/frontend
+      - ~/mitplan/mitplan-backend:/app/backend
     ports:
       - 9229:9229
       - 3000:3000

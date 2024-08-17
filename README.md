@@ -9,3 +9,29 @@ Mitplan is a web app designed to make planning raid cooldowns simple.
   - Intuitive drag-and-drop functionality
   - Visual feedback on cooldown availability
 - Real-time collaboration similar to Google Docs
+
+
+# Development
+
+## Setup
+
+To get started, clone the repository and write your own .env file based on the .env.example file.
+Make sure to write your own secrets/db_password.txt file.
+
+Write a docker-compose.yml file, I provided an example in docker-compose-example.yml.
+You can bind mount your local folders to the containers to edit the code live.
+
+
+## Running
+
+Run `docker compose build` in the root directory to build the mitplan container.
+Run `docker compose up` to start the containers. 
+
+The app will be available at http://<host>:3000. 
+
+
+
+
+
+
+

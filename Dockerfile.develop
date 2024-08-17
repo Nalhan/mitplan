@@ -6,8 +6,8 @@ COPY mitplan-backend/package*.json ./backend/
 COPY mitplan-frontend/package*.json ./frontend/
 
 # Install dependencies for both frontend and backend
-RUN cd backend && npm install
-RUN cd frontend && npm install
+RUN cd backend && npm install --include=dev
+RUN cd frontend && npm install --include=dev
 
 # Copy the rest of the application code
 # COPY mitplan-backend ./backend
@@ -17,8 +17,11 @@ RUN cd frontend && npm install
 COPY .env ./backend/.env
 COPY .env ./frontend/.env
 
+
 # Build the frontend
 # RUN cd frontend && npm run build
+
+
 
 # Expose ports
 EXPOSE 3000 5000 9229
