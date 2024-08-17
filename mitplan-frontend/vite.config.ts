@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
+  const env = loadEnv(mode, path.resolve(__dirname), '')
   return {
     plugins: [react()],
     server: {
@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
     assetsInclude: ['**/*.yaml'],
     envDir: path.resolve(__dirname, '..'),
     define: {
-      'process.env': env
+      'process.env': env,
+      'process.env.REACT_APP_BACKEND_URL': JSON.stringify(process.env.REACT_APP_BACKEND_URL)
     }
   }
 })

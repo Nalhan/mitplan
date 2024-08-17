@@ -14,7 +14,11 @@ const RoomSelection: React.FC = () => {
 
   const handleCreateRoom = async (): Promise<void> => {
     try {
-      const response = await axios.post<{ roomId: string }>(`/api/rooms`);
+      const response = await axios.post<{ roomId: string }>(
+        `${import.meta.env.VITE_BACKEND_URL}/api/rooms`,
+        {},
+        { withCredentials: true }
+      );
       const { roomId } = response.data;
       navigate(`/room/${roomId}`);
     } catch (error) {
