@@ -13,14 +13,19 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - REDIS_URL=${REDIS_URL}
-      - FRONTEND_URL=${REACT_APP_BACKEND_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
+      - VITE_BACKEND_URL=${BACKEND_URL}
     secrets:
       - db_password
     networks:
       - mitplan-network
     volumes:
-      - ~/mitplan/mitplan-frontend:/app/frontend
-      - ~/mitplan/mitplan-backend:/app/backend
+      # - "C:/Users/bread/mitplan/mitplan-frontend:/app/frontend"
+      # - "C:/Users/bread/mitplan/mitplan-backend:/app/backend"
+      - "/app/frontend/node_modules"
+      - "/app/backend/node_modules"
+
     ports:
       - 9229:9229
       - 3000:3000
