@@ -71,29 +71,42 @@ const CooldownItem: React.FC<CooldownItemProps> = ({ ability, player, cooldownUs
           />
         </div>
       </div>
-      <div className="w-8 bg-gray-300 relative" style={{ height: `${encounterLength * timeScale}px`, transform: `translateY(-${scrollTop}px)` }}>
-        {cooldownUses.map((use, index) => (
-          <div 
-            key={index}
-            className="w-full bg-blue-500 absolute" 
-            style={{ 
-              top: `${(use.timestamp / encounterLength) * 100}%`,
-              height: `${((use.endTimestamp - use.timestamp) / encounterLength) * 100}%`,
-              opacity: 0.7
-            }}
-          />
-        ))}
-        {overlappingRegions.map((region, index) => (
-          <div
-            key={`overlap-${index}`}
-            className="w-full bg-red-500 absolute"
-            style={{
-              top: `${(region.start / encounterLength) * 100}%`,
-              height: `${((region.end - region.start) / encounterLength) * 100}%`,
-              opacity: 0.7
-            }}
-          />
-        ))}
+      <div 
+        className="w-8 bg-gray-300 relative" 
+        style={{ 
+          height: `${encounterLength * timeScale}px`,
+          overflow: 'hidden'
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            transform: `translateY(-${scrollTop}px)`,
+          }}
+        >
+          {cooldownUses.map((use, index) => (
+            <div 
+              key={index}
+              className="w-full bg-blue-500 absolute" 
+              style={{ 
+                top: `${use.timestamp * timeScale}px`,
+                height: `${(use.endTimestamp - use.timestamp) * timeScale}px`,
+                opacity: 0.7
+              }}
+            />
+          ))}
+          {overlappingRegions.map((region, index) => (
+            <div
+              key={`overlap-${index}`}
+              className="w-full bg-red-500 absolute"
+              style={{
+                top: `${region.start * timeScale}px`,
+                height: `${(region.end - region.start) * timeScale}px`,
+                opacity: 0.7
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -174,7 +187,10 @@ const CooldownPalette: React.FC<CooldownPaletteProps> = ({ roomId, sheetId, enco
   return (
     <div 
       className={`${darkMode ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'} p-2 rounded-lg shadow-lg transition-colors duration-200 flex overflow-x-auto overflow-y-hidden`}
-      style={{ height: `${encounterLength * timeScale + 48}px` }}
+      style={{ 
+        height: `${encounterLength * timeScale + 48}px`,
+        minHeight: '100%'
+      }}
     >
       {cooldownItems.map(({ player, ability, cooldownUses }) => (
         <CooldownItem 
