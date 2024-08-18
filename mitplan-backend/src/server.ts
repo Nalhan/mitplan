@@ -31,7 +31,6 @@ interface RoomState {
         fightLength: number;
       };
       columnCount: number;
-      timeScale: number;
     };
   };
   roster: {
@@ -58,7 +57,7 @@ const DB_PASSWORD = fs.readFileSync('/run/secrets/db_password', 'utf8').trim();
 // const JWT_SECRET = fs.readFileSync('/run/secrets/jwt_secret', 'utf8').trim();
 
 // Initialize Sequelize with retry logic
-const initializeSequelize = async () => {
+const initializeSequelize = async (): Promise<Sequelize> => {
   const maxRetries = 5;
   const retryInterval = 5000; // 5 seconds
 
@@ -83,6 +82,8 @@ const initializeSequelize = async () => {
       await new Promise(resolve => setTimeout(resolve, retryInterval));
     }
   }
+
+  throw new Error('Failed to initialize database connection');
 };
 
 // Define Room model
@@ -142,8 +143,7 @@ const startServer = async () => {
               id: 'default',
               fightLength: 600 // 10 minutes default fight length
             },
-            columnCount: 2,
-            timeScale: 1
+            columnCount: 5,
           }
         },
         roster: {
