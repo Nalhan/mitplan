@@ -10,8 +10,8 @@ RUN cd backend && npm install --include=dev
 RUN cd frontend && npm install --include=dev
 
 # Copy the rest of the application code
-COPY mitplan-backend ./backend
-COPY mitplan-frontend ./frontend
+# COPY mitplan-backend ./backend
+# COPY mitplan-frontend ./frontend
 
 # Copy the .env file to both frontend and backend
 COPY ./.env ./backend/.env
