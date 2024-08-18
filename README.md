@@ -19,7 +19,8 @@ To get started, clone the repository and write your own .env file based on the .
 Make sure to write your own secrets/db_password.txt file.
 
 Write a docker-compose.yml file, I provided an example in docker-compose-example.yml.
-You can bind mount your local folders to the containers to edit the code live.
+You can bind mount your local folders to the containers to edit the code live. 
+On Windows, do this in WSL - you will have issues with bind mounting to the windows filesystem.
 
 
 ## Running
