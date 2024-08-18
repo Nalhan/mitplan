@@ -7,15 +7,15 @@ import { classSpecs, classColors } from '../../data/classes';
 import { useTheme } from '../../hooks/ThemeContext';
 import { useSelector } from 'react-redux';
 
-// interface CooldownItemProps {
-//   ability: Ability;
-//   player: Player;
-//   cooldownUses: { timestamp: number; endTimestamp: number }[];
-//   encounterLength: number;
-//   timeScale: number;
-//   scrollTop: number;
-//   topBufferHeight: number;
-// }
+interface CooldownIconProps {
+  ability: Ability;
+  player: Player;
+  cooldownUses: { timestamp: number; endTimestamp: number }[];
+  encounterLength: number;
+  timeScale: number;
+  scrollTop: number;
+  topBufferHeight: number;
+}
 
 interface CooldownBarProps {
   cooldownUses: { timestamp: number; endTimestamp: number }[];
@@ -34,7 +34,7 @@ interface CooldownPaletteProps {
   topBufferHeight: number;
 }
 
-const CooldownIcon: React.FC<{ player: Player; ability: Ability }> = ({ player, ability }) => {
+const CooldownIcon: React.FC<CooldownIconProps> = ({ player, ability, cooldownUses, encounterLength, timeScale, scrollTop, topBufferHeight }) => {
   const { darkMode } = useTheme();
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'ASSIGNMENT_EVENT',
@@ -62,6 +62,9 @@ const CooldownIcon: React.FC<{ player: Player; ability: Ability }> = ({ player, 
             ? 'bg-gray-800' 
             : 'bg-gray-100'
         }`}
+        style={{
+          paddingTop: `${topBufferHeight}px`
+        }}
       >
         <div
           ref={drag}
@@ -79,13 +82,13 @@ const CooldownIcon: React.FC<{ player: Player; ability: Ability }> = ({ player, 
         </div>
       </div>
       <div 
-        className="absolute text-center text-m font-bold truncate origin-top-left z-20"
+        className="absolute text-left text-m font-bold truncate origin-top-left z-20"
         style={{ 
           width: '78px',
           color: classColors[player.class],
           transform: 'rotate(-45deg) translateX(-50%)',
           left: '32px',
-          top: '0px',
+          top: `${topBufferHeight - 4}px`,
           textShadow: darkMode 
             ? '0px 0px 3px #000000, 0px 0px 3px #000000' 
             : '0px 0px 3px #ffffff, 0px 0px 3px #ffffff',
@@ -205,12 +208,17 @@ const CooldownPalette: React.FC<CooldownPaletteProps> = ({ roomId, sheetId, enco
       }}
     >
       <div className="flex flex-col">
-        <div className="flex sticky top-0 z-10" style={{ height: `${topBufferHeight}px`, paddingLeft: '10px' }}>
-          {cooldownItems.map(({ player, ability }) => (
+        <div className="flex sticky top-0 z-10 items-end" style={{ height: `${topBufferHeight}px`, paddingLeft: '10px' }}>
+          {cooldownItems.map(({ player, ability, cooldownUses }) => (
             <CooldownIcon 
               key={`icon-${player.id}-${ability.id}`}
               player={player}
               ability={ability}
+              cooldownUses={cooldownUses}
+              encounterLength={encounterLength}
+              timeScale={timeScale}
+              scrollTop={scrollTop}
+              topBufferHeight={topBufferHeight}
             />
           ))}
         </div>

@@ -51,7 +51,7 @@ const roomsSlice = createSlice({
         sheets: Object.entries(roomState.sheets).reduce((acc, [sheetId, sheet]) => {
           acc[sheetId] = {
             ...sheet,
-            timeScale: storedClientState?.sheets[sheetId]?.timeScale || 1
+            timeScale: storedClientState?.sheets[sheetId]?.timeScale || 5.4
           };
           return acc;
         }, {} as { [id: string]: Sheet })

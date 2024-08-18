@@ -35,7 +35,7 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
     handleMouseMoveRef.current = (e: MouseEvent) => {
       if (isDragging) {
         const newY = e.clientY;
-        const newTimeScale = Math.max(4, Math.min(startTimeScale * (1 + (newY - startY) / 100), 100));
+        const newTimeScale = Math.max(5.4, Math.min(startTimeScale * (1 + (newY - startY) / 100), 40));
         onTimeScaleChange(newTimeScale);
       }
     };
