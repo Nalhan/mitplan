@@ -65,7 +65,7 @@ const CooldownItem: React.FC<CooldownItemProps> = ({ ability, player, cooldownUs
           title={`${player.name} - ${ability.name} (${ability.cooldown}s)`}
         >
           <img 
-            src={`https://wow.zamimg.com/images/wow/icons/small/${ability.icon}.jpg`}
+            src={`https://wow.zamimg.com/images/wow/icons/large/${ability.icon}.jpg`}
             alt={ability.name} 
             className="w-7 h-7 rounded"
           />
