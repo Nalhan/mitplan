@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
 import { Transport } from 'engine.io';
@@ -12,6 +12,8 @@ import fs from 'fs';
 import generateMitplanId from './utils/mitplanIdGenerator';
 import { v4 as uuidv4 } from 'uuid';
 import debugModule from 'debug';
+import passport from 'passport';
+import DiscordStrategy from 'passport-discord';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -90,11 +92,32 @@ const initializeSequelize = async (): Promise<Sequelize> => {
 interface MitplanAttributes {
   mitplanId: string;
   state: any;
+  ownerId: string;
 }
 
 class Mitplan extends Model<MitplanAttributes> implements MitplanAttributes {
   public mitplanId!: string;
   public state!: any;
+  public ownerId!: string;
+}
+
+// Define User model
+interface UserAttributes {
+  id: string;
+  discordId: string;
+  username: string;
+  avatar: string;
+  email: string;
+  mitplans: string[];
+}
+
+class User extends Model<UserAttributes> implements UserAttributes {
+  public id!: string;
+  public discordId!: string;
+  public username!: string;
+  public avatar!: string;
+  public email!: string;
+  public mitplans!: string[];
 }
 
 // Wrap your server startup in an async function
@@ -107,8 +130,35 @@ const startServer = async () => {
         type: DataTypes.STRING,
         primaryKey: true
       },
-      state: DataTypes.JSONB
+      state: DataTypes.JSONB,
+      ownerId: {
+        type: DataTypes.STRING,
+        references: {
+          model: 'User',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      }
     }, { sequelize, modelName: 'Mitplan' });
+
+    User.init({
+      id: {
+        type: DataTypes.STRING,
+        primaryKey: true
+      },
+      discordId: {
+        type: DataTypes.STRING,
+        unique: true
+      },
+      username: DataTypes.STRING,
+      avatar: DataTypes.STRING,
+      email: DataTypes.STRING,
+      mitplans: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
+      }
+    }, { sequelize, modelName: 'User' });
 
     await sequelize.sync();
 
@@ -122,13 +172,76 @@ const startServer = async () => {
 
     app.use(bodyParser.json());
 
+    // Passport configuration
+    passport.use(new DiscordStrategy({
+      clientID: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      callbackURL: process.env.DISCORD_CALLBACK_URL!,
+      scope: ['identify', 'email']
+    }, async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await User.findOne({ where: { discordId: profile.id } });
+        if (!user) {
+          user = await User.create({
+            id: uuidv4(),
+            discordId: profile.id,
+            username: profile.username,
+            avatar: profile.avatar ?? '',
+            email: profile.email ?? '',
+            mitplans: []
+          });
+        } else {
+          await user.update({
+            username: profile.username,
+            avatar: profile.avatar ?? '',
+            email: profile.email ?? ''
+          });
+        }
+        done(null, user);
+      } catch (error) {
+        done(error as Error);
+      }
+    }));
+
+    // Passport routes
+    app.get('/auth/discord', passport.authenticate('discord'));
+
+    app.get('/auth/discord/callback', passport.authenticate('discord', {
+      failureRedirect: '/login'
+    }), (req, res) => {
+      res.redirect('/dashboard');
+    });
+
+    app.get('/auth/logout', (req, res) => {
+      req.logout(() => {
+        res.redirect('/');
+      });
+    });
+
+    app.get('/api/user', (req, res) => {
+      if (req.user) {
+        res.json(req.user);
+      } else {
+        res.status(401).json({ error: 'Not authenticated' });
+      }
+    });
+
     const mitplans = new Map();
 
     app.post('/api/mitplans', async (req: Request, res: Response) => {
+      const user = req.user as User | undefined;
+      
+      if (user) {
+        if (user.mitplans.length >= 5) {
+          return res.status(403).json({ error: 'You have reached the maximum number of mitplans allowed.' });
+        }
+      }
+
       let mitplanId: string;
       do {
         mitplanId = generateMitplanId();
       } while (await redis.exists(`mitplan:${mitplanId}`));
+      
       const defaultSheetId = uuidv4();
       const initialState: MitplanState = {
         id: mitplanId,
@@ -150,9 +263,27 @@ const startServer = async () => {
           players: {}
         }
       };
+
       await redis.set(`mitplan:${mitplanId}`, JSON.stringify(initialState));
-      await Mitplan.create({ mitplanId, state: initialState });
+      
+      if (user) {
+        await Mitplan.create({ mitplanId, state: initialState, ownerId: user.id });
+        user.mitplans.push(mitplanId);
+        await user.save();
+      }
+
       res.json({ mitplanId });
+    });
+
+    app.get('/api/user/mitplans', async (req: Request, res: Response) => {
+      const user = req.user as User | undefined;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const mitplans = await Mitplan.findAll({ where: { ownerId: user.id } });
+      res.json(mitplans);
     });
 
     interface ServerToClientEvents {
