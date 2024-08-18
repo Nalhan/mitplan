@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import debugModule from 'debug';
 import passport from 'passport';
 import DiscordStrategy from 'passport-discord';
+import session from 'express-session';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -111,13 +112,13 @@ interface UserAttributes {
   mitplans: string[];
 }
 
-class User extends Model<UserAttributes> implements UserAttributes {
-  public id!: string;
-  public discordId!: string;
-  public username!: string;
-  public avatar!: string;
-  public email!: string;
-  public mitplans!: string[];
+class User extends Model<UserAttributes> {
+  declare id: string;
+  declare discordId: string;
+  declare username: string;
+  declare avatar: string;
+  declare email: string;
+  declare mitplans: string[];
 }
 
 // Wrap your server startup in an async function
@@ -125,6 +126,26 @@ const startServer = async () => {
   try {
     const sequelize = await initializeSequelize();
 
+    // Initialize User model first
+    User.init({
+      id: {
+        type: DataTypes.STRING,
+        primaryKey: true
+      },
+      discordId: {
+        type: DataTypes.STRING,
+        unique: true
+      },
+      username: DataTypes.STRING,
+      avatar: DataTypes.STRING,
+      email: DataTypes.STRING,
+      mitplans: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
+      }
+    }, { sequelize, modelName: 'User', tableName: 'Users' });
+
+    // Then initialize Mitplan model
     Mitplan.init({
       mitplanId: {
         type: DataTypes.STRING,
@@ -142,25 +163,12 @@ const startServer = async () => {
       }
     }, { sequelize, modelName: 'Mitplan' });
 
-    User.init({
-      id: {
-        type: DataTypes.STRING,
-        primaryKey: true
-      },
-      discordId: {
-        type: DataTypes.STRING,
-        unique: true
-      },
-      username: DataTypes.STRING,
-      avatar: DataTypes.STRING,
-      email: DataTypes.STRING,
-      mitplans: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
-        defaultValue: []
-      }
-    }, { sequelize, modelName: 'User' });
+    // Define associations
+    User.hasMany(Mitplan, { foreignKey: 'ownerId' });
+    Mitplan.belongsTo(User, { foreignKey: 'ownerId' });
 
-    await sequelize.sync();
+    // Sync models with database
+    await sequelize.sync({ force: true });
 
     // Enable CORS
     app.use(cors({
@@ -171,6 +179,17 @@ const startServer = async () => {
     }));
 
     app.use(bodyParser.json());
+
+    // Add express-session middleware
+    app.use(session({
+      secret: process.env.SESSION_SECRET || 'your_session_secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    }));
 
     // Passport configuration
     passport.use(new DiscordStrategy({
@@ -203,6 +222,28 @@ const startServer = async () => {
       }
     }));
 
+    // Add these Passport serialization methods
+    passport.serializeUser((user: Express.User, done) => {
+      // console.log('Serializing user:', user);
+      done(null, (user as User).id);
+    });
+
+    passport.deserializeUser(async (id: string, done) => {
+      // console.log('Deserializing user with id:', id);
+      try {
+        const user = await User.findByPk(id);
+        // console.log('Deserialized user:', user);
+        done(null, user);
+      } catch (error) {
+        // console.error('Error deserializing user:', error);
+        done(error);
+      }
+    });
+
+    // Make sure to initialize Passport after setting up the session middleware
+    app.use(passport.initialize());
+    app.use(passport.session());
+
     // Passport routes
     app.get('/auth/discord', passport.authenticate('discord'));
 
@@ -219,9 +260,12 @@ const startServer = async () => {
     });
 
     app.get('/api/user', (req, res) => {
+      console.log('GET /api/user request received');
       if (req.user) {
+        console.log('User authenticated:', req.user);
         res.json(req.user);
       } else {
+        console.log('User not authenticated');
         res.status(401).json({ error: 'Not authenticated' });
       }
     });

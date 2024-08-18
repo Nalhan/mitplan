@@ -16,7 +16,7 @@ const Mitplan: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const mitplan = useSelector((state: RootState) => {
     // console.log('Current mitplans state:', state.mitplans);
-    return state.mitplans[mitplanId!];
+    return state.mitplans.mitplans[mitplanId!];
   });
   // console.log('Mitplan data:', mitplan);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -103,7 +103,7 @@ const MitplanWrapper: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const mitplan = useSelector((state: RootState) => {
-    return state.mitplans[mitplanId!];
+    return state.mitplans.mitplans[mitplanId!];
   });
   // console.log('MitplanWrapper - Mitplan data:', mitplan);
   const dispatch = useDispatch<AppDispatch>();

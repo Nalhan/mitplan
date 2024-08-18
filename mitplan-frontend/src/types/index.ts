@@ -13,8 +13,34 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 >;
 
 export interface RootState {
-  mitplans: { [mitplanId: string]: Mitplan };
+  mitplans: {
+    mitplans: { [mitplanId: string]: Mitplan };
+    status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    error: string | null;
+  };
+  auth: {
+    isAuthenticated: boolean;
+    user: User | null;
+    loading: boolean;
+    error: string | null;
+  };
 }
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface User {
+  id: string;
+  discordId: string;
+  username: string;
+  avatar: string;
+  email: string;
+}
+
 
 export interface ServerSyncedMitplan {
   id: string;

@@ -12,7 +12,7 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ mitplanId }) => {
   const [selectedEncounter, setSelectedEncounter] = useState<string>('');
   const [encounterList, setEncounterList] = useState<Record<string, Encounter>>({});
   const dispatch = useDispatch();
-  const activeMitplan = useSelector((state: RootState) => state.mitplans[mitplanId]);
+  const activeMitplan = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]);
 
   useEffect(() => {
     const loadEncounters = async () => {

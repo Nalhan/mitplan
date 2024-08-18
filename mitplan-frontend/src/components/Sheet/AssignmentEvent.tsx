@@ -60,7 +60,7 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const roster = useSelector((state: RootState) => state.mitplans[mitplanId]?.roster);
+  const roster = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.roster);
   const assignee = event.assignee ? roster.players[event.assignee] : null;
 
   return (

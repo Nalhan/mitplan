@@ -15,7 +15,7 @@ interface RosterManagementModalProps {
 
 const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, onClose, mitplanId }) => {
   const dispatch = useDispatch();
-  const mitplan = useSelector((state: RootState) => state.mitplans[mitplanId]);
+  const mitplan = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerClass, setNewPlayerClass] = useState<WowClass>('Warrior');
   const [newPlayerSpec, setNewPlayerSpec] = useState<WowSpec>('Arms');

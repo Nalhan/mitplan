@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store';
+import { createMitplan } from '../store/mitplansSlice';
 
 const MitplanSelection: React.FC = () => {
   const [mitplanId, setMitplanId] = useState<string>('');
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const error = useSelector((state: RootState) => state.mitplans.error);
 
   const handleJoinMitplan = (): void => {
     if (mitplanId) {
@@ -14,16 +18,12 @@ const MitplanSelection: React.FC = () => {
 
   const handleCreateMitplan = async (): Promise<void> => {
     try {
-      const response = await axios.post<{ mitplanId: string }>(
-        `${import.meta.env.VITE_BACKEND_URL}/api/mitplans`,
-        {},
-        { withCredentials: true }
-      );
-      const { mitplanId } = response.data;
-      navigate(`/mitplan/${mitplanId}`);
-    } catch (error) {
-      console.error('Error creating mitplan:', error);
-      // Handle error (e.g., show an error message to the user)
+      const resultAction = await dispatch(createMitplan());
+      if (createMitplan.fulfilled.match(resultAction)) {
+        navigate(`/mitplan/${resultAction.payload.mitplanId}`);
+      }
+    } catch (err) {
+      console.error('Failed to create mitplan:', err);
     }
   };
 
@@ -53,6 +53,7 @@ const MitplanSelection: React.FC = () => {
             Create Mitplan
           </button>
         </div>
+        {error && <p className="text-red-500 mt-4">{error}</p>}
       </div>
     </div>
   );

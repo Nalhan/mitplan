@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, path.resolve(__dirname), '')
+  const env = loadEnv(mode, path.resolve(__dirname, '..'), 'VITE_')
   return {
     plugins: [react()],
     server: {
@@ -12,9 +12,14 @@ export default defineConfig(({ mode }) => {
     },
     assetsInclude: ['**/*.yaml'],
     envDir: path.resolve(__dirname, '..'),
+    envPrefix: 'VITE_',
     define: {
-      'process.env': env,
-      'process.env.REACT_APP_BACKEND_URL': JSON.stringify(process.env.REACT_APP_BACKEND_URL)
+      ...Object.keys(env).reduce((acc, key) => {
+        if (key.startsWith('VITE_')) {
+          acc[`process.env.${key}`] = JSON.stringify(env[key])
+        }
+        return acc
+      }, {}),
     }
   }
 })

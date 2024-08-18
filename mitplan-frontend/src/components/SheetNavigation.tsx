@@ -18,7 +18,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
   const { showContextMenu } = useContextMenu();
   const dispatch = useDispatch();
 
-  const mitplan = useSelector((state: RootState) => state.mitplans[mitplanId]);
+  const mitplan = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]);
   const { sheets, activeSheetId } = mitplan || {};
 
   const handleContextMenu = (event: React.MouseEvent, sheetId: string) => {

@@ -18,7 +18,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ mitplanId, sheetId 
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const sheet = useSelector((state: RootState) => state.mitplans[mitplanId]?.sheets[sheetId]);
+  const sheet = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.sheets[sheetId]);
   const { assignmentEvents, encounter, columnCount, timeScale = 5 } = sheet || {};
 
   const updateSheetEvents = useCallback((updatedEvents: { [id: string]: AssignmentEventType }) => {

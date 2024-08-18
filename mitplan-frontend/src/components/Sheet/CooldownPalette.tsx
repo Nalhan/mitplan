@@ -145,8 +145,8 @@ const CooldownBar: React.FC<CooldownBarProps> = ({ cooldownUses, encounterLength
 
 const CooldownPalette: React.FC<CooldownPaletteProps> = ({ mitplanId, sheetId, encounterLength, timeScale, scrollTop, topBufferHeight }) => {
   const { darkMode } = useTheme();
-  const roster = useSelector((state: RootState) => state.mitplans[mitplanId]?.roster);
-  const assignmentEvents = useSelector((state: RootState) => state.mitplans[mitplanId]?.sheets[sheetId]?.assignmentEvents);
+  const roster = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.roster);
+  const assignmentEvents = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.sheets[sheetId]?.assignmentEvents);
 
   const cooldownItems = useMemo(() => {
     const items: { 
