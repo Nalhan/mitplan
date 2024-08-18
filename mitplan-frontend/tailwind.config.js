@@ -23,5 +23,7 @@ module.exports = {
       },
     },
   },
+
+  
   // ... other configurations
 };

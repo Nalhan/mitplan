@@ -6,10 +6,11 @@ interface EncounterEventProps {
   event: EncounterEventType;
   timelineLength: number;
   timeScale: number;
+  topBufferHeight: number;
 }
 
-const EncounterEvent: React.FC<EncounterEventProps> = ({ event, timelineLength, timeScale }) => {
-  const topPosition = `${((event.timer_dynamic + (event.phase_start || 0)) / timelineLength) * timelineLength * timeScale  }px`; // Add 20px offset
+const EncounterEvent: React.FC<EncounterEventProps> = ({ event, timelineLength, timeScale, topBufferHeight }) => {
+  const topPosition = `${((event.timer_dynamic + (event.phase_start || 0)) / timelineLength) * timelineLength * timeScale + topBufferHeight}px`;
   const eventColor = event.color || '#EF4444'; // Default to red if no color is provided
   const textColor = getContrastColor(eventColor);
 

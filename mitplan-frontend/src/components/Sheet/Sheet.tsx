@@ -3,7 +3,6 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
 import EncounterSelect from './EncounterSelect';
-import CooldownPalette from './CooldownPalette';
 import { Sheet as SheetType } from '../../types';
 import { deleteAssignmentEvents } from '../../store/roomsSlice';
 import { useDispatch } from 'react-redux';

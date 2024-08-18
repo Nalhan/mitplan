@@ -8,6 +8,7 @@ interface TimestampColumnProps {
   scrollTop: number;
   timeScale: number;
   onTimeScaleChange: (newTimeScale: number) => void;
+  topBufferHeight: number;
 }
 
 const TimestampColumn: React.FC<TimestampColumnProps> = ({ 
@@ -15,7 +16,8 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
   encounterEvents, 
   scrollTop, 
   timeScale, 
-  onTimeScaleChange
+  onTimeScaleChange,
+  topBufferHeight
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
@@ -33,7 +35,7 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
     handleMouseMoveRef.current = (e: MouseEvent) => {
       if (isDragging) {
         const newY = e.clientY;
-        const newTimeScale = Math.max(1, Math.min(startTimeScale * (1 + (newY - startY) / 100), 100));
+        const newTimeScale = Math.max(4, Math.min(startTimeScale * (1 + (newY - startY) / 100), 100));
         onTimeScaleChange(newTimeScale);
       }
     };
@@ -80,11 +82,12 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
         className="w-full h-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 border-r relative cursor-ns-resize select-none" 
         onMouseDown={handleMouseDown}
       >
+        <div style={{ height: `${topBufferHeight}px` }} />
         {getVisibleTimestamps().map((timestamp) => (
           <div 
             key={timestamp} 
             className="absolute left-0 right-0 flex items-center justify-end pr-4 h-5 text-sm text-gray-600 dark:text-gray-300 select-none"
-            style={{ top: `${timestamp * timeScale}px` }}
+            style={{ top: `${timestamp * timeScale + topBufferHeight}px` }}
           >
             <span className="font-mono px-1 rounded">{formatTimestamp(timestamp)}</span>
             <div className="absolute right-0 w-3 h-px bg-gray-400 dark:bg-gray-500"></div>
@@ -97,6 +100,7 @@ const TimestampColumn: React.FC<TimestampColumnProps> = ({
               event={event} 
               timelineLength={timelineLength} 
               timeScale={timeScale}
+              topBufferHeight={topBufferHeight}
             />
           ))}
         </div>

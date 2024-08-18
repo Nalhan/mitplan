@@ -16,6 +16,7 @@ interface EventColumnProps {
   sheetId: string;
   scrollTop: number;
   timeScale: number;
+  topBufferHeight: number; // Added topBufferHeight prop
 }
 
 const EventColumn: React.FC<EventColumnProps> = ({ 
@@ -27,7 +28,8 @@ const EventColumn: React.FC<EventColumnProps> = ({
   roomId, 
   sheetId, 
   scrollTop,
-  timeScale
+  timeScale,
+  topBufferHeight // Added topBufferHeight prop
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { showContextMenu } = useContextMenu();
@@ -37,11 +39,11 @@ const EventColumn: React.FC<EventColumnProps> = ({
     if (!clientY || !ref.current) return 0;
     const columnRect = ref.current.getBoundingClientRect();
     // Calculate relative position without considering scroll
-    const relativeY = clientY - columnRect.top;
+    const relativeY = clientY - columnRect.top - topBufferHeight; // Subtract topBufferHeight here
     // Add the scroll offset, then scale to get the timestamp
     const timestamp = (relativeY) / timeScale;
     return Math.max(0, Math.min(timestamp, timelineLength));
-  }, [timelineLength, timeScale]);
+  }, [timelineLength, timeScale, topBufferHeight]);
 
   const [, drop] = useDrop({
     accept: [ItemType, 'ASSIGNMENT_EVENT'],
@@ -86,8 +88,8 @@ const EventColumn: React.FC<EventColumnProps> = ({
       ref={ref} 
       className="relative w-full select-none"
       style={{ 
-        height: `${timelineLength * timeScale}px`,
-        //paddingTop: '20px',
+        height: `${timelineLength * timeScale + topBufferHeight}px`, // Add topBufferHeight here
+        paddingTop: `${topBufferHeight}px`, // Add this line
         overflow: 'hidden'  // Add this to prevent scrolling within the column
       }}
       onContextMenu={handleContextMenu}
@@ -101,6 +103,7 @@ const EventColumn: React.FC<EventColumnProps> = ({
           sheetId={sheetId}
           timeScale={timeScale}
           scrollTop={scrollTop}
+          topBufferHeight={topBufferHeight} // Add this prop
         />
       ))}
     </div>

@@ -74,18 +74,26 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
   }, [dispatch, roomId, sheetId]);
 
   const columnWidth = 200; // Fixed width for each column
+  const topBufferSeconds = 15; // 15 seconds of buffer at the top
+  const topBufferHeight = topBufferSeconds * timeScale;
+
   return (
     <>
       <div className="flex h-full bg-gray-100 dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden select-none">
         <div className="flex-grow overflow-auto" onScroll={handleScroll} ref={containerRef}>
-          <div className="flex" style={{ minHeight: `${encounter.fightLength * timeScale + 20}px`, minWidth: '100%', width: 'max-content' }}>
+          <div className="flex" style={{ 
+            minHeight: `${(encounter.fightLength + topBufferSeconds) * timeScale + 20}px`, 
+            minWidth: '100%', 
+            width: 'max-content' 
+          }}>
             <div className="flex-shrink-0" style={{ width: '150px', height: '100%' }}>
               <TimestampColumn 
-                timelineLength={encounter.fightLength} 
+                timelineLength={encounter.fightLength}
                 encounterEvents={encounter.events} 
                 scrollTop={scrollTop}
                 timeScale={timeScale}
                 onTimeScaleChange={handleTimeScaleChange}
+                topBufferHeight={topBufferHeight}
               />
             </div>
             <div className="flex divide-gray-200 dark:divide-gray-700 divide-x">
@@ -93,7 +101,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
                 <div key={index} style={{ width: `${columnWidth}px`, flexShrink: 0 }}>
                   <EventColumn 
                     events={events} 
-                    timelineLength={encounter.fightLength} 
+                    timelineLength={encounter.fightLength}
                     onDragEnd={handleMoveEvent}
                     onDrop={handleDrop}
                     columnId={index + 1}
@@ -101,6 +109,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
                     sheetId={sheetId}
                     scrollTop={scrollTop}
                     timeScale={timeScale}
+                    topBufferHeight={topBufferHeight}
                   />
                 </div>
               ))}
@@ -108,15 +117,13 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
             <CooldownPalette 
               roomId={roomId}
               sheetId={sheetId}
-            encounterLength={encounter.fightLength}
-            timeScale={timeScale}
-            scrollTop={scrollTop}
-          />
-        </div>
+              encounterLength={encounter.fightLength}
+              timeScale={timeScale}
+              scrollTop={scrollTop}
+              topBufferHeight={topBufferHeight}
+            />
           </div>
         </div>
-        <div className="flex-shrink-0 overflow-y-auto" style={{ minHeight: '100%' }}>
- 
       </div>
       <CustomDragLayer 
         timelineLength={encounter.fightLength}
@@ -124,6 +131,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
         sheetId={sheetId}
         timeScale={timeScale}
         scrollTop={scrollTop}
+        topBufferHeight={topBufferHeight}
       />
     </>
   );

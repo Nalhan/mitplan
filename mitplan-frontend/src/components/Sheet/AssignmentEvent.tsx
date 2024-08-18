@@ -16,9 +16,10 @@ interface AssignmentEventProps {
   isDragging?: boolean;
   timeScale: number;
   scrollTop: number;
+  topBufferHeight: number; // Added this prop
 }
 
-const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength, roomId, sheetId, isDragging = false, timeScale, scrollTop }) => {
+const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength, roomId, sheetId, isDragging = false, timeScale, scrollTop, topBufferHeight }) => {
   const dispatch = useDispatch();
   const ref = useRef<HTMLDivElement>(null);
   const [{ isDragging: isBeingDragged }, drag, preview] = useDrag(() => ({
@@ -34,7 +35,7 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
   const isCooldownEvent = (event: AssignmentEventType): event is CooldownEventType => 
     'ability' in event;
 
-  const top = `${event.timestamp * timeScale}px`;
+  const top = `${event.timestamp * timeScale + topBufferHeight}px`; // Added topBufferHeight here
   const durationHeight = isCooldownEvent(event) ? `${event.ability.duration * timeScale}px` : '0';
 
   const getContrastColor = (bgColor: string): string => {

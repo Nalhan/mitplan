@@ -3,21 +3,38 @@ import { useDrag } from 'react-dnd';
 import { v4 as uuidv4 } from 'uuid';
 import { Ability } from '../../data/ability';
 import { CooldownEventType, Player, RootState } from '../../types';
-import { classSpecs } from '../../data/classes';
-import { classColors } from '../../data/classes';
+import { classSpecs, classColors } from '../../data/classes';
 import { useTheme } from '../../hooks/ThemeContext';
 import { useSelector } from 'react-redux';
 
-interface CooldownItemProps {
-  ability: Ability;
-  player: Player;
+// interface CooldownItemProps {
+//   ability: Ability;
+//   player: Player;
+//   cooldownUses: { timestamp: number; endTimestamp: number }[];
+//   encounterLength: number;
+//   timeScale: number;
+//   scrollTop: number;
+//   topBufferHeight: number;
+// }
+
+interface CooldownBarProps {
   cooldownUses: { timestamp: number; endTimestamp: number }[];
   encounterLength: number;
   timeScale: number;
-  scrollTop: number;
+  overlappingRegions: { start: number; end: number }[];
+  topBufferHeight: number;
 }
 
-const CooldownItem: React.FC<CooldownItemProps> = ({ ability, player, cooldownUses, encounterLength, timeScale, scrollTop }) => {
+interface CooldownPaletteProps {
+  roomId: string;
+  sheetId: string;
+  encounterLength: number;
+  timeScale: number;
+  scrollTop: number;
+  topBufferHeight: number;
+}
+
+const CooldownIcon: React.FC<{ player: Player; ability: Ability }> = ({ player, ability }) => {
   const { darkMode } = useTheme();
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'ASSIGNMENT_EVENT',
@@ -37,31 +54,21 @@ const CooldownItem: React.FC<CooldownItemProps> = ({ ability, player, cooldownUs
     }),
   }));
 
-  const overlappingRegions = useMemo(() => {
-    const regions: { start: number; end: number }[] = [];
-    for (let i = 0; i < cooldownUses.length - 1; i++) {
-      const current = cooldownUses[i];
-      const next = cooldownUses[i + 1];
-      if (current.endTimestamp > next.timestamp) {
-        regions.push({
-          start: next.timestamp,
-          end: Math.min(current.endTimestamp, next.endTimestamp)
-        });
-      }
-    }
-    return regions;
-  }, [cooldownUses]);
-
   return (
-    <div className="flex flex-col items-center mr-2 pt-6">
-      <div className="relative mb-1">
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 -rotate-45 origin-bottom-left text-xs font-semibold whitespace-nowrap overflow-hidden max-w-[80px] truncate">
-          {player.name}
-        </div>
+    <div className="flex flex-col items-center mr-2 relative w-8">
+      <div 
+        className={`sticky z-10 flex flex-col items-center w-8 top-0 p-1 ${
+          darkMode 
+            ? 'bg-gray-800' 
+            : 'bg-gray-100'
+        }`}
+      >
         <div
           ref={drag}
-          className={`w-8 h-8 rounded cursor-move flex justify-center items-center hover:ring-2 hover:ring-inset hover:ring-blue-500 ${isDragging ? 'opacity-50' : ''} ${darkMode ? 'shadow-md shadow-gray-700' : 'shadow-sm shadow-gray-300'}`}
-          style={{ backgroundColor: classColors[player.class] }}
+          className={`w-8 h-8 mt-10 rounded cursor-move flex justify-center items-center hover:ring-2 hover:ring-inset hover:ring-blue-500 ${isDragging ? 'opacity-50' : ''} ${darkMode ? 'shadow-md shadow-gray-700' : 'shadow-sm shadow-gray-300'}`}
+          style={{ 
+            backgroundColor: classColors[player.class],
+          }}
           title={`${player.name} - ${ability.name} (${ability.cooldown}s)`}
         >
           <img 
@@ -72,55 +79,60 @@ const CooldownItem: React.FC<CooldownItemProps> = ({ ability, player, cooldownUs
         </div>
       </div>
       <div 
-        className="w-8 bg-gray-300 relative" 
+        className="absolute text-center text-m font-bold truncate origin-top-left z-20"
         style={{ 
-          height: `${encounterLength * timeScale}px`,
-          overflow: 'hidden'
+          width: '78px',
+          color: classColors[player.class],
+          transform: 'rotate(-45deg) translateX(-50%)',
+          left: '32px',
+          top: '0px',
+          textShadow: darkMode 
+            ? '0px 0px 3px #000000, 0px 0px 3px #000000' 
+            : '0px 0px 3px #ffffff, 0px 0px 3px #ffffff',
         }}
       >
-        <div
-          style={{
-            height: '100%',
-            transform: `translateY(-${scrollTop}px)`,
-          }}
-        >
-          {cooldownUses.map((use, index) => (
-            <div 
-              key={index}
-              className="w-full bg-blue-500 absolute" 
-              style={{ 
-                top: `${use.timestamp * timeScale}px`,
-                height: `${(use.endTimestamp - use.timestamp) * timeScale}px`,
-                opacity: 0.7
-              }}
-            />
-          ))}
-          {overlappingRegions.map((region, index) => (
-            <div
-              key={`overlap-${index}`}
-              className="w-full bg-red-500 absolute"
-              style={{
-                top: `${region.start * timeScale}px`,
-                height: `${(region.end - region.start) * timeScale}px`,
-                opacity: 0.7
-              }}
-            />
-          ))}
-        </div>
+        {player.name}
       </div>
     </div>
   );
 };
 
-interface CooldownPaletteProps {
-  roomId: string;
-  sheetId: string;
-  encounterLength: number;
-  timeScale: number;
-  scrollTop: number;
-}
+const CooldownBar: React.FC<CooldownBarProps> = ({ cooldownUses, encounterLength, timeScale, overlappingRegions, topBufferHeight }) => {
+  return (
+    <div 
+      className="w-8 rounded-sm bg-gray-300 relative" 
+      style={{ 
+        height: `${encounterLength * timeScale}px`,
+        marginTop: `${topBufferHeight}px`,
+      }}
+    >
+      {cooldownUses.map((use, index) => (
+        <div 
+          key={index}
+          className="w-full bg-blue-500 absolute" 
+          style={{ 
+            top: `${use.timestamp * timeScale}px`,
+            height: `${(use.endTimestamp - use.timestamp) * timeScale}px`,
+            opacity: 0.7
+          }}
+        />
+      ))}
+      {overlappingRegions.map((region, index) => (
+        <div
+          key={`overlap-${index}`}
+          className="w-full bg-red-500 absolute"
+          style={{
+            top: `${region.start * timeScale}px`,
+            height: `${(region.end - region.start) * timeScale}px`,
+            opacity: 0.7
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
-const CooldownPalette: React.FC<CooldownPaletteProps> = ({ roomId, sheetId, encounterLength, timeScale, scrollTop }) => {
+const CooldownPalette: React.FC<CooldownPaletteProps> = ({ roomId, sheetId, encounterLength, timeScale, scrollTop, topBufferHeight }) => {
   const { darkMode } = useTheme();
   const roster = useSelector((state: RootState) => state.rooms[roomId]?.roster);
   const assignmentEvents = useSelector((state: RootState) => state.rooms[roomId]?.sheets[sheetId]?.assignmentEvents);
@@ -186,23 +198,36 @@ const CooldownPalette: React.FC<CooldownPaletteProps> = ({ roomId, sheetId, enco
 
   return (
     <div 
-      className={`${darkMode ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'} p-2 rounded-lg shadow-lg transition-colors duration-200 flex overflow-x-auto overflow-y-hidden`}
+      className={`${darkMode ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'} p-2 transition-colors duration-200 flex flex-col relative`}
       style={{ 
-        height: `${encounterLength * timeScale + 48}px`,
-        minHeight: '100%'
+        height: `${encounterLength * timeScale + topBufferHeight + 48}px`,
+        minHeight: '100%',
       }}
     >
-      {cooldownItems.map(({ player, ability, cooldownUses }) => (
-        <CooldownItem 
-          key={`${player.id}-${ability.id}`}
-          player={player}
-          ability={ability}
-          cooldownUses={cooldownUses}
-          encounterLength={encounterLength}
-          timeScale={timeScale}
-          scrollTop={scrollTop}
-        />
-      ))}
+      <div className="flex flex-col">
+        <div className="flex sticky top-0 z-10" style={{ height: `${topBufferHeight}px`, paddingLeft: '10px' }}>
+          {cooldownItems.map(({ player, ability }) => (
+            <CooldownIcon 
+              key={`icon-${player.id}-${ability.id}`}
+              player={player}
+              ability={ability}
+            />
+          ))}
+        </div>
+        <div className="flex" style={{ paddingLeft: '10px' }}>
+          {cooldownItems.map(({ player, ability, cooldownUses }) => (
+            <div key={`bar-${player.id}-${ability.id}`} className="mr-2" style={{ width: '32px' }}>
+              <CooldownBar
+                cooldownUses={cooldownUses}
+                encounterLength={encounterLength}
+                timeScale={timeScale}
+                overlappingRegions={[]}
+                topBufferHeight={0}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

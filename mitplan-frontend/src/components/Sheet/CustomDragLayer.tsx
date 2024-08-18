@@ -8,6 +8,7 @@ interface CustomDragLayerProps {
   sheetId: string;
   timeScale: number;
   scrollTop: number;
+  topBufferHeight: number;
 }
 
 const CustomDragLayer: React.FC<CustomDragLayerProps> = ({ 
@@ -15,7 +16,8 @@ const CustomDragLayer: React.FC<CustomDragLayerProps> = ({
   roomId, 
   sheetId, 
   timeScale, 
-  scrollTop 
+  scrollTop,
+  topBufferHeight
 }) => {
   const { isDragging, item, currentOffset } = useDragLayer((monitor) => ({
     item: monitor.getItem(),
@@ -28,7 +30,7 @@ const CustomDragLayer: React.FC<CustomDragLayerProps> = ({
   }
 
   const { y } = currentOffset;
-  const timestamp = Math.max(0, Math.min(Math.round(((y + scrollTop - 20) / (timelineLength * timeScale)) * timelineLength), timelineLength));
+  const timestamp = Math.max(0, Math.min(Math.round(((y + scrollTop - topBufferHeight) / (timelineLength * timeScale)) * timelineLength), timelineLength));
 
   return (
     <div style={{
@@ -46,6 +48,7 @@ const CustomDragLayer: React.FC<CustomDragLayerProps> = ({
         isDragging
         timeScale={timeScale}
         scrollTop={scrollTop}
+        topBufferHeight={topBufferHeight}
       />
     </div>
   );
