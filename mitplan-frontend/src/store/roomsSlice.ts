@@ -6,6 +6,7 @@ import { allEncounters } from '../data/encounters/encounters';
 import { storageService } from './clientStorage';
 import { v4 as uuidv4 } from 'uuid';
 
+
 const initialState: { [roomId: string]: Room } = {};
 
 // Helper function to extract ServerSyncedSheet data

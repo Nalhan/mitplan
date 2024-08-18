@@ -2,6 +2,7 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
     "./public/index.html",
+    "./node_modules/flowbite-react/lib/esm/**/*.js"
   ],
   darkMode: 'selector',
   theme: {
@@ -24,6 +25,9 @@ module.exports = {
     },
   },
 
+  plugins: [
+    require('flowbite/plugin'),
+  ],
   
   // ... other configurations
 };

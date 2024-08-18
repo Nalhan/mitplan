@@ -6,6 +6,7 @@ import { CooldownEventType, Player, RootState } from '../../types';
 import { classSpecs, classColors } from '../../data/classes';
 import { useTheme } from '../../hooks/ThemeContext';
 import { useSelector } from 'react-redux';
+import { Tooltip } from 'flowbite-react';
 
 interface CooldownIconProps {
   ability: Ability;
@@ -66,20 +67,27 @@ const CooldownIcon: React.FC<CooldownIconProps> = ({ player, ability, cooldownUs
           paddingTop: `${topBufferHeight}px`
         }}
       >
-        <div
-          ref={drag}
-          className={`w-8 h-8 mt-10 rounded cursor-move flex justify-center items-center hover:ring-2 hover:ring-inset hover:ring-blue-500 ${isDragging ? 'opacity-50' : ''} ${darkMode ? 'shadow-md shadow-gray-700' : 'shadow-sm shadow-gray-300'}`}
-          style={{ 
-            backgroundColor: classColors[player.class],
-          }}
-          title={`${player.name} - ${ability.name} (${ability.cooldown}s)`}
+        <Tooltip
+          content={`${ability.name} (${ability.cooldown}s)`}
+          placement="top"
+          trigger="hover"
+          animation="duration-300"
+          style={darkMode ? "dark" : "light"}
         >
-          <img 
-            src={`https://wow.zamimg.com/images/wow/icons/large/${ability.icon}.jpg`}
-            alt={ability.name} 
-            className="w-7 h-7 rounded"
-          />
-        </div>
+          <div
+            ref={drag}
+            className={`w-8 h-8 mt-10 rounded cursor-move flex justify-center items-center hover:ring-2 hover:ring-inset hover:ring-blue-500 ${isDragging ? 'opacity-50' : ''} ${darkMode ? 'shadow-md shadow-gray-700' : 'shadow-sm shadow-gray-300'}`}
+            style={{ 
+              backgroundColor: classColors[player.class],
+            }}
+          >
+            <img 
+              src={`https://wow.zamimg.com/images/wow/icons/large/${ability.icon}.jpg`}
+              alt={ability.name} 
+              className="w-7 h-7 rounded"
+            />
+          </div>
+        </Tooltip>
       </div>
       <div 
         className="absolute text-left text-m font-bold truncate origin-top-left z-20"
