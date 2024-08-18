@@ -12,11 +12,11 @@ interface EventColumnProps {
   onDragEnd: (id: string, newTimestamp: number, columnId: number) => void;
   onDrop: (item: any, columnId: number, newTimestamp: number) => void;
   columnId: number;
-  roomId: string;
+  mitplanId: string;
   sheetId: string;
   scrollTop: number;
   timeScale: number;
-  topBufferHeight: number; // Added topBufferHeight prop
+  topBufferHeight: number;
 }
 
 const EventColumn: React.FC<EventColumnProps> = ({ 
@@ -25,11 +25,11 @@ const EventColumn: React.FC<EventColumnProps> = ({
   onDragEnd, 
   onDrop, 
   columnId, 
-  roomId, 
+  mitplanId, 
   sheetId, 
   scrollTop,
   timeScale,
-  topBufferHeight // Added topBufferHeight prop
+  topBufferHeight
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { showContextMenu } = useContextMenu();
@@ -38,9 +38,7 @@ const EventColumn: React.FC<EventColumnProps> = ({
   const calculateTimestamp = useCallback((clientY: number | undefined): number => {
     if (!clientY || !ref.current) return 0;
     const columnRect = ref.current.getBoundingClientRect();
-    // Calculate relative position without considering scroll
-    const relativeY = clientY - columnRect.top - topBufferHeight; // Subtract topBufferHeight here
-    // Add the scroll offset, then scale to get the timestamp
+    const relativeY = clientY - columnRect.top - topBufferHeight;
     const timestamp = (relativeY) / timeScale;
     return Math.max(0, Math.min(timestamp, timelineLength));
   }, [timelineLength, timeScale, topBufferHeight]);
@@ -88,9 +86,9 @@ const EventColumn: React.FC<EventColumnProps> = ({
       ref={ref} 
       className="relative w-full select-none"
       style={{ 
-        height: `${timelineLength * timeScale + topBufferHeight}px`, // Add topBufferHeight here
-        paddingTop: `${topBufferHeight}px`, // Add this line
-        overflow: 'hidden'  // Add this to prevent scrolling within the column
+        height: `${timelineLength * timeScale + topBufferHeight}px`,
+        paddingTop: `${topBufferHeight}px`,
+        overflow: 'hidden'
       }}
       onContextMenu={handleContextMenu}
     >
@@ -99,11 +97,11 @@ const EventColumn: React.FC<EventColumnProps> = ({
           key={event.id} 
           event={event} 
           timelineLength={timelineLength}
-          roomId={roomId}
+          mitplanId={mitplanId}
           sheetId={sheetId}
           timeScale={timeScale}
           scrollTop={scrollTop}
-          topBufferHeight={topBufferHeight} // Add this prop
+          topBufferHeight={topBufferHeight}
         />
       ))}
     </div>

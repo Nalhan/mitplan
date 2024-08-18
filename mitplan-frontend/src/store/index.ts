@@ -1,8 +1,8 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import roomsReducer from './roomsSlice';
+import mitplansReducer from './mitplansSlice';
 
 const rootReducer = combineReducers({
-  rooms: roomsReducer,
+  mitplans: mitplansReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

@@ -4,7 +4,7 @@ import AssignmentEvent from './AssignmentEvent';
 
 interface CustomDragLayerProps {
   timelineLength: number;
-  roomId: string;
+  mitplanId: string;
   sheetId: string;
   timeScale: number;
   scrollTop: number;
@@ -13,7 +13,7 @@ interface CustomDragLayerProps {
 
 const CustomDragLayer: React.FC<CustomDragLayerProps> = ({ 
   timelineLength, 
-  roomId, 
+  mitplanId, 
   sheetId, 
   timeScale, 
   scrollTop,
@@ -43,7 +43,7 @@ const CustomDragLayer: React.FC<CustomDragLayerProps> = ({
       <AssignmentEvent
         event={{ ...item, timestamp }}
         timelineLength={timelineLength}
-        roomId={roomId}
+        mitplanId={mitplanId}
         sheetId={sheetId}
         isDragging
         timeScale={timeScale}

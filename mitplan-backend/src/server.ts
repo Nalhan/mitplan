@@ -9,15 +9,15 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { Sequelize, DataTypes, Model } from 'sequelize';
 import fs from 'fs';
-import generateRoomName from './utils/roomNameGenerator';
+import generateMitplanId from './utils/mitplanIdGenerator';
 import { v4 as uuidv4 } from 'uuid';
 import debugModule from 'debug';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// Define RoomState interface
-interface RoomState {
+// Define MitplanState interface
+interface MitplanState {
   id: string;
   sheets: {
     [key: string]: {
@@ -86,14 +86,14 @@ const initializeSequelize = async (): Promise<Sequelize> => {
   throw new Error('Failed to initialize database connection');
 };
 
-// Define Room model
-interface RoomAttributes {
-  roomId: string;
+// Define Mitplan model
+interface MitplanAttributes {
+  mitplanId: string;
   state: any;
 }
 
-class Room extends Model<RoomAttributes> implements RoomAttributes {
-  public roomId!: string;
+class Mitplan extends Model<MitplanAttributes> implements MitplanAttributes {
+  public mitplanId!: string;
   public state!: any;
 }
 
@@ -102,13 +102,13 @@ const startServer = async () => {
   try {
     const sequelize = await initializeSequelize();
 
-    Room.init({
-      roomId: {
+    Mitplan.init({
+      mitplanId: {
         type: DataTypes.STRING,
         primaryKey: true
       },
       state: DataTypes.JSONB
-    }, { sequelize, modelName: 'Room' });
+    }, { sequelize, modelName: 'Mitplan' });
 
     await sequelize.sync();
 
@@ -122,20 +122,20 @@ const startServer = async () => {
 
     app.use(bodyParser.json());
 
-    const rooms = new Map();
+    const mitplans = new Map();
 
-    app.post('/api/rooms', async (req: Request, res: Response) => {
-      let roomId: string;
+    app.post('/api/mitplans', async (req: Request, res: Response) => {
+      let mitplanId: string;
       do {
-        roomId = generateRoomName();
-      } while (await redis.exists(`room:${roomId}`));
+        mitplanId = generateMitplanId();
+      } while (await redis.exists(`mitplan:${mitplanId}`));
       const defaultSheetId = uuidv4();
-      const initialState: RoomState = {
-        id: roomId,
+      const initialState: MitplanState = {
+        id: mitplanId,
         sheets: {
           [defaultSheetId]: {
             id: defaultSheetId,
-            name: 'Default Sheet',
+            name: 'Sheet 1',
             assignmentEvents: {},
             encounter: {
               events: [],
@@ -150,20 +150,20 @@ const startServer = async () => {
           players: {}
         }
       };
-      await redis.set(`room:${roomId}`, JSON.stringify(initialState));
-      await Room.create({ roomId, state: initialState });
-      res.json({ roomId });
+      await redis.set(`mitplan:${mitplanId}`, JSON.stringify(initialState));
+      await Mitplan.create({ mitplanId, state: initialState });
+      res.json({ mitplanId });
     });
 
     interface ServerToClientEvents {
-      roomState: (roomId: string, state: any) => void;
+      mitplanState: (mitplanId: string, state: any) => void;
       error: (error: { message: string }) => void;
-      stateUpdate: (roomId: string, update: RoomState) => void;
+      stateUpdate: (mitplanId: string, update: MitplanState) => void;
     }
 
     interface ClientToServerEvents {
-      joinRoom: (roomId: string, callback: (response: any) => void) => void;
-      stateUpdate: (roomId: string, state: RoomState) => void;
+      joinMitplan: (mitplanId: string, callback: (response: any) => void) => void;
+      stateUpdate: (mitplanId: string, state: MitplanState) => void;
     }
 
     const debug = debugModule('engine:socket');
@@ -185,53 +185,53 @@ const startServer = async () => {
         console.log('Client disconnected', socket.id);
       });
 
-      socket.on('joinRoom', async (roomId, callback) => {
-        console.log(`Client ${socket.id} attempting to join room ${roomId}`);
-        socket.join(roomId);
-        let roomData = await redis.get(`room:${roomId}`);
-        if (!roomData) {
-          console.log(`Room ${roomId} not found in Redis, checking database`);
-          const dbRoom = await Room.findOne({ where: { roomId } });
-          if (dbRoom) {
-            roomData = JSON.stringify(dbRoom.state);
-            await redis.set(`room:${roomId}`, roomData);
-            console.log(`Room ${roomId} data retrieved from database and cached in Redis`);
+      socket.on('joinMitplan', async (mitplanId, callback) => {
+        console.log(`Client ${socket.id} attempting to join mitplan ${mitplanId}`);
+        socket.join(mitplanId);
+        let mitplanData = await redis.get(`mitplan:${mitplanId}`);
+        if (!mitplanData) {
+          console.log(`Mitplan ${mitplanId} not found in Redis, checking database`);
+          const dbMitplan = await Mitplan.findOne({ where: { mitplanId } });
+          if (dbMitplan) {
+            mitplanData = JSON.stringify(dbMitplan.state);
+            await redis.set(`mitplan:${mitplanId}`, mitplanData);
+            console.log(`Mitplan ${mitplanId} data retrieved from database and cached in Redis`);
           } else {
-            console.log(`Room ${roomId} not found in database`);
+            console.log(`Mitplan ${mitplanId} not found in database`);
           }
         }
-        if (roomData) {
-          console.log(`Emitting initial state for room ${roomId}`);
-          const parsedRoomData = JSON.parse(roomData);
-          socket.emit('roomState', roomId, parsedRoomData);
+        if (mitplanData) {
+          console.log(`Emitting initial state for mitplan ${mitplanId}`);
+          const parsedMitplanData = JSON.parse(mitplanData);
+          socket.emit('mitplanState', mitplanId, parsedMitplanData);
           callback({ status: 'success' });
         } else {
-          console.log(`Error: Room ${roomId} not found`);
-          callback({ status: 'error', message: 'Room not found' });
+          console.log(`Error: Mitplan ${mitplanId} not found`);
+          callback({ status: 'error', message: 'Mitplan not found' });
         }
       });
 
-      socket.on('stateUpdate', async (roomId: string, state: RoomState) => {
-        console.log(`Received state update for room ${roomId}`);
-        // Update the room state in Redis
-        await redis.set(`room:${roomId}`, JSON.stringify(state));
+      socket.on('stateUpdate', async (mitplanId: string, state: MitplanState) => {
+        console.log(`Received state update for mitplan ${mitplanId}`);
+        // Update the mitplan state in Redis
+        await redis.set(`mitplan:${mitplanId}`, JSON.stringify(state));
         
-        // Update the room state in the database
-        await Room.update({ state }, { where: { roomId } });
+        // Update the mitplan state in the database
+        await Mitplan.update({ state }, { where: { mitplanId } });
         
-        // Broadcast the updated state to all clients in the room, including the sender
-        io.to(roomId).emit('roomState', roomId, state);
+        // Broadcast the updated state to all clients in the mitplan, including the sender
+        io.to(mitplanId).emit('mitplanState', mitplanId, state);
       });
     });
 
-    app.post('/api/rooms/:roomId/save', async (req: Request, res: Response) => {
-      const { roomId } = req.params;
-      const roomData = await redis.get(`room:${roomId}`);
-      if (roomData) {
-        await Room.update({ state: JSON.parse(roomData) }, { where: { roomId } });
-        res.json({ message: 'Room state saved successfully' });
+    app.post('/api/mitplans/:mitplanId/save', async (req: Request, res: Response) => {
+      const { mitplanId } = req.params;
+      const mitplanData = await redis.get(`mitplan:${mitplanId}`);
+      if (mitplanData) {
+        await Mitplan.update({ state: JSON.parse(mitplanData) }, { where: { mitplanId } });
+        res.json({ message: 'Mitplan state saved successfully' });
       } else {
-        res.status(404).json({ message: 'Room not found' });
+        res.status(404).json({ message: 'Mitplan not found' });
       }
     });
 
@@ -239,27 +239,27 @@ const startServer = async () => {
     server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
     // Helper function to apply an action to the server-side state
-    async function applyActionToServerState(roomId: string, action: any) {
-      // Retrieve the current room state from Redis
-      const roomData = await redis.get(`room:${roomId}`);
+    async function applyActionToServerState(mitplanId: string, action: any) {
+      // Retrieve the current mitplan state from Redis
+      const mitplanData = await redis.get(`mitplan:${mitplanId}`);
       
-      if (roomData) {
+      if (mitplanData) {
         // Apply the action to the state
-        const newState = applyActionToState(JSON.parse(roomData), action);
+        const newState = applyActionToState(JSON.parse(mitplanData), action);
         
-        // Update the room state in Redis
-        await redis.set(`room:${roomId}`, JSON.stringify(newState));
+        // Update the mitplan state in Redis
+        await redis.set(`mitplan:${mitplanId}`, JSON.stringify(newState));
         
-        // Update the room state in the database
-        await Room.update({ state: newState }, { where: { roomId } });
+        // Update the mitplan state in the database
+        await Mitplan.update({ state: newState }, { where: { mitplanId } });
       } else {
-        // Handle the case where the room is not found in Redis
+        // Handle the case where the mitplan is not found in Redis
         // ...
       }
     }
 
-    // Helper function to apply an action to a room state
-    function applyActionToState(state: RoomState, action: any): RoomState {
+    // Helper function to apply an action to a mitplan state
+    function applyActionToState(state: MitplanState, action: any): MitplanState {
       // Implement the logic to apply the action to the state
       // ...
       return state;

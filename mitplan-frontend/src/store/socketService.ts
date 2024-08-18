@@ -1,10 +1,10 @@
 import io, { Socket } from 'socket.io-client';
-import { Room, ServerSyncedRoom } from '../types';
+import { Mitplan, ServerSyncedMitplan } from '../types';
 
 let socket: Socket | null = null;
-let updateStateCallback: ((roomId: string, state: Room) => void) | null = null;
+let updateStateCallback: ((mitplanId: string, state: Mitplan) => void) | null = null;
 
-export const initializeSocket = (callback: (roomId: string, state: Room) => void): Socket => {
+export const initializeSocket = (callback: (mitplanId: string, state: Mitplan) => void): Socket => {
   console.log('Initializing socket...');
   updateStateCallback = callback;
   if (!socket) {
@@ -23,9 +23,9 @@ export const initializeSocket = (callback: (roomId: string, state: Room) => void
       console.error('Socket error:', error);
     });
 
-    socket.on('roomState', (roomId: string, state: Room) => {
-      console.log('Received room state update for room:', roomId, state);
-      updateStateCallback?.(roomId, state);
+    socket.on('mitplanState', (mitplanId: string, state: Mitplan) => {
+      console.log('Received mitplan state update for mitplan:', mitplanId, state);
+      updateStateCallback?.(mitplanId, state);
     });
   } else {
     console.log('Using existing socket connection:', socket.id);
@@ -33,8 +33,8 @@ export const initializeSocket = (callback: (roomId: string, state: Room) => void
   return socket;
 };
 
-export const joinRoom = (roomId: string): Promise<void> => {
-  console.log('Attempting to join room:', roomId);
+export const joinMitplan = (mitplanId: string): Promise<void> => {
+  console.log('Attempting to join mitplan:', mitplanId);
   return new Promise((resolve, reject) => {
     if (!socket) {
       console.error('Socket is not initialized');
@@ -43,19 +43,19 @@ export const joinRoom = (roomId: string): Promise<void> => {
     }
 
     const timeout = setTimeout(() => {
-      console.error('Join room timeout for room:', roomId);
-      reject(new Error('Join room timeout'));
+      console.error('Join mitplan timeout for mitplan:', mitplanId);
+      reject(new Error('Join mitplan timeout'));
     }, 10000); // 10 second timeout
 
-    console.log('Emitting joinRoom event for room:', roomId);
-    socket.emit('joinRoom', roomId, (response: any) => {
+    console.log('Emitting joinMitplan event for mitplan:', mitplanId);
+    socket.emit('joinMitplan', mitplanId, (response: any) => {
       clearTimeout(timeout);
-      console.log('Join room response:', response);
+      console.log('Join mitplan response:', response);
       if (response && response.status === 'success') {
-        console.log('Successfully joined room:', roomId);
+        console.log('Successfully joined mitplan:', mitplanId);
         resolve();
       } else {
-        console.error('Failed to join room:', roomId, 'Error:', response ? response.message : 'No response');
+        console.error('Failed to join mitplan:', mitplanId, 'Error:', response ? response.message : 'No response');
         reject(new Error(response ? response.message : 'No response from server'));
       }
     });
@@ -63,16 +63,16 @@ export const joinRoom = (roomId: string): Promise<void> => {
     // Add a one-time listener for potential errors
     socket.once('error', (error) => {
       clearTimeout(timeout);
-      console.error('Socket error while joining room:', error);
+      console.error('Socket error while joining mitplan:', error);
       reject(new Error('Socket error: ' + error.message));
     });
   });
 };
 
-export const updateServerState = (roomId: string, roomState: ServerSyncedRoom) => {
-  console.log('Sending state update to server:', roomId, roomState);
+export const updateServerState = (mitplanId: string, mitplanState: ServerSyncedMitplan) => {
+  console.log('Sending state update to server:', mitplanId, mitplanState);
   if (socket) {
-    socket.emit('stateUpdate', roomId, roomState);
+    socket.emit('stateUpdate', mitplanId, mitplanState);
   } else {
     console.error('Cannot update server state: Socket is not initialized');
   }

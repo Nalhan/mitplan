@@ -27,7 +27,7 @@ interface CooldownBarProps {
 }
 
 interface CooldownPaletteProps {
-  roomId: string;
+  mitplanId: string;
   sheetId: string;
   encounterLength: number;
   timeScale: number;
@@ -143,10 +143,10 @@ const CooldownBar: React.FC<CooldownBarProps> = ({ cooldownUses, encounterLength
   );
 };
 
-const CooldownPalette: React.FC<CooldownPaletteProps> = ({ roomId, sheetId, encounterLength, timeScale, scrollTop, topBufferHeight }) => {
+const CooldownPalette: React.FC<CooldownPaletteProps> = ({ mitplanId, sheetId, encounterLength, timeScale, scrollTop, topBufferHeight }) => {
   const { darkMode } = useTheme();
-  const roster = useSelector((state: RootState) => state.rooms[roomId]?.roster);
-  const assignmentEvents = useSelector((state: RootState) => state.rooms[roomId]?.sheets[sheetId]?.assignmentEvents);
+  const roster = useSelector((state: RootState) => state.mitplans[mitplanId]?.roster);
+  const assignmentEvents = useSelector((state: RootState) => state.mitplans[mitplanId]?.sheets[sheetId]?.assignmentEvents);
 
   const cooldownItems = useMemo(() => {
     const items: { 
@@ -199,7 +199,7 @@ const CooldownPalette: React.FC<CooldownPaletteProps> = ({ roomId, sheetId, enco
 
   // Log overall component props and data
   console.log('CooldownPalette - props and data:', {
-    roomId,
+    mitplanId,
     sheetId,
     encounterLength,
     timeScale,

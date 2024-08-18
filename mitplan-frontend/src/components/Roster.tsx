@@ -1,6 +1,6 @@
 import React, { useState, KeyboardEvent } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addPlayerToRoster, removePlayersFromRoster, updatePlayer } from '../store/roomsSlice';
+import { addPlayerToRoster, removePlayersFromRoster, updatePlayer } from '../store/mitplansSlice';
 import { RootState, Player, RosterState, ROSTER_STATES } from '../types';
 import { WowClass, WowSpec, classSpecs } from '../data/classes';
 import { ZamIcon } from './Shared/ZamIcon';
@@ -10,12 +10,12 @@ import { useFloating, offset, flip, shift } from '@floating-ui/react-dom';
 interface RosterManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  roomId: string;
+  mitplanId: string;
 }
 
-const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, onClose, roomId }) => {
+const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, onClose, mitplanId }) => {
   const dispatch = useDispatch();
-  const room = useSelector((state: RootState) => state.rooms[roomId]);
+  const mitplan = useSelector((state: RootState) => state.mitplans[mitplanId]);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerClass, setNewPlayerClass] = useState<WowClass>('Warrior');
   const [newPlayerSpec, setNewPlayerSpec] = useState<WowSpec>('Arms');
@@ -27,7 +27,7 @@ const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, o
 
   const handleAddPlayer = () => {
     if (newPlayerName) {
-      dispatch(addPlayerToRoster({ roomId, name: newPlayerName, class: newPlayerClass, spec: newPlayerSpec }));
+      dispatch(addPlayerToRoster({ mitplanId, name: newPlayerName, class: newPlayerClass, spec: newPlayerSpec }));
       setNewPlayerName('');
     }
   };
@@ -39,7 +39,7 @@ const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, o
   };
 
   const handleRemovePlayer = (playerId: string) => {
-    dispatch(removePlayersFromRoster({ roomId, playerIds: playerId }));
+    dispatch(removePlayersFromRoster({ mitplanId, playerIds: playerId }));
   };
 
   const getRosterStateStyle = (state: RosterState | undefined): string => {
@@ -59,9 +59,9 @@ const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, o
   };
 
   const handleSetRosterState = (playerId: string, sheetId: string, state: RosterState) => {
-    const player = room.roster.players[playerId];
+    const player = mitplan.roster.players[playerId];
     dispatch(updatePlayer({ 
-      roomId, 
+      mitplanId, 
       playerId, 
       updates: { 
         rosterStates: { 
@@ -124,7 +124,7 @@ const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, o
     return null;
   }
 
-  if (!room || !room.roster) {
+  if (!mitplan || !mitplan.roster) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-4/5 h-4/5">
@@ -141,9 +141,9 @@ const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, o
     );
   }
 
-  const playerCount = Object.keys(room.roster.players || {}).length;
+  const playerCount = Object.keys(mitplan.roster.players || {}).length;
 
-  const categorizedPlayers = Object.values(room.roster.players || {}).reduce((acc, player: Player) => {
+  const categorizedPlayers = Object.values(mitplan.roster.players || {}).reduce((acc, player: Player) => {
     const role = classSpecs[player.class][player.spec].role;
     const melee = classSpecs[player.class][player.spec].melee;
     
@@ -213,11 +213,11 @@ const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, o
           </p>
         ) : (
           <div className="overflow-y-auto flex-grow">
-            <div className="grid gap-2" style={{ gridTemplateColumns: `auto repeat(${Object.keys(room.sheets).length}, minmax(80px, 1fr)) auto` }}>
+            <div className="grid gap-2" style={{ gridTemplateColumns: `auto repeat(${Object.keys(mitplan.sheets).length}, minmax(80px, 1fr)) auto` }}>
               <div></div>
-              {Object.keys(room.sheets).map((sheetId) => (
+              {Object.keys(mitplan.sheets).map((sheetId) => (
                 <div key={sheetId} className="text-center">
-                  <span className="text-sm font-medium mb-1 dark:text-white">{room.sheets[sheetId].name}</span>
+                  <span className="text-sm font-medium mb-1 dark:text-white">{mitplan.sheets[sheetId].name}</span>
                 </div>
               ))}
               <div></div>
@@ -245,7 +245,7 @@ const RosterManagementModal: React.FC<RosterManagementModalProps> = ({ isOpen, o
                           {player.class} - {player.spec}
                         </span>
                       </div>
-                      {Object.keys(room.sheets).map((sheetId) => (
+                      {Object.keys(mitplan.sheets).map((sheetId) => (
                         <RosterStatePopover key={sheetId} player={player} sheetId={sheetId} />
                       ))}
                       <button

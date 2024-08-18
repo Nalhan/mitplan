@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import RoomSelection from './components/RoomSelection';
-import Room from './components/Room';
+import MitplanSelection from './components/MitplanSelection';
+import Mitplan from './components/Mitplan';
 import { ThemeProvider, useTheme } from './hooks/ThemeContext';
 import { Provider as ReduxProvider } from 'react-redux';
 import store from './store';
@@ -28,8 +28,8 @@ const AppContent: React.FC = () => {
       </button>
       <div className="h-full overflow-auto">
         <Routes>
-          <Route path="/" element={<RoomSelection />} />
-          <Route path="/room/:roomId" element={<Room />} />
+          <Route path="/" element={<MitplanSelection />} />
+          <Route path="/mitplan/:mitplanId" element={<Mitplan />} />
         </Routes>
       </div>
     </div>

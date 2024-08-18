@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { allEncounters } from '../../data/encounters/encounters';
 import { Encounter, RootState } from '../../types';
-import { updateSheet } from '../../store/roomsSlice';
+import { updateSheet } from '../../store/mitplansSlice';
 
 interface EncounterSelectProps {
-  roomId: string;
+  mitplanId: string;
 }
 
-const EncounterSelect: React.FC<EncounterSelectProps> = ({ roomId }) => {
+const EncounterSelect: React.FC<EncounterSelectProps> = ({ mitplanId }) => {
   const [selectedEncounter, setSelectedEncounter] = useState<string>('');
   const [encounterList, setEncounterList] = useState<Record<string, Encounter>>({});
   const dispatch = useDispatch();
-  const activeRoom = useSelector((state: RootState) => state.rooms[roomId]);
+  const activeMitplan = useSelector((state: RootState) => state.mitplans[mitplanId]);
 
   useEffect(() => {
     const loadEncounters = async () => {
@@ -34,21 +34,21 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ roomId }) => {
 
   const handleApplyEncounter = () => {
     const encounter = encounterList[selectedEncounter];
-    if (encounter && activeRoom) {
-      const activeSheetId = activeRoom.activeSheetId;
+    if (encounter && activeMitplan) {
+      const activeSheetId = activeMitplan.activeSheetId;
       if (activeSheetId) {
-        console.log(`Updating encounter for room ${roomId}, sheet ${activeSheetId}`);
+        console.log(`Updating encounter for mitplan ${mitplanId}, sheet ${activeSheetId}`);
         dispatch(updateSheet({
-          roomId,
+          mitplanId,
           sheetId: activeSheetId,
           updates: { encounter }
         }));
-        console.log(`Updated encounter to ${encounter.name} for room ${roomId}, sheet ${activeSheetId}`); // Debug log
+        console.log(`Updated encounter to ${encounter.name} for mitplan ${mitplanId}, sheet ${activeSheetId}`); // Debug log
       } else {
         console.error('No active sheet found');
       }
     } else {
-      console.error('No encounter selected or active room not found');
+      console.error('No encounter selected or active mitplan not found');
     }
   };
 
