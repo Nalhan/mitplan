@@ -50,10 +50,16 @@ const EventColumn: React.FC<EventColumnProps> = ({
     hover: (item: AssignmentEventType | CooldownEventType, monitor) => {
       const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
       if (item.type !== 'cooldown' && 'id' in item) {
-        setLocalEvents(prev => ({
-          ...prev,
-          [item.id]: { ...prev[item.id], timestamp: draggedTimestamp, columnId }
-        }));
+        setLocalEvents(prev => {
+          // Only update the event if it already exists in this column
+          if (prev[item.id]) {
+            return {
+              ...prev,
+              [item.id]: { ...prev[item.id], timestamp: draggedTimestamp, columnId }
+            };
+          }
+          return prev;
+        });
       }
     },
     drop: (item: AssignmentEventType | CooldownEventType, monitor) => {
