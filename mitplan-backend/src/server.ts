@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response,  } from 'express';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
 import { Transport } from 'engine.io';
@@ -9,12 +9,12 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { Sequelize, DataTypes, Model } from 'sequelize';
 import fs from 'fs';
-import generateMitplanId from './utils/mitplanIdGenerator';
-import { v4 as uuidv4 } from 'uuid';
+import { v7 as uuidv7 } from 'uuid';
 import debugModule from 'debug';
 import passport from 'passport';
 import DiscordStrategy from 'passport-discord';
 import session from 'express-session';
+import { debounce } from 'lodash';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -109,7 +109,6 @@ interface UserAttributes {
   username: string;
   avatar: string;
   email: string;
-  mitplans: string[];
 }
 
 class User extends Model<UserAttributes> {
@@ -118,7 +117,6 @@ class User extends Model<UserAttributes> {
   declare username: string;
   declare avatar: string;
   declare email: string;
-  declare mitplans: string[];
 }
 
 // Wrap your server startup in an async function
@@ -139,23 +137,19 @@ const startServer = async () => {
       username: DataTypes.STRING,
       avatar: DataTypes.STRING,
       email: DataTypes.STRING,
-      mitplans: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
-        defaultValue: []
-      }
     }, { sequelize, modelName: 'User', tableName: 'Users' });
 
     // Then initialize Mitplan model
     Mitplan.init({
       mitplanId: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         primaryKey: true
       },
       state: DataTypes.JSONB,
       ownerId: {
         type: DataTypes.STRING,
         references: {
-          model: 'User',
+          model: 'Users',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -168,7 +162,7 @@ const startServer = async () => {
     Mitplan.belongsTo(User, { foreignKey: 'ownerId' });
 
     // Sync models with database
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ force: false });
 
     // Enable CORS
     app.use(cors({
@@ -202,12 +196,11 @@ const startServer = async () => {
         let user = await User.findOne({ where: { discordId: profile.id } });
         if (!user) {
           user = await User.create({
-            id: uuidv4(),
+            id: uuidv7(),
             discordId: profile.id,
             username: profile.username,
             avatar: profile.avatar ?? '',
             email: profile.email ?? '',
-            mitplans: []
           });
         } else {
           await user.update({
@@ -255,7 +248,7 @@ const startServer = async () => {
 
     app.get('/auth/logout', (req, res) => {
       req.logout(() => {
-        res.redirect('/');
+        res.redirect('/logout');
       });
     });
 
@@ -276,17 +269,16 @@ const startServer = async () => {
       const user = req.user as User | undefined;
       
       if (user) {
-        if (user.mitplans.length >= 5) {
+        // Check the number of mitplans associated with the user
+        const mitplanCount = await Mitplan.count({ where: { ownerId: user.id } });
+        if (mitplanCount >= 5) {
           return res.status(403).json({ error: 'You have reached the maximum number of mitplans allowed.' });
         }
       }
 
-      let mitplanId: string;
-      do {
-        mitplanId = generateMitplanId();
-      } while (await redis.exists(`mitplan:${mitplanId}`));
+      const mitplanId = uuidv7();
+      const defaultSheetId = uuidv7();
       
-      const defaultSheetId = uuidv4();
       const initialState: MitplanState = {
         id: mitplanId,
         sheets: {
@@ -308,15 +300,28 @@ const startServer = async () => {
         }
       };
 
-      await redis.set(`mitplan:${mitplanId}`, JSON.stringify(initialState));
-      
-      if (user) {
-        await Mitplan.create({ mitplanId, state: initialState, ownerId: user.id });
-        user.mitplans.push(mitplanId);
-        await user.save();
-      }
+      try {
+        // Always save to Redis
+        await redis.set(`mitplan:${mitplanId}`, JSON.stringify(initialState));
+        
+        if (user) {
+          // Save to PostgreSQL only if a user is assigned
+          await Mitplan.create({ 
+            mitplanId, 
+            state: initialState, 
+            ownerId: user.id 
+          });
+          
+          console.log(`New mitplan ${mitplanId} created and saved to both Redis and PostgreSQL for user ${user.id}`);
+        } else {
+          console.log(`New mitplan ${mitplanId} created and saved to Redis (no user assigned)`);
+        }
 
-      res.json({ mitplanId });
+        res.json({ mitplanId });
+      } catch (error) {
+        console.error('Error creating new mitplan:', error);
+        res.status(500).json({ error: 'Failed to create new mitplan' });
+      }
     });
 
     app.get('/api/user/mitplans', async (req: Request, res: Response) => {
@@ -326,8 +331,24 @@ const startServer = async () => {
         return res.status(401).json({ error: 'Not authenticated' });
       }
 
-      const mitplans = await Mitplan.findAll({ where: { ownerId: user.id } });
-      res.json(mitplans);
+      try {
+        // Fetch mitplans from PostgreSQL using the association
+        const dbMitplans = await Mitplan.findAll({
+          where: { ownerId: user.id },
+          attributes: ['mitplanId', 'state'],
+        });
+        console.log('Fetched mitplans from database:', dbMitplans);
+        // Map the results to the desired format
+        const mitplans = dbMitplans.map(mitplan => ({
+          mitplanId: mitplan.get('mitplanId') as string,
+          state: mitplan.get('state') as MitplanState
+        }));
+        console.log('Fetched mitplans:', mitplans);
+        res.json(mitplans);
+      } catch (error) {
+        console.error('Error fetching user mitplans:', error);
+        res.status(500).json({ error: 'Failed to fetch mitplans' });
+      }
     });
 
     interface ServerToClientEvents {
@@ -353,32 +374,53 @@ const startServer = async () => {
       });
     });
 
+    const ROOM_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const roomTimeouts = new Map<string, NodeJS.Timeout>();
+
+    // Add this new function to check and restore mitplan state
+    async function checkAndRestoreMitplan(mitplanId: string): Promise<MitplanState | null> {
+      // First, check if the mitplan exists in Redis
+      let mitplanData = await redis.get(`mitplan:${mitplanId}`);
+      
+      if (!mitplanData) {
+        console.log(`Mitplan ${mitplanId} not found in Redis, checking database`);
+        
+        // If not in Redis, check the database
+        const dbMitplan = await Mitplan.findOne({ where: { mitplanId } });
+        
+        if (dbMitplan) {
+          // If found in database, restore to Redis
+          mitplanData = JSON.stringify(dbMitplan.state);
+          await redis.set(`mitplan:${mitplanId}`, mitplanData);
+          console.log(`Mitplan ${mitplanId} restored from database to Redis`);
+        } else {
+          console.log(`Mitplan ${mitplanId} not found in database`);
+          return null;
+        }
+      }
+      
+      return JSON.parse(mitplanData);
+    }
+
     io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
       console.log('New client connected', socket.id);
       
       socket.on('disconnect', () => {
         console.log('Client disconnected', socket.id);
+        checkRoomActivity(socket);
       });
 
       socket.on('joinMitplan', async (mitplanId, callback) => {
         console.log(`Client ${socket.id} attempting to join mitplan ${mitplanId}`);
-        socket.join(mitplanId);
-        let mitplanData = await redis.get(`mitplan:${mitplanId}`);
-        if (!mitplanData) {
-          console.log(`Mitplan ${mitplanId} not found in Redis, checking database`);
-          const dbMitplan = await Mitplan.findOne({ where: { mitplanId } });
-          if (dbMitplan) {
-            mitplanData = JSON.stringify(dbMitplan.state);
-            await redis.set(`mitplan:${mitplanId}`, mitplanData);
-            console.log(`Mitplan ${mitplanId} data retrieved from database and cached in Redis`);
-          } else {
-            console.log(`Mitplan ${mitplanId} not found in database`);
-          }
-        }
-        if (mitplanData) {
+        
+        const mitplanState = await checkAndRestoreMitplan(mitplanId);
+        
+        if (mitplanState) {
+          socket.join(mitplanId);
+          clearRoomTimeout(mitplanId);
+
           console.log(`Emitting initial state for mitplan ${mitplanId}`);
-          const parsedMitplanData = JSON.parse(mitplanData);
-          socket.emit('mitplanState', mitplanId, parsedMitplanData);
+          socket.emit('mitplanState', mitplanId, mitplanState);
           callback({ status: 'success' });
         } else {
           console.log(`Error: Mitplan ${mitplanId} not found`);
@@ -388,6 +430,8 @@ const startServer = async () => {
 
       socket.on('stateUpdate', async (mitplanId: string, state: MitplanState) => {
         console.log(`Received state update for mitplan ${mitplanId}`);
+        clearRoomTimeout(mitplanId);
+
         // Update the mitplan state in Redis
         await redis.set(`mitplan:${mitplanId}`, JSON.stringify(state));
         
@@ -398,6 +442,81 @@ const startServer = async () => {
         io.to(mitplanId).emit('mitplanState', mitplanId, state);
       });
     });
+
+    function clearRoomTimeout(mitplanId: string) {
+      if (roomTimeouts.has(mitplanId)) {
+        clearTimeout(roomTimeouts.get(mitplanId)!);
+        roomTimeouts.delete(mitplanId);
+      }
+    }
+
+    function checkRoomActivity(socket: Socket) {
+      for (const [mitplanId, room] of socket.rooms) {
+        if (mitplanId !== socket.id) { // Ignore the socket's personal room
+          const clientsInRoom = io.sockets.adapter.rooms.get(mitplanId);
+          if (!clientsInRoom || clientsInRoom.size === 0) {
+            // No clients left in the room, start the timeout
+            const timeout = setTimeout(() => handleRoomTimeout(mitplanId), ROOM_TIMEOUT);
+            roomTimeouts.set(mitplanId, timeout);
+          }
+        }
+      }
+    }
+
+    const SAVE_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+    // Set up periodic save job
+    const periodicSaveJob = setInterval(saveAllRoomStates, SAVE_INTERVAL);
+
+    async function saveAllRoomStates() {
+      console.log('Starting periodic save of all room states');
+      const mitplanIds = await redis.keys('mitplan:*');
+      
+      for (const key of mitplanIds) {
+        const mitplanId = key.split(':')[1];
+        const mitplanData = await redis.get(key);
+        
+        if (mitplanData) {
+          try {
+            const mitplan = await Mitplan.findOne({ where: { mitplanId } });
+            if (mitplan && mitplan.ownerId) {
+              await Mitplan.update({ state: JSON.parse(mitplanData) }, { where: { mitplanId } });
+              console.log(`Periodic save: Mitplan ${mitplanId} saved to database`);
+            } else {
+              console.log(`Periodic save: Mitplan ${mitplanId} skipped (no associated user)`);
+            }
+          } catch (error) {
+            console.error(`Error processing mitplan ${mitplanId} during periodic save:`, error);
+          }
+        }
+      }
+      
+      console.log('Periodic save of all room states completed');
+    }
+
+    const handleRoomTimeout = debounce(async (mitplanId: string) => {
+      console.log(`Room timeout for mitplan ${mitplanId}`);
+      
+      const mitplanData = await redis.get(`mitplan:${mitplanId}`);
+      
+      if (mitplanData) {
+        try {
+          const mitplan = await Mitplan.findOne({ where: { mitplanId } });
+          if (mitplan && mitplan.ownerId) {
+            await Mitplan.update({ state: JSON.parse(mitplanData) }, { where: { mitplanId } });
+            console.log(`Mitplan ${mitplanId} saved to database`);
+          } else {
+            console.log(`Mitplan ${mitplanId} not saved to database (no associated user)`);
+          }
+          await redis.del(`mitplan:${mitplanId}`);
+          console.log(`Mitplan ${mitplanId} removed from Redis`);
+        } catch (error) {
+          console.error(`Error handling room timeout for mitplan ${mitplanId}:`, error);
+        }
+      }
+      
+      roomTimeouts.delete(mitplanId);
+    }, 1000); // Debounce for 1 second to avoid multiple calls
 
     app.post('/api/mitplans/:mitplanId/save', async (req: Request, res: Response) => {
       const { mitplanId } = req.params;
@@ -412,6 +531,19 @@ const startServer = async () => {
 
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+    // Add this cleanup function
+    const cleanup = async () => {
+      console.log('Server is shutting down. Saving all room states...');
+      await saveAllRoomStates();
+      console.log('All room states saved. Exiting...');
+      process.exit(0);
+    };
+
+    // Register the cleanup function for different exit signals
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
+    process.on('SIGUSR2', cleanup); // For Nodemon restarts
 
     // Helper function to apply an action to the server-side state
     async function applyActionToServerState(mitplanId: string, action: any) {
