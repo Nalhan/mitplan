@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useDrop } from 'react-dnd';
+import { useDrop, useDragLayer } from 'react-dnd';
 import AssignmentEvent from './AssignmentEvent';
 import { useContextMenu } from '../Shared/ContextMenu';
 import { AssignmentEventType, CooldownEventType } from '../../types';
@@ -16,7 +16,7 @@ interface EventColumnProps {
   sheetId: string;
   scrollTop: number;
   timeScale: number;
-  topBufferHeight: number; // Added topBufferHeight prop
+  topBufferHeight: number;
 }
 
 const EventColumn: React.FC<EventColumnProps> = ({ 
@@ -29,18 +29,17 @@ const EventColumn: React.FC<EventColumnProps> = ({
   sheetId, 
   scrollTop,
   timeScale,
-  topBufferHeight // Added topBufferHeight prop
+  topBufferHeight
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { showContextMenu } = useContextMenu();
   const [localEvents, setLocalEvents] = useState(events);
+  const [draggedItem, setDraggedItem] = useState<AssignmentEventType | CooldownEventType | null>(null);
 
   const calculateTimestamp = useCallback((clientY: number | undefined): number => {
     if (!clientY || !ref.current) return 0;
     const columnRect = ref.current.getBoundingClientRect();
-    // Calculate relative position without considering scroll
-    const relativeY = clientY - columnRect.top - topBufferHeight; // Subtract topBufferHeight here
-    // Add the scroll offset, then scale to get the timestamp
+    const relativeY = clientY - columnRect.top - topBufferHeight;
     const timestamp = (relativeY) / timeScale;
     return Math.max(0, Math.min(timestamp, timelineLength));
   }, [timelineLength, timeScale, topBufferHeight]);
@@ -48,10 +47,12 @@ const EventColumn: React.FC<EventColumnProps> = ({
   const [, drop] = useDrop({
     accept: [ItemType, 'ASSIGNMENT_EVENT'],
     hover: (item: AssignmentEventType | CooldownEventType, monitor) => {
+      if (!draggedItem) {
+        setDraggedItem(item);
+      }
       const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
       if (item.type !== 'cooldown' && 'id' in item) {
         setLocalEvents(prev => {
-          // Only update the event if it already exists in this column
           if (prev[item.id]) {
             return {
               ...prev,
@@ -69,8 +70,43 @@ const EventColumn: React.FC<EventColumnProps> = ({
       } else {
         onDragEnd(item.id, draggedTimestamp, columnId);
       }
+
+      if (monitor.didDrop()) {
+        console.log('Item was dropped');
+      } else {
+        console.log('Drag ended without a drop');
+      }
+      setDraggedItem(null);
     },
   });
+
+  const { isDragging } = useDragLayer((monitor) => ({
+    isDragging: monitor.isDragging(),
+  }));
+
+  useEffect(() => {
+    if (!isDragging && draggedItem) {
+      console.log('Drag ended for item:', draggedItem);
+      
+      if (draggedItem.type === 'cooldown') {
+        console.log('Cooldown drag ended without drop');
+      } else if ('id' in draggedItem && events[draggedItem.id]) {
+        setLocalEvents(prevEvents => ({
+          ...prevEvents,
+          [draggedItem.id]: events[draggedItem.id]
+        }));
+        console.log('Assignment event reset to original position');
+      }
+
+      setDraggedItem(null);
+    }
+  }, [isDragging, draggedItem, events]);
+
+  useEffect(() => {
+    if (events) {
+      setLocalEvents(events);
+    }
+  }, [events]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -83,10 +119,6 @@ const EventColumn: React.FC<EventColumnProps> = ({
     ], e.clientX, e.clientY);
   }, [showContextMenu, calculateTimestamp, onDrop, columnId]);
 
-  useEffect(() => {
-    setLocalEvents(events);
-  }, [events]);
-
   drop(ref);
 
   return (
@@ -94,24 +126,26 @@ const EventColumn: React.FC<EventColumnProps> = ({
       ref={ref} 
       className="relative w-full select-none"
       style={{ 
-        height: `${timelineLength * timeScale + topBufferHeight}px`, // Add topBufferHeight here
-        paddingTop: `${topBufferHeight}px`, // Add this line
-        overflow: 'hidden'  // Add this to prevent scrolling within the column
+        height: `${timelineLength * timeScale + topBufferHeight}px`,
+        paddingTop: `${topBufferHeight}px`,
+        overflow: 'hidden'
       }}
       onContextMenu={handleContextMenu}
     >
-      {Object.values(localEvents).map((event) => (
-        <AssignmentEvent 
-          key={event.id} 
-          event={event} 
-          timelineLength={timelineLength}
-          roomId={roomId}
-          sheetId={sheetId}
-          timeScale={timeScale}
-          scrollTop={scrollTop}
-          topBufferHeight={topBufferHeight} // Add this prop
-        />
-      ))}
+      {Object.values(localEvents || {}).map((event) => 
+        event && 'id' in event ? (
+          <AssignmentEvent 
+            key={event.id} 
+            event={event} 
+            timelineLength={timelineLength}
+            roomId={roomId}
+            sheetId={sheetId}
+            timeScale={timeScale}
+            scrollTop={scrollTop}
+            topBufferHeight={topBufferHeight}
+          />
+        ) : null
+      )}
     </div>
   );
 };
