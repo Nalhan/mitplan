@@ -1,0 +1,39 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Install dependencies (Frontend)
+      run: |
+        cd mitplan-frontend
+        npm ci
+
+    - name: Install dependencies (Backend)
+      run: |
+        cd mitplan-backend
+        npm ci
+
+    - name: Lint Frontend
+      run: |
+        cd mitplan-frontend
+        npm run lint
+
+    - name: Lint Backend
+      run: |
+        cd mitplan-backend
+        npm run lint
