@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useDrop } from 'react-dnd';
+import { useDrop, useDragLayer } from 'react-dnd';
 import AssignmentEvent from './AssignmentEvent';
 import { useContextMenu } from '../Shared/ContextMenu';
 import { AssignmentEventType, CooldownEventType } from '../../types';
@@ -34,6 +34,7 @@ const EventColumn: React.FC<EventColumnProps> = ({
   const ref = useRef<HTMLDivElement>(null);
   const { showContextMenu } = useContextMenu();
   const [localEvents, setLocalEvents] = useState(events);
+  const [draggedItem, setDraggedItem] = useState<AssignmentEventType | CooldownEventType | null>(null);
 
   const calculateTimestamp = useCallback((clientY: number | undefined): number => {
     if (!clientY || !ref.current) return 0;
@@ -46,12 +47,20 @@ const EventColumn: React.FC<EventColumnProps> = ({
   const [, drop] = useDrop({
     accept: [ItemType, 'ASSIGNMENT_EVENT'],
     hover: (item: AssignmentEventType | CooldownEventType, monitor) => {
+      if (!draggedItem) {
+        setDraggedItem(item);
+      }
       const draggedTimestamp = calculateTimestamp(monitor.getClientOffset()?.y);
       if (item.type !== 'cooldown' && 'id' in item) {
-        setLocalEvents(prev => ({
-          ...prev,
-          [item.id]: { ...prev[item.id], timestamp: draggedTimestamp, columnId }
-        }));
+        setLocalEvents(prev => {
+          if (prev[item.id]) {
+            return {
+              ...prev,
+              [item.id]: { ...prev[item.id], timestamp: draggedTimestamp, columnId }
+            };
+          }
+          return prev;
+        });
       }
     },
     drop: (item: AssignmentEventType | CooldownEventType, monitor) => {
@@ -61,8 +70,43 @@ const EventColumn: React.FC<EventColumnProps> = ({
       } else {
         onDragEnd(item.id, draggedTimestamp, columnId);
       }
+
+      if (monitor.didDrop()) {
+        console.log('Item was dropped');
+      } else {
+        console.log('Drag ended without a drop');
+      }
+      setDraggedItem(null);
     },
   });
+
+  const { isDragging } = useDragLayer((monitor) => ({
+    isDragging: monitor.isDragging(),
+  }));
+
+  useEffect(() => {
+    if (!isDragging && draggedItem) {
+      console.log('Drag ended for item:', draggedItem);
+      
+      if (draggedItem.type === 'cooldown') {
+        console.log('Cooldown drag ended without drop');
+      } else if ('id' in draggedItem && events[draggedItem.id]) {
+        setLocalEvents(prevEvents => ({
+          ...prevEvents,
+          [draggedItem.id]: events[draggedItem.id]
+        }));
+        console.log('Assignment event reset to original position');
+      }
+
+      setDraggedItem(null);
+    }
+  }, [isDragging, draggedItem, events]);
+
+  useEffect(() => {
+    if (events) {
+      setLocalEvents(events);
+    }
+  }, [events]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -74,10 +118,6 @@ const EventColumn: React.FC<EventColumnProps> = ({
       }
     ], e.clientX, e.clientY);
   }, [showContextMenu, calculateTimestamp, onDrop, columnId]);
-
-  useEffect(() => {
-    setLocalEvents(events);
-  }, [events]);
 
   drop(ref);
 
@@ -92,18 +132,21 @@ const EventColumn: React.FC<EventColumnProps> = ({
       }}
       onContextMenu={handleContextMenu}
     >
-      {Object.values(localEvents).map((event) => (
-        <AssignmentEvent 
-          key={event.id} 
-          event={event} 
-          timelineLength={timelineLength}
-          mitplanId={mitplanId}
-          sheetId={sheetId}
-          timeScale={timeScale}
-          scrollTop={scrollTop}
-          topBufferHeight={topBufferHeight}
-        />
-      ))}
+      
+      {Object.values(localEvents || {}).map((event) => 
+        event && 'id' in event ? (
+          <AssignmentEvent 
+            key={event.id} 
+            event={event} 
+            timelineLength={timelineLength}
+            roomId={roomId}
+            sheetId={sheetId}
+            timeScale={timeScale}
+            scrollTop={scrollTop}
+            topBufferHeight={topBufferHeight}
+          />
+        ) : null
+      )}
     </div>
   );
 };
