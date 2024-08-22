@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only --inspect=0.0.0.0:9229 src/server.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
