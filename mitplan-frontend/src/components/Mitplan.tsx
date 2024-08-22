@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import SheetComponent from './Sheet/Sheet';
@@ -15,10 +15,8 @@ const Mitplan: React.FC = () => {
   const { mitplanId } = useParams<{ mitplanId: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const mitplan = useSelector((state: RootState) => {
-    // console.log('Current mitplans state:', state.mitplans);
     return state.mitplans.mitplans[mitplanId!];
   });
-  // console.log('Mitplan data:', mitplan);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [sheetToRename, setSheetToRename] = useState<string | null>(null);
   const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
@@ -46,12 +44,12 @@ const Mitplan: React.FC = () => {
     }
     setIsRenameModalOpen(false);
   };
+
   return (
     <ContextMenuProvider>
       <div className="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">
         <div className="flex-shrink-0 p-4 flex justify-between items-center">
           <div>
-            {/* <h1 className="text-4xl font-bold mb-1 text-gray-800 dark:text-white"></h1> */}
             <CopyToClipboard text={`${window.location.origin}/mitplan/${mitplanId}` || ''} popupText="Link copied!">
               <h1 className="text-4xl font-bold mb-0 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-0 py-1 inline-block">
                 Mitplan: {mitplanId}
@@ -102,44 +100,62 @@ const MitplanWrapper: React.FC = () => {
   const { mitplanId } = useParams<{ mitplanId: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const mitplan = useSelector((state: RootState) => {
-    return state.mitplans.mitplans[mitplanId!];
-  });
-  // console.log('MitplanWrapper - Mitplan data:', mitplan);
+  const mitplan = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId!]);
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (mitplanId) {
-      // console.log('Initializing socket...');
-      initializeSocket((mitplanId, state) => {
-        // console.log('Mitplan state updated:', mitplanId, state);
-        dispatch({ type: 'mitplans/setMitplan', payload: { mitplanId, state } });
-      });
-      
-      // console.log('Joining mitplan:', mitplanId);
-      joinMitplan(mitplanId)
-        .then(() => {
-          // console.log('Successfully joined mitplan:', mitplanId);
-          setLoading(false);
-        })
-        .catch((error: Error) => {
-          console.error('Error joining mitplan:', error);
-          setError(error.message || 'An error occurred while joining the mitplan');
-          setLoading(false);
-        });
+    if (!mitplanId) {
+      setError('Invalid Mitplan ID');
+      setLoading(false);
+      return;
     }
+
+    initializeSocket((mitplanId, state) => {
+      dispatch({ type: 'mitplans/setMitplan', payload: { mitplanId, state } });
+    });
+    
+    joinMitplan(mitplanId)
+      .then(() => {
+        setLoading(false);
+      })
+      .catch((error: Error) => {
+        console.error('Error joining mitplan:', error);
+        setError(error.message || 'An error occurred while joining the mitplan');
+        setLoading(false);
+      });
   }, [mitplanId, dispatch]);
 
-  if (!mitplanId) {
-    return <div className="p-4 text-red-600 dark:text-red-400">Error: Mitplan ID is missing</div>;
-  }
-
-  if (loading || !mitplan) {
+  if (loading) {
     return <div className="p-4 text-gray-600 dark:text-gray-400">Loading mitplan data...</div>;
   }
 
   if (error) {
-    return <div className="p-4 text-red-600 dark:text-red-400">Error: {error}</div>;
+    return (
+      <div className="p-4 text-red-600 dark:text-red-400">
+        <p>Error: {error}</p>
+        <button 
+          onClick={() => navigate('/')} 
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  if (!mitplan) {
+    return (
+      <div className="p-4 text-red-600 dark:text-red-400">
+        <p>Error: Mitplan not found</p>
+        <button 
+          onClick={() => navigate('/')} 
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
   }
 
   return <Mitplan />;
