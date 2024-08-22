@@ -263,7 +263,7 @@ const startServer = async () => {
       }
     });
 
-    const mitplans = new Map();
+    // const mitplans = new Map();
 
     app.post('/api/mitplans', async (req: Request, res: Response) => {
       const user = req.user as User | undefined;
@@ -374,8 +374,8 @@ const startServer = async () => {
       });
     });
 
-    const ROOM_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
-    const roomTimeouts = new Map<string, NodeJS.Timeout>();
+    const MITPLAN_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const mitplanTimeouts = new Map<string, NodeJS.Timeout>();
 
     // Add this new function to check and restore mitplan state
     async function checkAndRestoreMitplan(mitplanId: string): Promise<MitplanState | null> {
@@ -407,7 +407,7 @@ const startServer = async () => {
       
       socket.on('disconnect', () => {
         console.log('Client disconnected', socket.id);
-        checkRoomActivity(socket);
+        checkMitplanActivity(socket);
       });
 
       socket.on('joinMitplan', async (mitplanId, callback) => {
@@ -417,7 +417,7 @@ const startServer = async () => {
         
         if (mitplanState) {
           socket.join(mitplanId);
-          clearRoomTimeout(mitplanId);
+          clearMitplanTimeout(mitplanId);
 
           console.log(`Emitting initial state for mitplan ${mitplanId}`);
           socket.emit('mitplanState', mitplanId, mitplanState);
@@ -430,7 +430,7 @@ const startServer = async () => {
 
       socket.on('stateUpdate', async (mitplanId: string, state: MitplanState) => {
         console.log(`Received state update for mitplan ${mitplanId}`);
-        clearRoomTimeout(mitplanId);
+        clearMitplanTimeout(mitplanId);
 
         // Update the mitplan state in Redis
         await redis.set(`mitplan:${mitplanId}`, JSON.stringify(state));
@@ -443,21 +443,21 @@ const startServer = async () => {
       });
     });
 
-    function clearRoomTimeout(mitplanId: string) {
-      if (roomTimeouts.has(mitplanId)) {
-        clearTimeout(roomTimeouts.get(mitplanId)!);
-        roomTimeouts.delete(mitplanId);
+    function clearMitplanTimeout(mitplanId: string) {
+      if (mitplanTimeouts.has(mitplanId)) {
+        clearTimeout(mitplanTimeouts.get(mitplanId)!);
+        mitplanTimeouts.delete(mitplanId);
       }
     }
 
-    function checkRoomActivity(socket: Socket) {
-      for (const [mitplanId, room] of socket.rooms) {
+    function checkMitplanActivity(socket: Socket) {
+      for (const [mitplanId] of socket.rooms) {
         if (mitplanId !== socket.id) { // Ignore the socket's personal room
-          const clientsInRoom = io.sockets.adapter.rooms.get(mitplanId);
-          if (!clientsInRoom || clientsInRoom.size === 0) {
-            // No clients left in the room, start the timeout
-            const timeout = setTimeout(() => handleRoomTimeout(mitplanId), ROOM_TIMEOUT);
-            roomTimeouts.set(mitplanId, timeout);
+          const clientsInMitplan = io.sockets.adapter.rooms.get(mitplanId);
+          if (!clientsInMitplan || clientsInMitplan.size === 0) {
+            // No clients left in the mitplan, start the timeout
+            const timeout = setTimeout(() => handleMitplanTimeout(mitplanId), MITPLAN_TIMEOUT);
+            mitplanTimeouts.set(mitplanId, timeout);
           }
         }
       }
@@ -466,10 +466,10 @@ const startServer = async () => {
     const SAVE_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
     // Set up periodic save job
-    const periodicSaveJob = setInterval(saveAllRoomStates, SAVE_INTERVAL);
+  setInterval(saveAllMitplanStates, SAVE_INTERVAL);
 
-    async function saveAllRoomStates() {
-      console.log('Starting periodic save of all room states');
+    async function saveAllMitplanStates() {
+      console.log('Starting periodic save of all mitplan states');
       const mitplanIds = await redis.keys('mitplan:*');
       
       for (const key of mitplanIds) {
@@ -491,11 +491,11 @@ const startServer = async () => {
         }
       }
       
-      console.log('Periodic save of all room states completed');
+      console.log('Periodic save of all mitplan states completed');
     }
 
-    const handleRoomTimeout = debounce(async (mitplanId: string) => {
-      console.log(`Room timeout for mitplan ${mitplanId}`);
+    const handleMitplanTimeout = debounce(async (mitplanId: string) => {
+      console.log(`Mitplan timeout for mitplan ${mitplanId}`);
       
       const mitplanData = await redis.get(`mitplan:${mitplanId}`);
       
@@ -511,11 +511,11 @@ const startServer = async () => {
           await redis.del(`mitplan:${mitplanId}`);
           console.log(`Mitplan ${mitplanId} removed from Redis`);
         } catch (error) {
-          console.error(`Error handling room timeout for mitplan ${mitplanId}:`, error);
+          console.error(`Error handling mitplan timeout for mitplan ${mitplanId}:`, error);
         }
       }
       
-      roomTimeouts.delete(mitplanId);
+      mitplanTimeouts.delete(mitplanId);
     }, 1000); // Debounce for 1 second to avoid multiple calls
 
     app.post('/api/mitplans/:mitplanId/save', async (req: Request, res: Response) => {
@@ -534,9 +534,9 @@ const startServer = async () => {
 
     // Add this cleanup function
     const cleanup = async () => {
-      console.log('Server is shutting down. Saving all room states...');
-      await saveAllRoomStates();
-      console.log('All room states saved. Exiting...');
+      console.log('Server is shutting down. Saving all mitplan states...');
+      await saveAllMitplanStates();
+      console.log('All mitplan states saved. Exiting...');
       process.exit(0);
     };
 
@@ -546,31 +546,31 @@ const startServer = async () => {
     process.on('SIGUSR2', cleanup); // For Nodemon restarts
 
     // Helper function to apply an action to the server-side state
-    async function applyActionToServerState(mitplanId: string, action: any) {
-      // Retrieve the current mitplan state from Redis
-      const mitplanData = await redis.get(`mitplan:${mitplanId}`);
+    // async function applyActionToServerState(mitplanId: string, action: any) {
+    //   // Retrieve the current mitplan state from Redis
+    //   const mitplanData = await redis.get(`mitplan:${mitplanId}`);
       
-      if (mitplanData) {
-        // Apply the action to the state
-        const newState = applyActionToState(JSON.parse(mitplanData), action);
+    //   if (mitplanData) {
+    //     // Apply the action to the state
+    //     const newState = applyActionToState(JSON.parse(mitplanData), action);
         
-        // Update the mitplan state in Redis
-        await redis.set(`mitplan:${mitplanId}`, JSON.stringify(newState));
+    //     // Update the mitplan state in Redis
+    //     await redis.set(`mitplan:${mitplanId}`, JSON.stringify(newState));
         
-        // Update the mitplan state in the database
-        await Mitplan.update({ state: newState }, { where: { mitplanId } });
-      } else {
-        // Handle the case where the mitplan is not found in Redis
-        // ...
-      }
-    }
+    //     // Update the mitplan state in the database
+    //     await Mitplan.update({ state: newState }, { where: { mitplanId } });
+    //   } else {
+    //     // Handle the case where the mitplan is not found in Redis
+    //     // ...
+    //   }
+    // }
 
     // Helper function to apply an action to a mitplan state
-    function applyActionToState(state: MitplanState, action: any): MitplanState {
-      // Implement the logic to apply the action to the state
-      // ...
-      return state;
-    }
+    // function applyActionToState(state: MitplanState, action: any): MitplanState {
+    //   // Implement the logic to apply the action to the state
+    //   // ...
+    //   return state;
+    // }
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
