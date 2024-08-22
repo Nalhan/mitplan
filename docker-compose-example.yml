@@ -16,6 +16,9 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - BACKEND_URL=${BACKEND_URL}
       - VITE_BACKEND_URL=${BACKEND_URL}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - DISCORD_CALLBACK_URL=${DISCORD_CALLBACK_URL}
     secrets:
       - db_password
     networks:
@@ -23,8 +26,6 @@ services:
     volumes:
       - ~/mitplan/mitplan-frontend:/app/frontend
       - ~/mitplan/mitplan-backend:/app/backend
-      - "/app/frontend/node_modules"
-      - "/app/backend/node_modules"
 
     ports:
       - 9229:9229
