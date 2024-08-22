@@ -8,3 +8,5 @@ docker-compose.yml
 mitplan-postgres/
 .cursorrules
 *.code-workspace
+package-lock.json
+package.json
