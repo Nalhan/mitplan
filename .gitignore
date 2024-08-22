@@ -10,3 +10,4 @@ mitplan-postgres/
 *.code-workspace
 package-lock.json
 package.json
+.vscode/
