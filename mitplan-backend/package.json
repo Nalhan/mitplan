@@ -6,7 +6,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only --inspect=0.0.0.0:9229 src/server.ts",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "keywords": [],
   "author": "",
@@ -45,6 +46,9 @@
     "@types/sequelize": "^4.28.20",
     "@types/socket.io": "^3.0.2",
     "@types/uuid": "~10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.2.0",
+    "@typescript-eslint/parser": "^8.2.0",
+    "eslint": "^9.9.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4",
     "vite": "^5.4.1"
