@@ -2,8 +2,8 @@ import React, { useRef, useCallback } from 'react';
 import { useDrag, DragPreviewImage } from 'react-dnd';
 import { FaTrash, FaClock } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { AssignmentEventType, CooldownEventType, TextEventType, RootState } from '../../types';
-import { deleteAssignmentEvents } from '../../store/roomsSlice';
+import { AssignmentEventType, CooldownEventType, /*TextEventType,*/ RootState } from '../../types';
+import { deleteAssignmentEvents } from '../../store/mitplansSlice';
 
 // TODO: figure out how to get rid of this
 const ItemType = 'ASSIGNMENT_EVENT';
@@ -11,7 +11,7 @@ const ItemType = 'ASSIGNMENT_EVENT';
 interface AssignmentEventProps {
   event: AssignmentEventType;
   timelineLength: number;
-  roomId: string;
+  mitplanId: string;
   sheetId: string;
   isDragging?: boolean;
   timeScale: number;
@@ -19,7 +19,7 @@ interface AssignmentEventProps {
   topBufferHeight: number; // Added this prop
 }
 
-const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength, roomId, sheetId, isDragging = false, timeScale, scrollTop, topBufferHeight }) => {
+const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength, mitplanId, sheetId, isDragging = false, timeScale, scrollTop, topBufferHeight }) => {
   const dispatch = useDispatch();
   const ref = useRef<HTMLDivElement>(null);
   const [{ isDragging: isBeingDragged }, drag, preview] = useDrag(() => ({
@@ -51,8 +51,8 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
   const textColor = getContrastColor(bgColor);
 
   const handleDelete = useCallback(() => {
-    dispatch(deleteAssignmentEvents({ roomId, sheetId, eventId: event.id }));
-  }, [dispatch, roomId, sheetId, event.id]);
+    dispatch(deleteAssignmentEvents({ mitplanId, sheetId, eventId: event.id }));
+  }, [dispatch, mitplanId, sheetId, event.id]);
 
   const formatTimestamp = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -60,7 +60,7 @@ const AssignmentEvent: React.FC<AssignmentEventProps> = ({ event, timelineLength
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const roster = useSelector((state: RootState) => state.rooms[roomId]?.roster);
+  const roster = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.roster);
   const assignee = event.assignee ? roster.players[event.assignee] : null;
 
   return (

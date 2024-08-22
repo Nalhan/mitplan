@@ -3,7 +3,7 @@
 import { ThunkAction } from 'redux-thunk';
 import { Action } from '@reduxjs/toolkit';
 import { Ability } from '../data/ability';
-import { WowClass, WowSpec, classSpecs } from '../data/classes';
+import { WowClass, WowSpec, /*classSpecs*/ } from '../data/classes';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
@@ -13,10 +13,36 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 >;
 
 export interface RootState {
-  rooms: { [roomId: string]: Room };
+  mitplans: {
+    mitplans: { [mitplanId: string]: Mitplan };
+    status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    error: string | null;
+  };
+  auth: {
+    isAuthenticated: boolean;
+    user: User | null;
+    loading: boolean;
+    error: string | null;
+  };
 }
 
-export interface ServerSyncedRoom {
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface User {
+  id: string;
+  discordId: string;
+  username: string;
+  avatar: string;
+  email: string;
+}
+
+
+export interface ServerSyncedMitplan {
   id: string;
   sheets: { [id: string]: ServerSyncedSheet };
   roster: Roster;
@@ -34,13 +60,13 @@ export interface ClientStoredSheet {
   timeScale: number;
 }
 
-export interface ClientStoredRoom {
+export interface ClientStoredMitplan {
   activeSheetId: string | null;
 }
 
 export interface Sheet extends ServerSyncedSheet, ClientStoredSheet {}
 
-export interface Room extends ServerSyncedRoom, ClientStoredRoom {
+export interface Mitplan extends ServerSyncedMitplan, ClientStoredMitplan {
   sheets: { [id: string]: Sheet };
 }
 

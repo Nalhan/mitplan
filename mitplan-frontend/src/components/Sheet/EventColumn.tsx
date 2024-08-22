@@ -12,7 +12,7 @@ interface EventColumnProps {
   onDragEnd: (id: string, newTimestamp: number, columnId: number) => void;
   onDrop: (item: any, columnId: number, newTimestamp: number) => void;
   columnId: number;
-  roomId: string;
+  mitplanId: string;
   sheetId: string;
   scrollTop: number;
   timeScale: number;
@@ -25,7 +25,7 @@ const EventColumn: React.FC<EventColumnProps> = ({
   onDragEnd, 
   onDrop, 
   columnId, 
-  roomId, 
+  mitplanId, 
   sheetId, 
   scrollTop,
   timeScale,
@@ -132,6 +132,7 @@ const EventColumn: React.FC<EventColumnProps> = ({
       }}
       onContextMenu={handleContextMenu}
     >
+      
       {Object.values(localEvents || {}).map((event) => 
         event && 'id' in event ? (
           <AssignmentEvent 

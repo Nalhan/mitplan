@@ -9,11 +9,11 @@ const nouns: string[] = [
     'centaur', 'naga', 'satyr', 'worgen', 'dragon', 'elemental', 'gargoyle', 'lich'
 ];
 
-function generateRoomName(): string {
+function generateMitplanName(): string {
     const adjective1: string = adjectives[Math.floor(Math.random() * adjectives.length)];
     const adjective2: string = adjectives[Math.floor(Math.random() * adjectives.length)];
     const noun: string = nouns[Math.floor(Math.random() * nouns.length)];
     return `${adjective1}-${adjective2}-${noun}`;
 }
 
-export default generateRoomName;
+export default generateMitplanName;

@@ -2,30 +2,30 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useContextMenu } from './Shared/ContextMenu';
 import { RootState } from '../types';
-import { addSheet, deleteSheet, setActiveSheet } from '../store/roomsSlice';
+import { addSheet, deleteSheet, setActiveSheet } from '../store/mitplansSlice';
 import { v4 as uuidv4 } from 'uuid';
 import { allEncounters } from '../data/encounters/encounters';
 
 interface SheetNavigationProps {
-  roomId: string;
+  mitplanId: string;
   onRenameSheet: (sheetId: string) => void;
 }
 
 const SheetNavigation: React.FC<SheetNavigationProps> = ({
-  roomId,
+  mitplanId,
   onRenameSheet,
 }) => {
   const { showContextMenu } = useContextMenu();
   const dispatch = useDispatch();
 
-  const room = useSelector((state: RootState) => state.rooms[roomId]);
-  const { sheets, activeSheetId } = room || {};
+  const mitplan = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]);
+  const { sheets, activeSheetId } = mitplan || {};
 
   const handleContextMenu = (event: React.MouseEvent, sheetId: string) => {
     event.preventDefault();
     const items = [
       { label: 'Rename', action: () => onRenameSheet(sheetId) },
-      { label: 'Delete', action: () => dispatch(deleteSheet({ roomId, sheetId })) },
+      { label: 'Delete', action: () => dispatch(deleteSheet({ mitplanId, sheetId })) },
     ];
     showContextMenu(items, event.clientX, event.clientY);
   };
@@ -36,7 +36,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
     const defaultEncounter = allEncounters[defaultEncounterId];
 
     dispatch(addSheet({
-      roomId,
+      mitplanId,
       sheet: {
         id: newSheetId,
         name: `New Sheet ${Object.keys(sheets || {}).length + 1}`,
@@ -46,7 +46,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
         timeScale: 1,
       }
     }));
-    dispatch(setActiveSheet({ roomId, sheetId: newSheetId }));
+    dispatch(setActiveSheet({ mitplanId, sheetId: newSheetId }));
   };
 
   if (!sheets) {
@@ -63,7 +63,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
               ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-t border-l border-r border-gray-300 dark:border-gray-700'
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
-          onClick={() => dispatch(setActiveSheet({ roomId, sheetId: sheet.id }))}
+          onClick={() => dispatch(setActiveSheet({ mitplanId, sheetId: sheet.id }))}
           onContextMenu={(e) => handleContextMenu(e, sheet.id)}
         >
           {sheet.name}

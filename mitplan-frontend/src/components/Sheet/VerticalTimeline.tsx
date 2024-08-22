@@ -2,29 +2,29 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { AssignmentEventType, RootState } from '../../types';
-import { updateSheet, setTimeScale } from '../../store/roomsSlice';
+import { updateSheet, setTimeScale } from '../../store/mitplansSlice';
 import EventColumn from './EventColumn';
 import CustomDragLayer from './CustomDragLayer';
 import TimestampColumn from './TimestampColumn';
 import CooldownPalette from './CooldownPalette';
 
 interface VerticalTimelineProps {
-  roomId: string;
+  mitplanId: string;
   sheetId: string;
 }
 
-const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) => {
+const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ mitplanId, sheetId }) => {
   const dispatch = useDispatch();
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const sheet = useSelector((state: RootState) => state.rooms[roomId]?.sheets[sheetId]);
+  const sheet = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.sheets[sheetId]);
   const { assignmentEvents, encounter, columnCount, timeScale = 5 } = sheet || {};
 
   const updateSheetEvents = useCallback((updatedEvents: { [id: string]: AssignmentEventType }) => {
     const newEvents = { ...assignmentEvents, ...updatedEvents };
-    dispatch(updateSheet({ roomId, sheetId, updates: { assignmentEvents: newEvents } }));
-  }, [dispatch, roomId, sheetId, assignmentEvents]);
+    dispatch(updateSheet({ mitplanId, sheetId, updates: { assignmentEvents: newEvents } }));
+  }, [dispatch, mitplanId, sheetId, assignmentEvents]);
 
   const handleMoveEvent = useCallback((id: string, newTimestamp: number, columnId: number) => {
     if (assignmentEvents && id in assignmentEvents) {
@@ -42,7 +42,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
       ...(item.icon && { icon: item.icon }),
       ...(item.type && { type: item.type }),
       ...(item.ability && { ability: item.ability }),
-      ...(item.assignee && { assignee: item.assignee }), // Add this line
+      ...(item.assignee && { assignee: item.assignee }),
     };
     updateSheetEvents({ [newEvent.id]: newEvent });
   }, [updateSheetEvents]);
@@ -70,8 +70,8 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
   };
 
   const handleTimeScaleChange = useCallback((newTimeScale: number) => {
-    dispatch(setTimeScale({ roomId, sheetId, timeScale: newTimeScale }));
-  }, [dispatch, roomId, sheetId]);
+    dispatch(setTimeScale({ mitplanId, sheetId, timeScale: newTimeScale }));
+  }, [dispatch, mitplanId, sheetId]);
 
   const columnWidth = 200; // Fixed width for each column
   const topBufferSeconds = 15; // 15 seconds of buffer at the top
@@ -105,7 +105,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
                     onDragEnd={handleMoveEvent}
                     onDrop={handleDrop}
                     columnId={index + 1}
-                    roomId={roomId}
+                    mitplanId={mitplanId}
                     sheetId={sheetId}
                     scrollTop={scrollTop}
                     timeScale={timeScale}
@@ -115,7 +115,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
               ))}
             </div>
             <CooldownPalette 
-              roomId={roomId}
+              mitplanId={mitplanId}
               sheetId={sheetId}
               encounterLength={encounter.fightLength}
               timeScale={timeScale}
@@ -127,7 +127,7 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ roomId, sheetId }) 
       </div>
       <CustomDragLayer 
         timelineLength={encounter.fightLength}
-        roomId={roomId}
+        mitplanId={mitplanId}
         sheetId={sheetId}
         timeScale={timeScale}
         scrollTop={scrollTop}

@@ -1,8 +1,8 @@
-import { Room } from '../types';
+import { Mitplan } from '../types';
 import { Socket } from 'socket.io-client';
 
-export const updateServerState = (socket: Socket, roomId: string, state: Room): void => {
+export const updateServerState = (socket: Socket, mitplanId: string, state: Mitplan): void => {
   if (socket) {
-    socket.emit('updateState', roomId, state);
+    socket.emit('updateState', mitplanId, state);
   }
 };

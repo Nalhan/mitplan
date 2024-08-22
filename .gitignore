@@ -5,3 +5,5 @@ mitplan-frontend/.env
 secrets/
 docker-compose.yml
 mitplan-postgres/
+.cursorrules
+*.code-workspace
