@@ -32,8 +32,6 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
 
   const handleCreateSheet = () => {
     const newSheetId = uuidv4();
-    const defaultEncounterId = Object.keys(allEncounters)[0];
-    const defaultEncounter = allEncounters[defaultEncounterId];
 
     dispatch(addSheet({
       mitplanId,
@@ -41,7 +39,7 @@ const SheetNavigation: React.FC<SheetNavigationProps> = ({
         id: newSheetId,
         name: `New Sheet ${Object.keys(sheets || {}).length + 1}`,
         assignmentEvents: {},
-        encounter: defaultEncounter,
+        encounterId: 'Default',
         columnCount: 5,
         timeScale: 1,
       }

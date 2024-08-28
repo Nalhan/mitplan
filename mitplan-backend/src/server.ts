@@ -27,12 +27,7 @@ interface MitplanState {
       id: string;
       name: string;
       assignmentEvents: { [id: string]: any };
-      encounter: {
-        events: any[];
-        name: string;
-        id: string;
-        fightLength: number;
-      };
+      encounterId: string;
       columnCount: number;
     };
   };
@@ -286,12 +281,7 @@ const startServer = async () => {
             id: defaultSheetId,
             name: 'Sheet 1',
             assignmentEvents: {},
-            encounter: {
-              events: [],
-              name: 'Default Encounter',
-              id: 'default',
-              fightLength: 600 // 10 minutes default fight length
-            },
+            encounterId: 'Default',
             columnCount: 5,
           }
         },

@@ -14,7 +14,7 @@ const SheetComponent: React.FC<SheetType & {
 }> = ({
   name,
   assignmentEvents,
-  encounter,
+  encounterId,
   columnCount,
   mitplanId,
   sheetId,
