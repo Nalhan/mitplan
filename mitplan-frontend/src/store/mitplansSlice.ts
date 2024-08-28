@@ -116,7 +116,7 @@ const mitplansSlice = createSlice({
       state.mitplans[mitplanId].sheets[sheet.id] = {
         ...sheet,
         assignmentEvents: sheet.assignmentEvents || {},
-        encounter: sheet.encounter || getDefaultEncounter()
+        encounterId: sheet.encounterId || 'Default'
       };
       updateServerState(mitplanId, getServerSyncedState(state.mitplans[mitplanId]));
     },
@@ -135,7 +135,7 @@ const mitplansSlice = createSlice({
         ...currentSheet, 
         ...updates,
         assignmentEvents: updates.assignmentEvents || currentSheet.assignmentEvents || {},
-        encounter: updates.encounter || currentSheet.encounter || getDefaultEncounter()
+        encounterId: updates.encounterId || currentSheet.encounterId || 'Default'
       };
       updateServerState(mitplanId, getServerSyncedState(state.mitplans[mitplanId]));
     },
@@ -286,7 +286,6 @@ const mitplansSlice = createSlice({
               id: defaultSheetId,
               name: 'Sheet 1',
               assignmentEvents: {},
-              encounter: getDefaultEncounter(),
               encounterId: 'Default',
               columnCount: 5,
               timeScale: 5.4

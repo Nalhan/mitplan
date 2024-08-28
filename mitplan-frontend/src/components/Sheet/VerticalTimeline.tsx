@@ -22,8 +22,6 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ mitplanId, sheetId 
   const sheet = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.sheets[sheetId]);
   const { assignmentEvents, encounterId, columnCount, timeScale = 5 } = sheet || {};
   const encounter = allEncounters[encounterId];
-  console.log(encounterId);
-  console.log('XXXXXXXXXXXXXaaaaaaaaaaaaaaaaaAXXXXXXXXXXXXXXXXXXXXX');
 
   const updateSheetEvents = useCallback((updatedEvents: { [id: string]: AssignmentEventType }) => {
     const newEvents = { ...assignmentEvents, ...updatedEvents };

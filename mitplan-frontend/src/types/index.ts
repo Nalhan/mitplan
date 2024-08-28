@@ -52,7 +52,6 @@ export interface ServerSyncedSheet {
   id: string;
   name: string;
   assignmentEvents: { [id: string]: AssignmentEventType };
-  encounter: Encounter;
   encounterId: string;
   columnCount: number;
 }
