@@ -53,6 +53,7 @@ export interface ServerSyncedSheet {
   name: string;
   assignmentEvents: { [id: string]: AssignmentEventType };
   encounter: Encounter;
+  encounterId: string;
   columnCount: number;
 }
 

@@ -7,6 +7,7 @@ import EventColumn from './EventColumn';
 import CustomDragLayer from './CustomDragLayer';
 import TimestampColumn from './TimestampColumn';
 import CooldownPalette from './CooldownPalette';
+import { allEncounters } from '../../data/encounters/encounters';
 
 interface VerticalTimelineProps {
   mitplanId: string;
@@ -19,7 +20,10 @@ const VerticalTimeline: React.FC<VerticalTimelineProps> = ({ mitplanId, sheetId 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const sheet = useSelector((state: RootState) => state.mitplans.mitplans[mitplanId]?.sheets[sheetId]);
-  const { assignmentEvents, encounter, columnCount, timeScale = 5 } = sheet || {};
+  const { assignmentEvents, encounterId, columnCount, timeScale = 5 } = sheet || {};
+  const encounter = allEncounters[encounterId];
+  console.log(encounterId);
+  console.log('XXXXXXXXXXXXXaaaaaaaaaaaaaaaaaAXXXXXXXXXXXXXXXXXXXXX');
 
   const updateSheetEvents = useCallback((updatedEvents: { [id: string]: AssignmentEventType }) => {
     const newEvents = { ...assignmentEvents, ...updatedEvents };

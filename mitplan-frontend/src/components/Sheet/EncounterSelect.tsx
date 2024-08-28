@@ -41,7 +41,7 @@ const EncounterSelect: React.FC<EncounterSelectProps> = ({ mitplanId }) => {
         dispatch(updateSheet({
           mitplanId,
           sheetId: activeSheetId,
-          updates: { encounter }
+          updates: { encounterId: selectedEncounter }
         }));
         console.log(`Updated encounter to ${encounter.name} for mitplan ${mitplanId}, sheet ${activeSheetId}`); // Debug log
       } else {

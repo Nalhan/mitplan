@@ -27,90 +27,13 @@ interface MitplanState {
       id: string;
       name: string;
       assignmentEvents: { [id: string]: any };
-      encounter: {
-        events: any[];
-        name: string;
-        id: string;
-        fightLength: number;
-      };
+      encounterId: string;
       columnCount: number;
     };
   };
   roster: {
     players: {}
   };
-}
-
-// Add this interface for the database representation of MitplanState
-interface MitplanStateDB extends Omit<MitplanState, 'sheets'> {
-  sheets: {
-    [key: string]: Omit<MitplanState['sheets'][string], 'encounter'> & { encounterId: string };
-  };
-}
-
-// Add this function to convert MitplanState to MitplanStateDB
-function convertToDBState(state: MitplanState): MitplanStateDB {
-  const dbState: MitplanStateDB = {
-    ...state,
-    sheets: Object.entries(state.sheets).reduce((acc, [sheetId, sheet]) => {
-      const { encounter, ...restSheet } = sheet;
-      acc[sheetId] = {
-        ...restSheet,
-        encounterId: encounter.id,
-      };
-      return acc;
-    }, {} as MitplanStateDB['sheets']),
-  };
-  return dbState;
-}
-
-// Add this function to convert MitplanStateDB back to MitplanState
-async function convertToFullState(dbState: MitplanStateDB): Promise<MitplanState> {
-  const fullState: MitplanState = {
-    ...dbState,
-    sheets: await Object.entries(dbState.sheets).reduce(async (accPromise, [sheetId, sheet]) => {
-      const acc = await accPromise;
-      const encounter = await fetchEncounterById(sheet.encounterId);
-      acc[sheetId] = {
-        ...sheet,
-        encounter,
-      };
-      return acc;
-    }, Promise.resolve({} as MitplanState['sheets'])),
-  };
-  return fullState;
-}
-
-// Add this function to fetch an encounter by its ID
-async function fetchEncounterById(encounterId: string) {
-  try {
-    // First, check if the encounter exists in Redis
-    const encounterData = await redis.get(`encounter:${encounterId}`);
-    
-    if (encounterData) {
-      console.log(`Encounter ${encounterId} found in Redis`);
-      return JSON.parse(encounterData);
-    }
-    
-    
-    // If encounter is not found, return a dummy encounter
-    console.log(`Encounter ${encounterId} not found, returning dummy encounter`);
-    const dummyEncounter = {
-      id: encounterId,
-      name: 'Default Encounter',
-      events: [],
-      fightLength: 600 // 10 minutes default fight length
-    };
-    
-    // Cache the dummy encounter in Redis
-    await redis.set(`encounter:${encounterId}`, JSON.stringify(dummyEncounter));
-    
-    return dummyEncounter;
-  } catch (error) {
-    console.error(`Error fetching encounter ${encounterId}:`, error);
-    throw error;
-  }
-  
 }
 
 const app = express();
@@ -358,12 +281,7 @@ const startServer = async () => {
             id: defaultSheetId,
             name: 'Sheet 1',
             assignmentEvents: {},
-            encounter: {
-              events: [],
-              name: 'Default Encounter',
-              id: 'default',
-              fightLength: 600 // 10 minutes default fight length
-            },
+            encounterId: 'Default',
             columnCount: 5,
           }
         },
@@ -373,8 +291,6 @@ const startServer = async () => {
       };
 
       try {
-        const dbState = convertToDBState(initialState);
-        
         // Always save to Redis
         await redis.set(`mitplan:${mitplanId}`, JSON.stringify(initialState));
         
@@ -382,7 +298,7 @@ const startServer = async () => {
           // Save to PostgreSQL only if a user is assigned
           await Mitplan.create({ 
             mitplanId, 
-            state: dbState, 
+            state: initialState, 
             ownerId: user.id 
           });
           
@@ -406,16 +322,17 @@ const startServer = async () => {
       }
 
       try {
+        // Fetch mitplans from PostgreSQL using the association
         const dbMitplans = await Mitplan.findAll({
           where: { ownerId: user.id },
           attributes: ['mitplanId', 'state'],
         });
-        
-        const mitplans = await Promise.all(dbMitplans.map(async (mitplan) => ({
+        console.log('Fetched mitplans from database:', dbMitplans);
+        // Map the results to the desired format
+        const mitplans = dbMitplans.map(mitplan => ({
           mitplanId: mitplan.get('mitplanId') as string,
-          state: await convertToFullState(mitplan.get('state') as MitplanStateDB),
-        })));
-        
+          state: mitplan.get('state') as MitplanState
+        }));
         console.log('Fetched mitplans:', mitplans);
         res.json(mitplans);
       } catch (error) {
@@ -463,7 +380,7 @@ const startServer = async () => {
         
         if (dbMitplan) {
           // If found in database, restore to Redis
-          mitplanData = JSON.stringify(await convertToFullState(dbMitplan.state));
+          mitplanData = JSON.stringify(dbMitplan.state);
           await redis.set(`mitplan:${mitplanId}`, mitplanData);
           console.log(`Mitplan ${mitplanId} restored from database to Redis`);
         } else {
@@ -508,9 +425,8 @@ const startServer = async () => {
         // Update the mitplan state in Redis
         await redis.set(`mitplan:${mitplanId}`, JSON.stringify(state));
         
-        // Convert to DB state and update in the database
-        const dbState = convertToDBState(state);
-        await Mitplan.update({ state: dbState }, { where: { mitplanId } });
+        // Update the mitplan state in the database
+        await Mitplan.update({ state }, { where: { mitplanId } });
         
         // Broadcast the updated state to all clients in the mitplan, including the sender
         io.to(mitplanId).emit('mitplanState', mitplanId, state);
@@ -554,9 +470,7 @@ const startServer = async () => {
           try {
             const mitplan = await Mitplan.findOne({ where: { mitplanId } });
             if (mitplan && mitplan.ownerId) {
-              const state = JSON.parse(mitplanData);
-              const dbState = convertToDBState(state);
-              await Mitplan.update({ state: dbState }, { where: { mitplanId } });
+              await Mitplan.update({ state: JSON.parse(mitplanData) }, { where: { mitplanId } });
               console.log(`Periodic save: Mitplan ${mitplanId} saved to database`);
             } else {
               console.log(`Periodic save: Mitplan ${mitplanId} skipped (no associated user)`);
@@ -579,9 +493,7 @@ const startServer = async () => {
         try {
           const mitplan = await Mitplan.findOne({ where: { mitplanId } });
           if (mitplan && mitplan.ownerId) {
-            const state = JSON.parse(mitplanData);
-            const dbState = convertToDBState(state);
-            await Mitplan.update({ state: dbState }, { where: { mitplanId } });
+            await Mitplan.update({ state: JSON.parse(mitplanData) }, { where: { mitplanId } });
             console.log(`Mitplan ${mitplanId} saved to database`);
           } else {
             console.log(`Mitplan ${mitplanId} not saved to database (no associated user)`);
@@ -600,9 +512,7 @@ const startServer = async () => {
       const { mitplanId } = req.params;
       const mitplanData = await redis.get(`mitplan:${mitplanId}`);
       if (mitplanData) {
-        const state = JSON.parse(mitplanData);
-        const dbState = convertToDBState(state);
-        await Mitplan.update({ state: dbState }, { where: { mitplanId } });
+        await Mitplan.update({ state: JSON.parse(mitplanData) }, { where: { mitplanId } });
         res.json({ message: 'Mitplan state saved successfully' });
       } else {
         res.status(404).json({ message: 'Mitplan not found' });

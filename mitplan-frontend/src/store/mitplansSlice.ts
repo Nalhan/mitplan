@@ -287,6 +287,7 @@ const mitplansSlice = createSlice({
               name: 'Sheet 1',
               assignmentEvents: {},
               encounter: getDefaultEncounter(),
+              encounterId: 'Default',
               columnCount: 5,
               timeScale: 5.4
             }
