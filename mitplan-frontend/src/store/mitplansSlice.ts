@@ -116,7 +116,8 @@ const mitplansSlice = createSlice({
       state.mitplans[mitplanId].sheets[sheet.id] = {
         ...sheet,
         assignmentEvents: sheet.assignmentEvents || {},
-        encounterId: sheet.encounterId || 'Default'
+        encounterId: sheet.encounterId || 'Default',
+        isPrepullEnabled: sheet.isPrepullEnabled || false // Add this line
       };
       updateServerState(mitplanId, getServerSyncedState(state.mitplans[mitplanId]));
     },
@@ -135,7 +136,8 @@ const mitplansSlice = createSlice({
         ...currentSheet, 
         ...updates,
         assignmentEvents: updates.assignmentEvents || currentSheet.assignmentEvents || {},
-        encounterId: updates.encounterId || currentSheet.encounterId || 'Default'
+        encounterId: updates.encounterId || currentSheet.encounterId || 'Default',
+        isPrepullEnabled: updates.isPrepullEnabled !== undefined ? updates.isPrepullEnabled : (currentSheet.isPrepullEnabled || false)
       };
       updateServerState(mitplanId, getServerSyncedState(state.mitplans[mitplanId]));
     },
@@ -288,7 +290,8 @@ const mitplansSlice = createSlice({
               assignmentEvents: {},
               encounterId: 'Default',
               columnCount: 5,
-              timeScale: 5.4
+              timeScale: 5.4,
+              isPrepullEnabled: false // Add this line
             }
           },
           roster: {

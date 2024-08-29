@@ -3,6 +3,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import VerticalTimeline from './VerticalTimeline';
 import EncounterSelect from './EncounterSelect';
+import PrepullToggle from './PrepullToggle';
 import { Sheet as SheetType } from '../../types';
 import { deleteAssignmentEvents } from '../../store/mitplansSlice';
 import { useDispatch } from 'react-redux';
@@ -36,6 +37,7 @@ const SheetComponent: React.FC<SheetType & {
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white">{name}</h2>
           <div className="flex items-center space-x-4">
             <EncounterSelect mitplanId={mitplanId} />
+            <PrepullToggle mitplanId={mitplanId} />
             <button
               onClick={handleClearEvents}
               className="bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 text-white px-4 py-1 rounded font-semibold transition duration-300 ease-in-out text-sm"

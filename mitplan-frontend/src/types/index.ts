@@ -54,6 +54,7 @@ export interface ServerSyncedSheet {
   assignmentEvents: { [id: string]: AssignmentEventType };
   encounterId: string;
   columnCount: number;
+  isPrepullEnabled: boolean;
 }
 
 export interface ClientStoredSheet {
